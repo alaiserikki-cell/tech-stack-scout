@@ -1,5 +1,7 @@
 # Tech Stack Scout
 
+[![CI](https://github.com/alaiserikki-cell/tech-stack-scout/actions/workflows/ci.yml/badge.svg)](https://github.com/alaiserikki-cell/tech-stack-scout/actions/workflows/ci.yml)
+
 
 A watchlist of target companies that stays current automatically. For each company it builds a call-prep brief for Nikhil, an enterprise AE selling **FlakeGuard** (a fictional flaky-test tool): how the company builds software, how actively, what changed recently, an outreach opener tied to a real signal, 3 discovery questions the evidence already answers and 2 it can't. Every Monday it emails a ranked "who to call this week" digest.
 
