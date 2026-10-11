@@ -1,0 +1,3096 @@
+[
+ {
+  "canonical_name": "Go",
+  "category": "language",
+  "aliases": [
+   "golang",
+   "go developer",
+   "go engineer",
+   "written in go",
+   "go services",
+   "go microservices",
+   "experience with go",
+   "go programming"
+  ],
+  "detection_files": [
+   "go.mod"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Java",
+  "category": "language",
+  "aliases": [
+   "java",
+   "java 17",
+   "java 21",
+   "java developer",
+   "java engineer"
+  ],
+  "detection_files": [
+   "pom.xml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Kotlin",
+  "category": "language",
+  "aliases": [
+   "kotlin"
+  ],
+  "detection_files": [
+   "build.gradle.kts"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Python",
+  "category": "language",
+  "aliases": [
+   "python",
+   "python3"
+  ],
+  "detection_files": [
+   "requirements.txt",
+   "pyproject.toml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "TypeScript",
+  "category": "language",
+  "aliases": [
+   "typescript"
+  ],
+  "detection_files": [
+   "tsconfig.json"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "JavaScript",
+  "category": "language",
+  "aliases": [
+   "javascript",
+   "node.js",
+   "nodejs",
+   "ecmascript"
+  ],
+  "detection_files": [
+   "package.json"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Ruby",
+  "category": "language",
+  "aliases": [
+   "ruby developer",
+   "ruby engineer"
+  ],
+  "detection_files": [
+   "Gemfile"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Rust",
+  "category": "language",
+  "aliases": [
+   "rust programming",
+   "rust developer",
+   "rust engineer",
+   "written in rust",
+   "rustlang",
+   "experience with rust",
+   "rust services"
+  ],
+  "detection_files": [
+   "Cargo.toml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Scala",
+  "category": "language",
+  "aliases": [
+   "scala"
+  ],
+  "detection_files": [
+   "build.sbt"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "C#",
+  "category": "language",
+  "aliases": [
+   "c#",
+   ".net developer",
+   "c# developer",
+   "csharp"
+  ],
+  "detection_files": [
+   "*.csproj"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "C++",
+  "category": "language",
+  "aliases": [
+   "c++",
+   "cpp",
+   "modern c++"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "C",
+  "category": "language",
+  "aliases": [
+   "c programming",
+   "embedded c"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "PHP",
+  "category": "language",
+  "aliases": [
+   "php"
+  ],
+  "detection_files": [
+   "composer.json"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Swift",
+  "category": "language",
+  "aliases": [
+   "swift developer",
+   "swift engineer",
+   "swiftui",
+   "ios swift",
+   "swift and objective-c"
+  ],
+  "detection_files": [
+   "Package.swift"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Objective-C",
+  "category": "language",
+  "aliases": [
+   "objective-c",
+   "objective c",
+   "objc"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Elixir",
+  "category": "language",
+  "aliases": [
+   "elixir"
+  ],
+  "detection_files": [
+   "mix.exs"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Erlang",
+  "category": "language",
+  "aliases": [
+   "erlang"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Clojure",
+  "category": "language",
+  "aliases": [
+   "clojure"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Haskell",
+  "category": "language",
+  "aliases": [
+   "haskell"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Dart",
+  "category": "language",
+  "aliases": [
+   "dart language"
+  ],
+  "detection_files": [
+   "pubspec.yaml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Shell",
+  "category": "language",
+  "aliases": [
+   "bash scripting",
+   "shell scripting"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "HCL",
+  "category": "language",
+  "aliases": [
+   "hcl"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Lua",
+  "category": "language",
+  "aliases": [
+   "lua"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "R",
+  "category": "language",
+  "aliases": [
+   "r programming",
+   "r language",
+   "rstats"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Julia",
+  "category": "language",
+  "aliases": [
+   "julia language"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Zig",
+  "category": "language",
+  "aliases": [
+   "zig language",
+   "ziglang"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "OCaml",
+  "category": "language",
+  "aliases": [
+   "ocaml"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "F#",
+  "category": "language",
+  "aliases": [
+   "f#",
+   "fsharp"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Groovy",
+  "category": "language",
+  "aliases": [
+   "groovy"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Perl",
+  "category": "language",
+  "aliases": [
+   "perl"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Solidity",
+  "category": "language",
+  "aliases": [
+   "solidity"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "React",
+  "category": "framework",
+  "aliases": [
+   "react",
+   "reactjs",
+   "react.js"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "react"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Next.js",
+  "category": "framework",
+  "aliases": [
+   "next.js",
+   "nextjs"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "next"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Vue.js",
+  "category": "framework",
+  "aliases": [
+   "vue.js",
+   "vuejs",
+   "vue",
+   "vue 3"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "vue"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Nuxt",
+  "category": "framework",
+  "aliases": [
+   "nuxt",
+   "nuxt.js",
+   "nuxtjs"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "nuxt"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Angular",
+  "category": "framework",
+  "aliases": [
+   "angular",
+   "angularjs"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "@angular/core"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Svelte",
+  "category": "framework",
+  "aliases": [
+   "svelte",
+   "sveltekit"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "svelte"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Express",
+  "category": "framework",
+  "aliases": [
+   "express.js",
+   "expressjs",
+   "express framework"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "express"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "NestJS",
+  "category": "framework",
+  "aliases": [
+   "nestjs",
+   "nest.js"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "@nestjs/core"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Fastify",
+  "category": "framework",
+  "aliases": [
+   "fastify"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "fastify"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "GraphQL",
+  "category": "framework",
+  "aliases": [
+   "graphql"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "graphql",
+   "@apollo/server",
+   "apollo-server",
+   "graphene",
+   "github.com/99designs/gqlgen"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "gRPC",
+  "category": "framework",
+  "aliases": [
+   "grpc",
+   "protobuf",
+   "protocol buffers"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "@grpc/grpc-js",
+   "grpcio",
+   "google.golang.org/grpc",
+   "io.grpc"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Django",
+  "category": "framework",
+  "aliases": [
+   "django"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "django"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Flask",
+  "category": "framework",
+  "aliases": [
+   "flask"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "flask"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "FastAPI",
+  "category": "framework",
+  "aliases": [
+   "fastapi"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "fastapi"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Celery",
+  "category": "framework",
+  "aliases": [
+   "celery"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "celery"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Spring Boot",
+  "category": "framework",
+  "aliases": [
+   "spring boot",
+   "spring framework",
+   "springboot"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "org.springframework.boot",
+   "spring-boot-starter"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Ruby on Rails",
+  "category": "framework",
+  "aliases": [
+   "ruby on rails",
+   "rails"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "rails"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Sinatra",
+  "category": "framework",
+  "aliases": [
+   "sinatra"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "sinatra"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Laravel",
+  "category": "framework",
+  "aliases": [
+   "laravel"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "laravel/framework"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Symfony",
+  "category": "framework",
+  "aliases": [
+   "symfony"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "symfony/symfony"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "ASP.NET Core",
+  "category": "framework",
+  "aliases": [
+   "asp.net core",
+   "asp.net",
+   ".net core",
+   "dotnet core"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Gin",
+  "category": "framework",
+  "aliases": [
+   "gin-gonic"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "github.com/gin-gonic/gin"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Echo (Go)",
+  "category": "framework",
+  "aliases": [
+   "labstack echo"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "github.com/labstack/echo"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Phoenix",
+  "category": "framework",
+  "aliases": [
+   "phoenix framework",
+   "elixir phoenix"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "React Native",
+  "category": "framework",
+  "aliases": [
+   "react native"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "react-native"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Flutter",
+  "category": "framework",
+  "aliases": [
+   "flutter"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "flutter"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Electron",
+  "category": "framework",
+  "aliases": [
+   "electron.js",
+   "electron app"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "electron"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Ktor",
+  "category": "framework",
+  "aliases": [
+   "ktor"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "io.ktor"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Micronaut",
+  "category": "framework",
+  "aliases": [
+   "micronaut"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "io.micronaut"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Quarkus",
+  "category": "framework",
+  "aliases": [
+   "quarkus"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "io.quarkus"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Tailwind CSS",
+  "category": "framework",
+  "aliases": [
+   "tailwind css",
+   "tailwindcss",
+   "tailwind"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "tailwindcss"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Remix",
+  "category": "framework",
+  "aliases": [
+   "remix.run"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "@remix-run/react"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "tRPC",
+  "category": "framework",
+  "aliases": [
+   "trpc"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "@trpc/server"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Pydantic",
+  "category": "framework",
+  "aliases": [
+   "pydantic"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "pydantic"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "PyTorch",
+  "category": "framework",
+  "aliases": [
+   "pytorch"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "torch"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "TensorFlow",
+  "category": "framework",
+  "aliases": [
+   "tensorflow"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "tensorflow"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "scikit-learn",
+  "category": "framework",
+  "aliases": [
+   "scikit-learn",
+   "sklearn"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "scikit-learn"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "LangChain",
+  "category": "framework",
+  "aliases": [
+   "langchain"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "langchain",
+   "@langchain/core"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "AWS",
+  "category": "cloud",
+  "aliases": [
+   "aws",
+   "amazon web services",
+   "aws lambda",
+   "amazon s3",
+   "aws cloud"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "@aws-sdk/*",
+   "aws-sdk",
+   "boto3",
+   "botocore",
+   "github.com/aws/aws-sdk-go",
+   "github.com/aws/aws-sdk-go-v2",
+   "software.amazon.awssdk"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Google Cloud",
+  "category": "cloud",
+  "aliases": [
+   "google cloud",
+   "gcp",
+   "google cloud platform",
+   "cloud run"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "@google-cloud/*",
+   "google-cloud-storage",
+   "google-cloud-bigquery",
+   "cloud.google.com/go",
+   "com.google.cloud"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Azure",
+  "category": "cloud",
+  "aliases": [
+   "azure",
+   "microsoft azure",
+   "azure devops",
+   "aks"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "@azure/*",
+   "azure-storage-blob",
+   "azure-identity",
+   "github.com/azure/azure-sdk-for-go",
+   "com.azure"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Cloudflare",
+  "category": "cloud",
+  "aliases": [
+   "cloudflare",
+   "cloudflare workers"
+  ],
+  "detection_files": [
+   "wrangler.toml"
+  ],
+  "dependency_names": [
+   "wrangler",
+   "@cloudflare/workers-types"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Vercel",
+  "category": "cloud",
+  "aliases": [
+   "vercel"
+  ],
+  "detection_files": [
+   "vercel.json"
+  ],
+  "dependency_names": [
+   "vercel",
+   "@vercel/*"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Netlify",
+  "category": "cloud",
+  "aliases": [
+   "netlify"
+  ],
+  "detection_files": [
+   "netlify.toml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Heroku",
+  "category": "cloud",
+  "aliases": [
+   "heroku"
+  ],
+  "detection_files": [
+   "Procfile",
+   "app.json"
+  ],
+  "dependency_names": [],
+  "verify": true
+ },
+ {
+  "canonical_name": "DigitalOcean",
+  "category": "cloud",
+  "aliases": [
+   "digitalocean"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "github.com/digitalocean/godo"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Fly.io",
+  "category": "cloud",
+  "aliases": [
+   "fly.io"
+  ],
+  "detection_files": [
+   "fly.toml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Firebase",
+  "category": "cloud",
+  "aliases": [
+   "firebase"
+  ],
+  "detection_files": [
+   "firebase.json"
+  ],
+  "dependency_names": [
+   "firebase",
+   "firebase-admin"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Supabase",
+  "category": "cloud",
+  "aliases": [
+   "supabase"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "@supabase/supabase-js"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Oracle Cloud",
+  "category": "cloud",
+  "aliases": [
+   "oracle cloud",
+   "oracle cloud infrastructure"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Alibaba Cloud",
+  "category": "cloud",
+  "aliases": [
+   "alibaba cloud",
+   "aliyun"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "AWS Lambda",
+  "category": "cloud",
+  "aliases": [
+   "aws lambda",
+   "lambda functions",
+   "serverless lambda"
+  ],
+  "detection_files": [
+   "template.yaml"
+  ],
+  "dependency_names": [],
+  "verify": true
+ },
+ {
+  "canonical_name": "Amazon ECS",
+  "category": "cloud",
+  "aliases": [
+   "amazon ecs",
+   "ecs fargate",
+   "aws fargate",
+   "fargate"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Amazon EKS",
+  "category": "cloud",
+  "aliases": [
+   "amazon eks",
+   "eks"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Google Kubernetes Engine",
+  "category": "cloud",
+  "aliases": [
+   "google kubernetes engine",
+   "gke"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Docker",
+  "category": "infra",
+  "aliases": [
+   "docker",
+   "dockerfile",
+   "docker compose"
+  ],
+  "detection_files": [
+   "Dockerfile",
+   "docker-compose.yml",
+   "docker-compose.yaml",
+   "compose.yaml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Kubernetes",
+  "category": "infra",
+  "aliases": [
+   "kubernetes",
+   "k8s"
+  ],
+  "detection_files": [
+   "kustomization.yaml",
+   "skaffold.yaml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Helm",
+  "category": "infra",
+  "aliases": [
+   "helm",
+   "helm charts"
+  ],
+  "detection_files": [
+   "Chart.yaml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Terraform",
+  "category": "infra",
+  "aliases": [
+   "terraform"
+  ],
+  "detection_files": [
+   "*.tf"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Pulumi",
+  "category": "infra",
+  "aliases": [
+   "pulumi"
+  ],
+  "detection_files": [
+   "Pulumi.yaml"
+  ],
+  "dependency_names": [
+   "@pulumi/pulumi",
+   "pulumi"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "AWS CDK",
+  "category": "infra",
+  "aliases": [
+   "aws cdk",
+   "cdk",
+   "cloud development kit"
+  ],
+  "detection_files": [
+   "cdk.json"
+  ],
+  "dependency_names": [
+   "aws-cdk-lib",
+   "aws-cdk"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "CloudFormation",
+  "category": "infra",
+  "aliases": [
+   "cloudformation",
+   "aws cloudformation"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Serverless Framework",
+  "category": "infra",
+  "aliases": [
+   "serverless framework",
+   "serverless.yml"
+  ],
+  "detection_files": [
+   "serverless.yml",
+   "serverless.yaml"
+  ],
+  "dependency_names": [
+   "serverless"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Ansible",
+  "category": "infra",
+  "aliases": [
+   "ansible"
+  ],
+  "detection_files": [
+   "ansible.cfg",
+   "playbook.yml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Chef",
+  "category": "infra",
+  "aliases": [
+   "chef infra"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Puppet",
+  "category": "infra",
+  "aliases": [
+   "puppet"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Nomad",
+  "category": "infra",
+  "aliases": [
+   "hashicorp nomad"
+  ],
+  "detection_files": [
+   "*.nomad"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Consul",
+  "category": "infra",
+  "aliases": [
+   "hashicorp consul"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Vault",
+  "category": "infra",
+  "aliases": [
+   "hashicorp vault"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Istio",
+  "category": "infra",
+  "aliases": [
+   "istio"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Linkerd",
+  "category": "infra",
+  "aliases": [
+   "linkerd"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Envoy",
+  "category": "infra",
+  "aliases": [
+   "envoy proxy"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Nginx",
+  "category": "infra",
+  "aliases": [
+   "nginx"
+  ],
+  "detection_files": [
+   "nginx.conf"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Argo CD",
+  "category": "infra",
+  "aliases": [
+   "argo cd",
+   "argocd"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Flux",
+  "category": "infra",
+  "aliases": [
+   "fluxcd",
+   "flux cd"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Bazel",
+  "category": "infra",
+  "aliases": [
+   "bazel"
+  ],
+  "detection_files": [
+   "BUILD.bazel",
+   "WORKSPACE",
+   "MODULE.bazel",
+   ".bazelrc"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Nx",
+  "category": "infra",
+  "aliases": [
+   "nx monorepo",
+   "nrwl nx"
+  ],
+  "detection_files": [
+   "nx.json"
+  ],
+  "dependency_names": [
+   "nx"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Turborepo",
+  "category": "infra",
+  "aliases": [
+   "turborepo",
+   "turbo repo"
+  ],
+  "detection_files": [
+   "turbo.json"
+  ],
+  "dependency_names": [
+   "turbo"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "pnpm workspaces",
+  "category": "infra",
+  "aliases": [
+   "pnpm workspaces",
+   "pnpm workspace"
+  ],
+  "detection_files": [
+   "pnpm-workspace.yaml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Lerna",
+  "category": "infra",
+  "aliases": [
+   "lerna"
+  ],
+  "detection_files": [
+   "lerna.json"
+  ],
+  "dependency_names": [
+   "lerna"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Gradle",
+  "category": "infra",
+  "aliases": [
+   "gradle"
+  ],
+  "detection_files": [
+   "build.gradle",
+   "build.gradle.kts",
+   "settings.gradle"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Maven",
+  "category": "infra",
+  "aliases": [
+   "maven",
+   "apache maven"
+  ],
+  "detection_files": [
+   "pom.xml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Pants",
+  "category": "infra",
+  "aliases": [
+   "pantsbuild",
+   "pants build"
+  ],
+  "detection_files": [
+   "pants.toml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Packer",
+  "category": "infra",
+  "aliases": [
+   "hashicorp packer"
+  ],
+  "detection_files": [
+   "*.pkr.hcl"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Crossplane",
+  "category": "infra",
+  "aliases": [
+   "crossplane"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "OpenTofu",
+  "category": "infra",
+  "aliases": [
+   "opentofu"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Dev Containers",
+  "category": "infra",
+  "aliases": [
+   "dev containers",
+   "devcontainer"
+  ],
+  "detection_files": [
+   ".devcontainer/devcontainer.json"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "GitHub Actions",
+  "category": "ci",
+  "aliases": [
+   "github actions",
+   "github action"
+  ],
+  "detection_files": [
+   ".github/workflows/*.yml",
+   ".github/workflows/*.yaml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "CircleCI",
+  "category": "ci",
+  "aliases": [
+   "circleci",
+   "circle ci"
+  ],
+  "detection_files": [
+   ".circleci/config.yml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Jenkins",
+  "category": "ci",
+  "aliases": [
+   "jenkins",
+   "jenkinsfile"
+  ],
+  "detection_files": [
+   "Jenkinsfile"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Buildkite",
+  "category": "ci",
+  "aliases": [
+   "buildkite"
+  ],
+  "detection_files": [
+   ".buildkite/pipeline.yml",
+   ".buildkite/pipeline.yaml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "GitLab CI",
+  "category": "ci",
+  "aliases": [
+   "gitlab ci",
+   "gitlab ci/cd",
+   "gitlab-ci",
+   "gitlab pipelines"
+  ],
+  "detection_files": [
+   ".gitlab-ci.yml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Travis CI",
+  "category": "ci",
+  "aliases": [
+   "travis ci",
+   "travis"
+  ],
+  "detection_files": [
+   ".travis.yml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Azure Pipelines",
+  "category": "ci",
+  "aliases": [
+   "azure pipelines"
+  ],
+  "detection_files": [
+   "azure-pipelines.yml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Drone CI",
+  "category": "ci",
+  "aliases": [
+   "drone ci",
+   "drone.io"
+  ],
+  "detection_files": [
+   ".drone.yml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "TeamCity",
+  "category": "ci",
+  "aliases": [
+   "teamcity"
+  ],
+  "detection_files": [
+   ".teamcity/settings.kts"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Bitbucket Pipelines",
+  "category": "ci",
+  "aliases": [
+   "bitbucket pipelines"
+  ],
+  "detection_files": [
+   "bitbucket-pipelines.yml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "AppVeyor",
+  "category": "ci",
+  "aliases": [
+   "appveyor"
+  ],
+  "detection_files": [
+   "appveyor.yml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Google Cloud Build",
+  "category": "ci",
+  "aliases": [
+   "google cloud build",
+   "cloud build"
+  ],
+  "detection_files": [
+   "cloudbuild.yaml",
+   "cloudbuild.yml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "AWS CodeBuild",
+  "category": "ci",
+  "aliases": [
+   "aws codebuild",
+   "codebuild"
+  ],
+  "detection_files": [
+   "buildspec.yml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Spinnaker",
+  "category": "ci",
+  "aliases": [
+   "spinnaker"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Tekton",
+  "category": "ci",
+  "aliases": [
+   "tekton"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Semaphore CI",
+  "category": "ci",
+  "aliases": [
+   "semaphore ci",
+   "semaphoreci"
+  ],
+  "detection_files": [
+   ".semaphore/semaphore.yml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Earthly",
+  "category": "ci",
+  "aliases": [
+   "earthly"
+  ],
+  "detection_files": [
+   "Earthfile"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Dagger",
+  "category": "ci",
+  "aliases": [
+   "dagger.io"
+  ],
+  "detection_files": [
+   "dagger.json"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Renovate",
+  "category": "ci",
+  "aliases": [
+   "renovate bot",
+   "renovatebot"
+  ],
+  "detection_files": [
+   "renovate.json"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Dependabot",
+  "category": "ci",
+  "aliases": [
+   "dependabot"
+  ],
+  "detection_files": [
+   ".github/dependabot.yml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "pre-commit",
+  "category": "ci",
+  "aliases": [
+   "pre-commit"
+  ],
+  "detection_files": [
+   ".pre-commit-config.yaml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Codecov",
+  "category": "ci",
+  "aliases": [
+   "codecov"
+  ],
+  "detection_files": [
+   "codecov.yml",
+   ".codecov.yml"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "SonarQube",
+  "category": "ci",
+  "aliases": [
+   "sonarqube",
+   "sonarcloud",
+   "sonar"
+  ],
+  "detection_files": [
+   "sonar-project.properties"
+  ],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Jest",
+  "category": "test_framework",
+  "aliases": [
+   "jest"
+  ],
+  "detection_files": [
+   "jest.config.js",
+   "jest.config.ts"
+  ],
+  "dependency_names": [
+   "jest",
+   "ts-jest",
+   "@jest/globals"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Vitest",
+  "category": "test_framework",
+  "aliases": [
+   "vitest"
+  ],
+  "detection_files": [
+   "vitest.config.ts",
+   "vitest.config.js"
+  ],
+  "dependency_names": [
+   "vitest"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Mocha",
+  "category": "test_framework",
+  "aliases": [
+   "mocha",
+   "mochajs"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "mocha"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Jasmine",
+  "category": "test_framework",
+  "aliases": [
+   "jasmine tests",
+   "jasmine testing"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "jasmine"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Cypress",
+  "category": "test_framework",
+  "aliases": [
+   "cypress"
+  ],
+  "detection_files": [
+   "cypress.config.ts",
+   "cypress.config.js",
+   "cypress.json"
+  ],
+  "dependency_names": [
+   "cypress"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Playwright",
+  "category": "test_framework",
+  "aliases": [
+   "playwright"
+  ],
+  "detection_files": [
+   "playwright.config.ts",
+   "playwright.config.js"
+  ],
+  "dependency_names": [
+   "@playwright/test",
+   "playwright"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Selenium",
+  "category": "test_framework",
+  "aliases": [
+   "selenium",
+   "webdriver"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "selenium",
+   "selenium-webdriver",
+   "org.seleniumhq.selenium"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "WebdriverIO",
+  "category": "test_framework",
+  "aliases": [
+   "webdriverio",
+   "wdio"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "webdriverio",
+   "@wdio/cli"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Puppeteer",
+  "category": "test_framework",
+  "aliases": [
+   "puppeteer"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "puppeteer"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Testing Library",
+  "category": "test_framework",
+  "aliases": [
+   "testing library",
+   "react testing library"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "@testing-library/react",
+   "@testing-library/jest-dom"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Storybook",
+  "category": "test_framework",
+  "aliases": [
+   "storybook"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "storybook",
+   "@storybook/react"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "pytest",
+  "category": "test_framework",
+  "aliases": [
+   "pytest"
+  ],
+  "detection_files": [
+   "pytest.ini",
+   "conftest.py"
+  ],
+  "dependency_names": [
+   "pytest",
+   "pytest-xdist",
+   "pytest-cov"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "unittest",
+  "category": "test_framework",
+  "aliases": [
+   "python unittest"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "tox",
+  "category": "test_framework",
+  "aliases": [
+   "tox"
+  ],
+  "detection_files": [
+   "tox.ini"
+  ],
+  "dependency_names": [
+   "tox"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Hypothesis",
+  "category": "test_framework",
+  "aliases": [
+   "property-based testing"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "hypothesis"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "JUnit",
+  "category": "test_framework",
+  "aliases": [
+   "junit",
+   "junit5",
+   "junit 5"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "junit",
+   "org.junit.jupiter",
+   "junit-jupiter"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "TestNG",
+  "category": "test_framework",
+  "aliases": [
+   "testng"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "org.testng",
+   "testng"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Mockito",
+  "category": "test_framework",
+  "aliases": [
+   "mockito"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "org.mockito",
+   "mockito-core"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Kotest",
+  "category": "test_framework",
+  "aliases": [
+   "kotest"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "io.kotest"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Testcontainers",
+  "category": "test_framework",
+  "aliases": [
+   "testcontainers"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "testcontainers",
+   "org.testcontainers",
+   "github.com/testcontainers/testcontainers-go"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "testify",
+  "category": "test_framework",
+  "aliases": [
+   "testify"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "github.com/stretchr/testify"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Ginkgo",
+  "category": "test_framework",
+  "aliases": [
+   "ginkgo"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "github.com/onsi/ginkgo",
+   "github.com/onsi/ginkgo/v2"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Gomega",
+  "category": "test_framework",
+  "aliases": [
+   "gomega"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "github.com/onsi/gomega"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "RSpec",
+  "category": "test_framework",
+  "aliases": [
+   "rspec"
+  ],
+  "detection_files": [
+   ".rspec"
+  ],
+  "dependency_names": [
+   "rspec",
+   "rspec-rails"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Minitest",
+  "category": "test_framework",
+  "aliases": [
+   "minitest"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "minitest"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Capybara",
+  "category": "test_framework",
+  "aliases": [
+   "capybara"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "capybara"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "PHPUnit",
+  "category": "test_framework",
+  "aliases": [
+   "phpunit"
+  ],
+  "detection_files": [
+   "phpunit.xml"
+  ],
+  "dependency_names": [
+   "phpunit/phpunit"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "xUnit",
+  "category": "test_framework",
+  "aliases": [
+   "xunit",
+   "xunit.net"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "NUnit",
+  "category": "test_framework",
+  "aliases": [
+   "nunit"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "k6",
+  "category": "test_framework",
+  "aliases": [
+   "grafana k6",
+   "k6 load testing"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "k6"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Gatling",
+  "category": "test_framework",
+  "aliases": [
+   "gatling"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Locust",
+  "category": "test_framework",
+  "aliases": [
+   "locust load testing"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "locust"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Pact",
+  "category": "test_framework",
+  "aliases": [
+   "contract testing",
+   "pact contract"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "@pact-foundation/pact",
+   "pact-python"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Detox",
+  "category": "test_framework",
+  "aliases": [
+   "detox e2e",
+   "detox testing"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "detox"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Appium",
+  "category": "test_framework",
+  "aliases": [
+   "appium"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "appium"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "XCTest",
+  "category": "test_framework",
+  "aliases": [
+   "xctest"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Espresso",
+  "category": "test_framework",
+  "aliases": [
+   "android espresso"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "PostgreSQL",
+  "category": "data",
+  "aliases": [
+   "postgresql",
+   "postgres",
+   "psql"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "pg",
+   "psycopg2",
+   "psycopg",
+   "asyncpg",
+   "github.com/lib/pq",
+   "github.com/jackc/pgx",
+   "org.postgresql"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "MySQL",
+  "category": "data",
+  "aliases": [
+   "mysql",
+   "mariadb"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "mysql",
+   "mysql2",
+   "pymysql",
+   "github.com/go-sql-driver/mysql"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "MongoDB",
+  "category": "data",
+  "aliases": [
+   "mongodb",
+   "mongo db"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "mongodb",
+   "mongoose",
+   "pymongo",
+   "go.mongodb.org/mongo-driver"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Redis",
+  "category": "data",
+  "aliases": [
+   "redis"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "redis",
+   "ioredis",
+   "github.com/redis/go-redis",
+   "github.com/go-redis/redis"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Elasticsearch",
+  "category": "data",
+  "aliases": [
+   "elasticsearch",
+   "elastic search"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "@elastic/elasticsearch",
+   "elasticsearch"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "OpenSearch",
+  "category": "data",
+  "aliases": [
+   "opensearch"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "@opensearch-project/opensearch",
+   "opensearch-py"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Apache Kafka",
+  "category": "data",
+  "aliases": [
+   "apache kafka",
+   "kafka"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "kafkajs",
+   "confluent-kafka",
+   "github.com/segmentio/kafka-go",
+   "org.apache.kafka"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "RabbitMQ",
+  "category": "data",
+  "aliases": [
+   "rabbitmq",
+   "amqp"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "amqplib",
+   "pika"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Apache Spark",
+  "category": "data",
+  "aliases": [
+   "pyspark",
+   "spark streaming",
+   "spark sql"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "pyspark",
+   "org.apache.spark"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Apache Flink",
+  "category": "data",
+  "aliases": [
+   "apache flink",
+   "flink"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Apache Airflow",
+  "category": "data",
+  "aliases": [
+   "apache airflow",
+   "airflow"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "apache-airflow"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "dbt",
+  "category": "data",
+  "aliases": [
+   "dbt",
+   "data build tool",
+   "dbt core"
+  ],
+  "detection_files": [
+   "dbt_project.yml"
+  ],
+  "dependency_names": [
+   "dbt-core"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Snowflake",
+  "category": "data",
+  "aliases": [
+   "snowflake",
+   "snowflake data"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "snowflake-connector-python",
+   "snowflake-sdk"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "BigQuery",
+  "category": "data",
+  "aliases": [
+   "bigquery",
+   "google bigquery"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "@google-cloud/bigquery",
+   "google-cloud-bigquery"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Amazon Redshift",
+  "category": "data",
+  "aliases": [
+   "amazon redshift",
+   "redshift"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Databricks",
+  "category": "data",
+  "aliases": [
+   "databricks"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "databricks-sdk",
+   "databricks-connect"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "ClickHouse",
+  "category": "data",
+  "aliases": [
+   "clickhouse"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "@clickhouse/client",
+   "clickhouse-connect"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Cassandra",
+  "category": "data",
+  "aliases": [
+   "cassandra",
+   "apache cassandra"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "cassandra-driver"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "DynamoDB",
+  "category": "data",
+  "aliases": [
+   "dynamodb",
+   "amazon dynamodb"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "@aws-sdk/client-dynamodb"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "SQLite",
+  "category": "data",
+  "aliases": [
+   "sqlite"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "sqlite3",
+   "better-sqlite3"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "CockroachDB",
+  "category": "data",
+  "aliases": [
+   "cockroachdb",
+   "cockroach db"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Prisma",
+  "category": "data",
+  "aliases": [
+   "prisma"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "prisma",
+   "@prisma/client"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "SQLAlchemy",
+  "category": "data",
+  "aliases": [
+   "sqlalchemy"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "sqlalchemy"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Hibernate",
+  "category": "data",
+  "aliases": [
+   "hibernate"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "org.hibernate"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Pandas",
+  "category": "data",
+  "aliases": [
+   "pandas"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "pandas"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Apache Beam",
+  "category": "data",
+  "aliases": [
+   "apache beam"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "apache-beam"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Trino",
+  "category": "data",
+  "aliases": [
+   "trino",
+   "presto"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Pinecone",
+  "category": "data",
+  "aliases": [
+   "pinecone"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "@pinecone-database/pinecone",
+   "pinecone-client"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Amazon SQS",
+  "category": "data",
+  "aliases": [
+   "amazon sqs",
+   "sqs"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "@aws-sdk/client-sqs"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "NATS",
+  "category": "data",
+  "aliases": [
+   "nats",
+   "nats.io"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "nats",
+   "github.com/nats-io/nats.go"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Temporal",
+  "category": "data",
+  "aliases": [
+   "temporal.io",
+   "temporal workflows"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "@temporalio/client",
+   "go.temporal.io/sdk",
+   "temporalio"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Datadog",
+  "category": "observability",
+  "aliases": [
+   "datadog"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "dd-trace",
+   "ddtrace",
+   "datadog-api-client",
+   "@datadog/browser-rum"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Prometheus",
+  "category": "observability",
+  "aliases": [
+   "prometheus"
+  ],
+  "detection_files": [
+   "prometheus.yml"
+  ],
+  "dependency_names": [
+   "prom-client",
+   "prometheus-client",
+   "prometheus_client",
+   "github.com/prometheus/client_golang"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Grafana",
+  "category": "observability",
+  "aliases": [
+   "grafana"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "OpenTelemetry",
+  "category": "observability",
+  "aliases": [
+   "opentelemetry",
+   "otel"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "@opentelemetry/api",
+   "@opentelemetry/sdk-node",
+   "opentelemetry-api",
+   "opentelemetry-sdk",
+   "go.opentelemetry.io/otel",
+   "io.opentelemetry"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Sentry",
+  "category": "observability",
+  "aliases": [
+   "sentry"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "@sentry/node",
+   "@sentry/react",
+   "@sentry/nextjs",
+   "sentry-sdk",
+   "github.com/getsentry/sentry-go"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "New Relic",
+  "category": "observability",
+  "aliases": [
+   "new relic",
+   "newrelic"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "newrelic"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Honeycomb",
+  "category": "observability",
+  "aliases": [
+   "honeycomb"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "@honeycombio/opentelemetry-node"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Splunk",
+  "category": "observability",
+  "aliases": [
+   "splunk"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "ELK Stack",
+  "category": "observability",
+  "aliases": [
+   "kibana",
+   "logstash"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Jaeger",
+  "category": "observability",
+  "aliases": [
+   "jaeger",
+   "jaeger tracing"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "PagerDuty",
+  "category": "observability",
+  "aliases": [
+   "pagerduty"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Grafana Loki",
+  "category": "observability",
+  "aliases": [
+   "loki"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Amazon CloudWatch",
+  "category": "observability",
+  "aliases": [
+   "amazon cloudwatch",
+   "cloudwatch"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Dynatrace",
+  "category": "observability",
+  "aliases": [
+   "dynatrace"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "Bugsnag",
+  "category": "observability",
+  "aliases": [
+   "bugsnag"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "@bugsnag/js"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "Rollbar",
+  "category": "observability",
+  "aliases": [
+   "rollbar"
+  ],
+  "detection_files": [],
+  "dependency_names": [
+   "rollbar"
+  ],
+  "verify": false
+ },
+ {
+  "canonical_name": "microservices",
+  "category": "pattern",
+  "aliases": [
+   "microservices",
+   "microservice",
+   "micro-services",
+   "service-oriented architecture",
+   "distributed services"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "monorepo",
+  "category": "pattern",
+  "aliases": [
+   "monorepo",
+   "mono-repo",
+   "mono repo"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "platform team",
+  "category": "pattern",
+  "aliases": [
+   "platform team",
+   "platform engineering",
+   "platform engineer",
+   "internal developer platform"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "developer productivity",
+  "category": "pattern",
+  "aliases": [
+   "developer productivity",
+   "developer experience",
+   "devex",
+   "dev productivity",
+   "engineering productivity",
+   "developer tooling"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "test infrastructure",
+  "category": "pattern",
+  "aliases": [
+   "test infrastructure",
+   "test infra",
+   "testing infrastructure",
+   "test automation infrastructure",
+   "test tooling"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "CI reliability",
+  "category": "pattern",
+  "aliases": [
+   "ci reliability",
+   "flaky tests",
+   "flaky test",
+   "build reliability",
+   "build times",
+   "ci/cd reliability",
+   "ci pipeline reliability"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "event-driven architecture",
+  "category": "pattern",
+  "aliases": [
+   "event-driven architecture",
+   "event-driven",
+   "event sourcing",
+   "cqrs"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "serverless",
+  "category": "pattern",
+  "aliases": [
+   "serverless",
+   "serverless architecture",
+   "faas"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "infrastructure as code",
+  "category": "pattern",
+  "aliases": [
+   "infrastructure as code",
+   "iac"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "GitOps",
+  "category": "pattern",
+  "aliases": [
+   "gitops"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "site reliability engineering",
+  "category": "pattern",
+  "aliases": [
+   "site reliability engineering",
+   "sre",
+   "site reliability"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "feature flags",
+  "category": "pattern",
+  "aliases": [
+   "feature flags",
+   "feature flagging",
+   "launchdarkly"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "trunk-based development",
+  "category": "pattern",
+  "aliases": [
+   "trunk-based development",
+   "trunk based development"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "continuous deployment",
+  "category": "pattern",
+  "aliases": [
+   "continuous deployment",
+   "continuous delivery",
+   "ci/cd"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "chaos engineering",
+  "category": "pattern",
+  "aliases": [
+   "chaos engineering"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ },
+ {
+  "canonical_name": "service mesh",
+  "category": "pattern",
+  "aliases": [
+   "service mesh"
+  ],
+  "detection_files": [],
+  "dependency_names": [],
+  "verify": false
+ }
+]

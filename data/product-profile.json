@@ -1,0 +1,25 @@
+{
+  "product_name": "FlakeGuard",
+  "one_line_pitch": "Finds flaky tests in your CI pipeline, quarantines them automatically, and shows which service and commit made them flaky.",
+  "problem_it_solves": "In teams running many services, flaky tests fail builds at random, engineers re-run pipelines instead of shipping, and trust in CI drops. Nobody owns the flaky tests because nobody can see which ones they are.",
+  "ideal_customer_signals": [
+    "multiple services or repos (microservices)",
+    "CI defined in code (GitHub Actions, CircleCI, Jenkins, Buildkite, GitLab CI)",
+    "large or growing test suites (unit, integration and end-to-end frameworks present)",
+    "monorepo tooling",
+    "job posts mentioning CI reliability, build times, test infrastructure, developer productivity or platform engineering",
+    "high deploy frequency or active hiring of platform / developer experience engineers"
+  ],
+  "target_languages": ["Go", "Java", "Kotlin", "Python", "TypeScript", "JavaScript", "Ruby"],
+  "target_ci_systems": ["GitHub Actions", "CircleCI", "Jenkins", "Buildkite", "GitLab CI"],
+  "target_patterns": ["microservices", "monorepo", "platform team", "developer productivity", "test infrastructure", "CI reliability"],
+  "competitors_and_adjacent": [
+    {"name": "BuildPulse", "detection": ["buildpulse/buildpulse-action"], "verify": true},
+    {"name": "Trunk Flaky Tests", "detection": ["trunk-io/analytics-uploader"], "verify": false},
+    {"name": "Datadog CI Visibility / Test Optimization", "detection": ["dd-trace/ci/init", "dd-trace/ci/cypress"], "verify": false},
+    {"name": "Launchable", "detection": ["launchable", "smart-tests-cli", "launchable record tests"], "verify": false},
+    {"name": "Develocity (Gradle)", "detection": ["com.gradle.develocity", "com.gradle.enterprise"], "verify": false},
+    {"name": "Buildkite Test Engine", "detection": ["buildkite-test-collector"], "verify": false}
+  ],
+  "proof_points": ["EDIT: customer result 1", "EDIT: customer result 2"]
+}
