@@ -28,8 +28,9 @@
 | 17 | Local (same code + DB): passcode form (wrong passcode rejected, right one accepted), add company by domain in UI → redirected with live step indicator → brief written | Pass |
 | 18 | Writes without passcode → 401; refresh within 10 min → cached run; opener feedback; source confirm; bad source edit rejected | Pass |
 | 19 | 375 px width: no horizontal scroll on watchlist and brief pages (production and local) | Pass |
-| 21 | `npm run smoke https://tech-stack-scout-zeta.vercel.app --writes`: pages, company pages, API, auth guards, passcode cookie, refresh, input validation | Pass: 20/20 |
+| 21 | `npm run smoke https://tech-stack-scout-zeta.vercel.app --writes`: pages, company pages, API, guards, refresh, input validation | Pass: 18/18 (open mode) |
 | 22 | GitHub Actions CI on every push: type check, unit tests, replay, production build | See CI badge in README |
+| 23 | **Live browser test on production, no passcode** (every feature clicked): watchlist sort; Refresh now with live steps; opener Copy / Used / Edited (text box) / Rejected; source Confirm and Edit (bad value rejected); add company by domain (resend.com → brief in ~40 s); Remove with confirmation; digest ranking, email preview, email form; settings profile save; every page at 375 px | Pass. Three issues found and fixed: Copy claimed success when the browser blocked the clipboard (now falls back and says so); fit-score popover opened off-screen on phones (now right-anchored); email message pointed to the preview "below" (now "above") |
 | 20 | Secret scan of all git history before making the repo public | Pass: no secrets found |
 
 Bug found and fixed during verification: a regex that removes inline `[12, 13]` citations from brief prose lost its backslashes and deleted every "s" and "d". Fixed, covered by a new unit test, affected briefs reset and regenerated.
