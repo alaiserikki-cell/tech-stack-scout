@@ -138,14 +138,14 @@ export const SOURCE_LABEL: Record<string, string> = {
   hosting: "DNS/HTTP",
 };
 
-export function FitScore({ score, reasons }: { score: number; reasons: { reason: string; points: number }[] }) {
+export function FitScore({ score, reasons, align = "left" }: { score: number; reasons: { reason: string; points: number }[]; align?: "left" | "right" }) {
   return (
     <details className="group relative inline-block">
       <summary className="cursor-pointer list-none rounded font-mono text-sm tabular-nums [&::-webkit-details-marker]:hidden" aria-label={`Fit score ${score}. Show reasons`}>
         <span className="font-semibold text-ink">{score}</span>
         <span className="text-faint">/100</span>
       </summary>
-      <div className="absolute left-0 z-20 mt-1 w-72 max-w-[80vw] rounded-lg border border-line bg-surface p-3 text-left text-xs shadow-lg">
+      <div className={cx("absolute z-20 mt-1 w-72 max-w-[80vw] rounded-lg border border-line bg-surface p-3 text-left text-xs shadow-lg", align === "right" ? "right-0" : "left-0")}>
         <p className="mb-1 font-semibold text-ink">Top reasons</p>
         {reasons.length ? (
           <ul className="space-y-1 text-muted">

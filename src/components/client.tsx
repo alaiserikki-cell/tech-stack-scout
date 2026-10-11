@@ -287,8 +287,32 @@ export function RemoveButton({ companyId }: { companyId: number }) {
 // ---------------------------------------------------------------------------
 // Opener + feedback
 // ---------------------------------------------------------------------------
+/** Clipboard API first; falls back to a hidden textarea + execCommand for browsers that deny clipboard access. */
+async function copyText(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try {
+      ok = document.execCommand("copy");
+    } catch {
+      ok = false;
+    }
+    ta.remove();
+    return ok;
+  }
+}
+
 export function OpenerActions({ snapshotId, opener }: { snapshotId: number; opener: string }) {
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"ok" | "failed" | null>(null);
   const [mode, setMode] = useState<"idle" | "editing">("idle");
   const [text, setText] = useState(opener);
   const [saved, setSaved] = useState<string | null>(null);
@@ -308,12 +332,11 @@ export function OpenerActions({ snapshotId, opener }: { snapshotId: number; open
         <button
           className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-fg"
           onClick={async () => {
-            await navigator.clipboard.writeText(opener).catch(() => {});
-            setCopied(true);
-            setTimeout(() => setCopied(false), 1800);
+            setCopied((await copyText(opener)) ? "ok" : "failed");
+            setTimeout(() => setCopied(null), 2500);
           }}
         >
-          {copied ? "Copied" : "Copy"}
+          {copied === "ok" ? "Copied" : "Copy"}
         </button>
         <button className={btn} onClick={() => send("used")}>
           Used
@@ -341,7 +364,7 @@ export function OpenerActions({ snapshotId, opener }: { snapshotId: number; open
         </form>
       )}
       <p className="mt-2 text-xs text-muted" aria-live="polite">
-        {saved ? `Recorded as ${saved}.` : ""}
+        {copied === "failed" ? "Your browser blocked copying. Select the opener text above and copy it manually." : saved ? `Recorded as ${saved}.` : ""}
       </p>
       {gate}
       {err}

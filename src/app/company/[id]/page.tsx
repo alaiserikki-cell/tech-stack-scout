@@ -87,7 +87,7 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
           {computed && (
             <div className="text-right">
               <p className="text-xs text-faint">Fit score</p>
-              <FitScore score={computed.fit.score} reasons={computed.fit.reasons} />
+              <FitScore score={computed.fit.score} reasons={computed.fit.reasons} align="right" />
             </div>
           )}
         </div>

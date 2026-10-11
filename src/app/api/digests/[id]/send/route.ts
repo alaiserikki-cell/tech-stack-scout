@@ -17,7 +17,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/digests/[id]/se
   const status = await sendDigest(id, email);
   if (status === "restricted")
     return Response.json(
-      { error: "This demo sends through a Resend account without a verified domain, so it can only deliver to the project owner's inbox. The preview below is exactly the email the Monday digest sends." },
+      { error: "This demo sends through a Resend account without a verified domain, so it can only deliver to the project owner's inbox. The preview above shows exactly the email the Monday digest sends." },
       { status: 422 },
     );
   if (status !== "sent") return Response.json({ error: "Sending failed. Please try again later." }, { status: 502 });
