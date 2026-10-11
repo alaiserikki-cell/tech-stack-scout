@@ -364,28 +364,32 @@ export function OpenerActions({ snapshotId, opener }: { snapshotId: number; open
         setMode("idle");
       },
     );
-  const btn = "rounded-lg border border-line px-3 py-1.5 text-sm hover:bg-surface-2";
+  const LABEL: Record<string, string> = { used: "used as written", edited: "used with your edits", rejected: "not used" };
   return (
     <div>
-      <div className="flex flex-wrap gap-2">
-        <button
-          className="rounded-lg bg-btn px-3 py-1.5 text-sm font-medium text-btn-fg"
-          onClick={async () => {
-            setCopied((await copyText(opener)) ? "ok" : "failed");
-            setTimeout(() => setCopied(null), 2500);
-          }}
-        >
-          {copied === "ok" ? "Copied" : "Copy"}
-        </button>
-        <button className={btn} onClick={() => send("used")}>
-          Used
-        </button>
-        <button className={btn} onClick={() => setMode(mode === "editing" ? "idle" : "editing")} aria-expanded={mode === "editing"}>
-          Edited
-        </button>
-        <button className={btn} onClick={() => send("rejected")}>
-          Rejected
-        </button>
+      <button
+        className="rounded-lg bg-btn px-4 py-2 text-sm font-semibold text-btn-fg shadow-sm"
+        onClick={async () => {
+          setCopied((await copyText(opener)) ? "ok" : "failed");
+          setTimeout(() => setCopied(null), 2500);
+        }}
+      >
+        {copied === "ok" ? "Copied" : "Copy opener"}
+      </button>
+      <div className="mt-4 rounded-xl border border-line bg-surface-2/50 p-3">
+        <p className="text-xs font-semibold text-ink">After the call: how did this opener go?</p>
+        <p className="mb-2.5 text-xs text-faint">Your answer is logged in Activity, so you can see which openers actually get used.</p>
+        <div className="flex flex-wrap gap-2">
+          <button className={"rounded-lg border px-3 py-1.5 text-sm transition-colors " + (saved === "used" ? "border-accent bg-accent-soft font-semibold text-accent-ink" : "border-line hover:bg-surface-2")} onClick={() => send("used")} title="You said it as written">
+            ✓ Used as written
+          </button>
+          <button className={"rounded-lg border px-3 py-1.5 text-sm transition-colors " + (saved === "edited" ? "border-accent bg-accent-soft font-semibold text-accent-ink" : "border-line hover:bg-surface-2")} onClick={() => setMode(mode === "editing" ? "idle" : "editing")} aria-expanded={mode === "editing"} title="You changed the wording; paste what you said">
+            ✎ Used with edits
+          </button>
+          <button className={"rounded-lg border px-3 py-1.5 text-sm transition-colors " + (saved === "rejected" ? "border-accent bg-accent-soft font-semibold text-accent-ink" : "border-line hover:bg-surface-2")} onClick={() => send("rejected")} title="You did not use it">
+            ✕ Didn&apos;t use it
+          </button>
+        </div>
       </div>
       {mode === "editing" && (
         <form
@@ -396,14 +400,14 @@ export function OpenerActions({ snapshotId, opener }: { snapshotId: number; open
           }}
         >
           <label className="mb-1 block text-xs text-muted" htmlFor="edited-opener">
-            What you actually said
+            What you actually said (so better openers can be written next time)
           </label>
           <textarea id="edited-opener" value={text} onChange={(e) => setText(e.target.value)} rows={3} className="w-full rounded-lg border border-line bg-surface p-2 text-sm" />
-          <button className="mt-2 rounded-lg bg-btn px-3 py-1.5 text-sm font-medium text-btn-fg">Save edit</button>
+          <button className="mt-2 rounded-lg bg-btn px-3 py-1.5 text-sm font-medium text-btn-fg">Save what I said</button>
         </form>
       )}
       <p className="mt-2 text-xs text-muted" aria-live="polite">
-        {copied === "failed" ? "Your browser blocked copying. Select the opener text above and copy it manually." : saved ? `Recorded as ${saved}.` : ""}
+        {copied === "failed" ? "Your browser blocked copying. Select the opener text above and copy it manually." : saved ? `Saved: opener ${LABEL[saved] ?? saved}.` : ""}
       </p>
       {gate}
       {err}

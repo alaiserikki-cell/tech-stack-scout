@@ -177,6 +177,8 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
 
           {computed && <WhatChanged history={history.map((h) => ({ events: (h.changeEvents as ChangeEvent[]) ?? [], at: h.generatedAt }))} dropped={dropped.map((d) => ({ tech: d.tech, at: d.lastSeen }))} />}
 
+          {sigs.length > 0 && <SourcesList sigs={sigs} />}
+
           {brief && (
             <Fold title="Read the full engineering summary" hint="two paragraphs written by Gemini from the signals">
               <div className="space-y-3 text-[15px] leading-relaxed">
@@ -627,4 +629,100 @@ function Fold({ title, hint, children }: { title: string; hint?: string; childre
       <div className="border-t border-line p-5 sm:px-6">{children}</div>
     </details>
   );
+}
+
+const SOURCE_GROUPS: { source: string; title: string; kinds?: string[] }[] = [
+  { source: "jobs", title: "Job posts", kinds: ["job_post"] },
+  { source: "github", title: "GitHub" },
+  { source: "blog", title: "Engineering blog", kinds: ["blog_post"] },
+  { source: "talks", title: "Conference talks", kinds: ["talk"] },
+  { source: "hn", title: "Hacker News" },
+  { source: "hosting", title: "Website & hosting" },
+];
+
+function sourceLabel(s: SigRow): string {
+  const d = s.detail as Record<string, unknown>;
+  if (s.source === "github") {
+    if (s.kind === "org") return `github.com/${s.name}`;
+    if (s.kind === "activity") return "Recently pushed repositories";
+    if (s.kind === "language") return `${s.name}: ${d.pct}% of recent code`;
+    if (s.kind === "competitor") return `${s.name} config (${d.match})`;
+    const path = d.path ?? d.dependency;
+    return `${s.name}${d.repo ? ` in ${d.repo}` : ""}${path ? ` (${path})` : ""}`;
+  }
+  if (s.kind === "job_count") return `Job board: ${d.engineering} engineering of ${d.total} roles`;
+  if (s.kind === "hosting") return `${s.name}: ${d.evidence}`;
+  if (s.kind === "job_post" && d.location) return `${s.name} · ${d.location}`;
+  return s.name;
+}
+
+/** Every link behind the brief, grouped by where it came from (one entry per URL). */
+function SourcesList({ sigs }: { sigs: SigRow[] }) {
+  const groups = SOURCE_GROUPS.map((g) => {
+    const seen = new Set<string>();
+    const rows = sigs
+      .filter((s) => s.source === g.source && s.evidenceUrl && (!g.kinds || g.kinds.includes(s.kind) || s.kind === "job_count"))
+      .sort((a, b) => b.observedAt.getTime() - a.observedAt.getTime())
+      .filter((s) => (seen.has(s.evidenceUrl!) ? false : (seen.add(s.evidenceUrl!), true)));
+    return { ...g, rows };
+  }).filter((g) => g.rows.length);
+  const total = groups.reduce((a, g) => a + g.rows.length, 0);
+  if (!total) return null;
+  return (
+    <section aria-labelledby="sources" className="rounded-2xl border border-line bg-surface p-5 shadow-card sm:p-6">
+      <div className="mb-4 flex items-baseline justify-between gap-3">
+        <h2 id="sources" className="font-display text-[15px] font-semibold tracking-tight text-ink">
+          Sources
+        </h2>
+        <span className="text-xs text-faint">{total} links · every claim on this page comes from these</span>
+      </div>
+      <div className="space-y-4">
+        {groups.map((g) => (
+          <div key={g.source}>
+            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-faint">
+              {g.title} <span className="font-normal normal-case">({g.rows.length})</span>
+            </p>
+            <SourceLinks rows={g.rows} />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function SourceLinks({ rows }: { rows: SigRow[] }) {
+  const first = rows.slice(0, 5);
+  const rest = rows.slice(5);
+  const item = (s: SigRow) => (
+    <li key={s.id} className="flex min-w-0 items-baseline gap-2 text-sm">
+      <span aria-hidden className="text-faint">↗</span>
+      <span className="min-w-0">
+        <Ext href={s.evidenceUrl} className="break-words">
+          {sourceLabel(s)}
+        </Ext>
+        <span className="ml-1.5 whitespace-nowrap text-xs text-faint">{hostOf(s.evidenceUrl)}</span>
+      </span>
+    </li>
+  );
+  return (
+    <ul className="space-y-1">
+      {first.map(item)}
+      {rest.length > 0 && (
+        <li>
+          <details>
+            <summary className="cursor-pointer text-xs font-medium text-accent-ink">Show {rest.length} more</summary>
+            <ul className="mt-1 space-y-1">{rest.map(item)}</ul>
+          </details>
+        </li>
+      )}
+    </ul>
+  );
+}
+
+function hostOf(url: string | null): string {
+  try {
+    return url ? new URL(url).hostname.replace(/^www./, "") : "";
+  } catch {
+    return "";
+  }
 }
