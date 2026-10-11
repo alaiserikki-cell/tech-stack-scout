@@ -11,6 +11,8 @@ export interface RankedAccount {
   fitScore: number;
   score: number;
   whyNow: string;
+  whyType?: string | null;
+  momentum?: number;
   evidenceUrl: string | null;
 }
 
@@ -48,13 +50,17 @@ export function rankAccounts(
         domain: r.domain,
         fitScore: r.fitScore,
         score: eventScore + r.fitScore,
+        momentum: eventScore,
+        whyType: top?.type ?? null,
         whyNow: top ? top.title : reason ? `No new changes this week. Strongest fit signal: ${reason}.` : "No new changes this week.",
         evidenceUrl: top?.evidenceUrl ?? null,
       };
     })
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 5);
+    .sort((a, b) => b.score - a.score);
 }
+
+/** The email and the list show the top 5; the priority map plots every account. */
+export const TOP_N = 5;
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
@@ -65,6 +71,7 @@ export function digestSubject(n: number, weekOf: string): string {
 
 export function renderDigestHtml(accounts: RankedAccount[], weekOf: string, appUrl: string): string {
   const rows = accounts
+    .slice(0, TOP_N)
     .map(
       (a, i) => `
   <tr><td style="padding:16px 0;border-bottom:1px solid #e4e4e7">
@@ -112,7 +119,7 @@ export async function sendDigest(digestId: number, to: string): Promise<"sent" |
   const ranked = d.rankedAccounts as RankedAccount[];
   let status: "sent" | "failed" | "restricted" = "sent";
   try {
-    await sendMail(to, digestSubject(ranked.length, d.weekOf), d.html);
+    await sendMail(to, digestSubject(Math.min(TOP_N, ranked.length), d.weekOf), d.html);
   } catch (e) {
     status = e instanceof RecipientRestrictedError ? "restricted" : "failed";
   }

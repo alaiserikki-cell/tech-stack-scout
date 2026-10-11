@@ -3,6 +3,7 @@ import { getDb, schema } from "@/db/client";
 import { createRun, executeRun } from "@/lib/pipeline";
 import { buildDigest, isMondayIST, sendDigest, weekOfIST } from "@/lib/digest";
 import { emailConfigured } from "@/lib/email";
+import { logActivity } from "@/lib/activity";
 
 // Vercel Hobby: functions run up to 300s; cron jobs run at most once per day (hour-level precision).
 export const maxDuration = 300;
@@ -45,5 +46,6 @@ export async function GET(req: Request) {
       }
     }
   }
+  await logActivity("cron_run", `Daily job: ${refreshed.length} of ${due.length} due companies refreshed; digest ${digest}`, { actor: "cron" });
   return Response.json({ due: due.length, refreshed: refreshed.length, remaining: due.length - refreshed.length, digest, ms: Date.now() - t0 });
 }

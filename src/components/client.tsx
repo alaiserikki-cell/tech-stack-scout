@@ -209,7 +209,7 @@ export function RefreshButton({ companyId, activeRunId }: { companyId: number; a
 // ---------------------------------------------------------------------------
 // Add / remove company
 // ---------------------------------------------------------------------------
-export function AddCompanyForm({ hero }: { hero?: boolean }) {
+export function AddCompanyForm({ hero, autoFocus }: { hero?: boolean; autoFocus?: boolean }) {
   const [domain, setDomain] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
@@ -234,6 +234,7 @@ export function AddCompanyForm({ hero }: { hero?: boolean }) {
               value={domain}
               onChange={(e) => setDomain(e.target.value)}
               placeholder="Company domain, e.g. sentry.io"
+              autoFocus={autoFocus}
               inputMode="url"
               autoCapitalize="none"
               required
@@ -841,5 +842,56 @@ export function Collapsible({ summary, children }: { summary: ReactNode; childre
       <summary className="cursor-pointer text-sm text-muted hover:text-ink">{summary}</summary>
       <div className="mt-2">{children}</div>
     </details>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Header "Add company": opens a dialog from any page
+// ---------------------------------------------------------------------------
+export function AddCompanyDialog() {
+  const ref = useRef<HTMLDialogElement>(null);
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const d = ref.current;
+    if (!d) return;
+    if (open && !d.open) d.showModal();
+    if (!open && d.open) d.close();
+  }, [open]);
+  return (
+    <>
+      <button onClick={() => setOpen(true)} className="rounded-lg bg-btn px-3.5 py-2 text-sm font-semibold text-btn-fg shadow-sm transition-opacity hover:opacity-90">
+        + Add company
+      </button>
+      <dialog
+        ref={ref}
+        onClose={() => setOpen(false)}
+        onClick={(e) => {
+          if (e.target === ref.current) setOpen(false); // click on backdrop closes
+        }}
+        aria-labelledby="add-company-title"
+        className="m-auto w-[min(92vw,520px)] rounded-2xl border border-line bg-surface p-0 text-ink shadow-card backdrop:bg-black/40 backdrop:backdrop-blur-sm"
+      >
+        {open && (
+          <div className="p-6">
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <h2 id="add-company-title" className="font-display text-xl font-bold tracking-tight">
+                  Add a company
+                </h2>
+                <p className="mt-1 text-sm text-muted">Type its website domain. The brief builds in about a minute.</p>
+              </div>
+              <button onClick={() => setOpen(false)} aria-label="Close" className="rounded-lg px-2 py-1 text-lg leading-none text-faint hover:bg-surface-2 hover:text-ink">
+                ×
+              </button>
+            </div>
+            <AddCompanyForm hero autoFocus />
+            <ul className="mt-4 space-y-1 text-xs text-faint">
+              <li>We look for its public GitHub, job board, engineering blog, talks and hosting.</li>
+              <li>To remove a company later, use Remove on its row in the watchlist.</li>
+            </ul>
+          </div>
+        )}
+      </dialog>
+    </>
   );
 }

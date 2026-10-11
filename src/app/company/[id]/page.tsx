@@ -8,6 +8,8 @@ import { getDb, schema } from "@/db/client";
 import type { Brief } from "@/lib/brief";
 import type { ChangeEvent, Computed, TechSummary } from "@/lib/compute";
 import { companyRuns, droppedTechs, recentSnapshots } from "@/lib/queries";
+import { loadProfile } from "@/lib/repo";
+import { AtAGlance, StackMap } from "@/components/brief-glance";
 import { AutoRunProgress, OpenerActions, RefreshButton, RemoveButton, SourceControl } from "@/components/client";
 import { Badge, Card, Confidence, Empty, Ext, FitScore, H2, LevelPill, SOURCE_LABEL, Skeleton, ago, cx, fmtDate, isStale } from "@/components/ui";
 import { boardUrl } from "@/collectors/jobs";
@@ -47,12 +49,14 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
   const db = getDb();
   const [company] = await db.select().from(schema.watchlist).where(eq(schema.watchlist.id, id));
   if (!company) notFound();
-  const [[snap], runs, history, dropped] = await Promise.all([
+  const [[snap], runs, history, dropped, profile] = await Promise.all([
     db.select().from(schema.snapshots).where(eq(schema.snapshots.companyId, id)).orderBy(desc(schema.snapshots.generatedAt)).limit(1),
     companyRuns(id, 5),
     recentSnapshots(id, 6),
     droppedTechs(id),
+    loadProfile(),
   ]);
+  const productName = profile.product_name;
   const sigs: SigRow[] = snap?.runId ? await db.select().from(schema.signals).where(eq(schema.signals.runId, snap.runId)) : [];
   const byId = new Map(sigs.map((s) => [s.id, s]));
   const computed = snap?.computed as Computed | undefined;
@@ -126,6 +130,9 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
             )}
           </section>
 
+          {computed && <AtAGlance c={computed} />}
+          {computed && <StackMap c={computed} productName={productName} />}
+
           {brief && (
             <div className="grid gap-4 sm:grid-cols-2">
               <section aria-labelledby="answered">
@@ -160,9 +167,18 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
             </div>
           )}
 
-          {brief && (
+
+          {snap.briefStatus === "none" && computed && (
             <Card>
-              <H2>Engineering summary</H2>
+              <H2>Sources checked</H2>
+              <CheckedList checked={computed.checked} />
+            </Card>
+          )}
+
+          {computed && <WhatChanged history={history.map((h) => ({ events: (h.changeEvents as ChangeEvent[]) ?? [], at: h.generatedAt }))} dropped={dropped.map((d) => ({ tech: d.tech, at: d.lastSeen }))} />}
+
+          {brief && (
+            <Fold title="Read the full engineering summary" hint="two paragraphs written by Gemini from the signals">
               <div className="space-y-3 text-[15px] leading-relaxed">
                 <p>{brief.paragraph_1}</p>
                 <p>{brief.paragraph_2}</p>
@@ -175,29 +191,22 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
                   ))}
                 </ul>
               )}
-            </Card>
+            </Fold>
           )}
 
-          {snap.briefStatus === "none" && computed && (
-            <Card>
-              <H2>Sources checked</H2>
-              <CheckedList checked={computed.checked} />
-            </Card>
-          )}
-
-          {computed && <WhatChanged history={history.map((h) => ({ events: (h.changeEvents as ChangeEvent[]) ?? [], at: h.generatedAt }))} dropped={dropped.map((d) => ({ tech: d.tech, at: d.lastSeen }))} />}
-
-          {computed && <Evidence c={computed} company={company} />}
-
-          {computed && computed.contradictions.length > 0 && (
-            <Card>
-              <H2>Contradictions</H2>
-              {computed.contradictions.map((x) => (
-                <p key={x.note} className="text-sm">
-                  {x.note} <span className="text-xs text-faint">{cite(x.signalIds)}</span>
-                </p>
-              ))}
-            </Card>
+          {computed && (
+            <Fold title="All evidence" hint={`${sigs.length} signals: languages, tools, job posts, posts, talks, hosting`}>
+              {computed.contradictions.length > 0 && (
+                <div className="mb-4 rounded-xl border border-warn/40 bg-warn/5 p-3 text-sm">
+                  {computed.contradictions.map((x) => (
+                    <p key={x.note}>
+                      {x.note} <span className="text-xs text-faint">{cite(x.signalIds)}</span>
+                    </p>
+                  ))}
+                </div>
+              )}
+              <Evidence c={computed} company={company} />
+            </Fold>
           )}
         </>
       )}
@@ -273,7 +282,7 @@ function WhatChanged({ history, dropped }: { history: { events: ChangeEvent[]; a
       seen.add(e.title);
       items.push({ ...e, at: h.at });
     }
-  const top = items.slice(0, 10);
+  const top = items.slice(0, 5);
   return (
     <Card>
       <H2>What changed</H2>
@@ -338,10 +347,7 @@ function Evidence({ c, company }: { c: Computed; company: typeof schema.watchlis
   const topLangs = c.languages.slice(0, 5);
   const other = Math.max(0, 100 - topLangs.reduce((a, l) => a + l.pct, 0));
   return (
-    <section aria-labelledby="evidence" className="space-y-4">
-      <h2 id="evidence" className="pt-2 text-lg font-semibold tracking-tight">
-        Evidence
-      </h2>
+    <section aria-label="Evidence" className="space-y-4">
 
       <Card>
         <H2 right={c.githubOrg ? <Ext href={`https://github.com/${c.githubOrg}`} className="text-xs">github.com/{c.githubOrg}</Ext> : null}>Languages in recent public code</H2>
@@ -605,5 +611,20 @@ function RunList({ runs }: { runs: (typeof schema.refreshRuns.$inferSelect)[] })
         </li>
       ))}
     </ul>
+  );
+}
+
+function Fold({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
+  return (
+    <details className="group rounded-2xl border border-line bg-surface shadow-card">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-5 sm:px-6 [&::-webkit-details-marker]:hidden">
+        <span>
+          <span className="block font-display text-[15px] font-semibold tracking-tight text-ink">{title}</span>
+          {hint && <span className="block text-xs text-faint">{hint}</span>}
+        </span>
+        <span aria-hidden className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-surface-2 text-muted transition-transform group-open:rotate-180">⌄</span>
+      </summary>
+      <div className="border-t border-line p-5 sm:px-6">{children}</div>
+    </details>
   );
 }

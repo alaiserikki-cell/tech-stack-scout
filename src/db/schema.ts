@@ -186,3 +186,18 @@ export type Company = typeof watchlist.$inferSelect;
 export type Run = typeof refreshRuns.$inferSelect;
 export type SignalRow = typeof signals.$inferSelect;
 export type SnapshotRow = typeof snapshots.$inferSelect;
+
+/** One row per user or system action (add, remove, refresh, confirm, feedback, digest, settings, cron). */
+export const activityLog = pgTable(
+  "activity_log",
+  {
+    id: serial("id").primaryKey(),
+    at: timestamp("at", { withTimezone: true }).defaultNow().notNull(),
+    type: text("type").notNull(),
+    actor: text("actor").notNull().default("visitor"), // visitor | system | cron
+    companyId: integer("company_id").references(() => watchlist.id, { onDelete: "set null" }),
+    summary: text("summary").notNull(),
+    detail: jsonb("detail").$type<Record<string, unknown>>().default({}).notNull(),
+  },
+  (t) => [index("activity_log_at_idx").on(t.at)],
+);

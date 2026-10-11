@@ -16,6 +16,7 @@ const CNAME_PATTERNS: [RegExp, string][] = [
   [/elb\.amazonaws\.com\.?$|amazonaws\.com\.?$/i, "AWS"],
   [/wpengine\.com\.?$/i, "WP Engine"],
   [/webflow\.io\.?$|proxy-ssl\.webflow\.com\.?$/i, "Webflow"],
+  [/myshopify\.com\.?$|shops\.myshopify\.com\.?$/i, "Shopify"],
 ];
 
 const HEADER_PATTERNS: [(h: Headers) => boolean, string, string][] = [
@@ -30,6 +31,7 @@ const HEADER_PATTERNS: [(h: Headers) => boolean, string, string][] = [
   [(h) => /fastly/i.test(h.get("x-served-by") ?? "") || h.has("x-fastly-request-id"), "Fastly", "x-served-by header"],
   [(h) => /akamai/i.test(h.get("server") ?? "") || h.has("x-akamai-transformed"), "Akamai", "server header"],
   [(h) => h.has("x-github-request-id"), "GitHub Pages", "x-github-request-id header"],
+  [(h) => h.has("x-shopid") || h.has("x-shopify-stage") || /shopify/i.test(h.get("powered-by") ?? ""), "Shopify", "x-shopid / x-shopify-stage header"],
 ];
 
 export function classifyCname(target: string): string | null {

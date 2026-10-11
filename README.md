@@ -16,7 +16,7 @@ A watchlist of target companies that stays current automatically. For each compa
   2. **Add a company by domain.** On the watchlist, type a domain (e.g. `posthog.com`) and press **Add company**. You land on its page while the brief builds (about a minute). Auto-discovered sources show as *Unverified* with Confirm / Edit.
   3. **Email yourself the digest.** Open **Digests**, pick the current week (or build it), enter your email under *Email me this digest*. Max 3 per address per day; the address is never stored or shown. Note: the demo sends through a Resend account without a verified domain, so delivery only succeeds to the project owner's inbox. The digest page shows the exact email, and other addresses get an explanation (see BLOCKED.md).
 
-Other pages: **System** (cron schedule, run history, collector errors), **Costs** (Gemini tokens and an estimate at paid rates; actual spend is zero), **How it works** (components by actor), **Settings** (product profile, entries waiting for verification).
+Other pages: **Digests** (weekly ranking with a fit-vs-momentum priority map), **Activity** (one timeline of every add, remove, refresh, review, digest and daily run), **Settings** (product profile, entries waiting for verification).
 
 ## How it works
 
@@ -30,11 +30,11 @@ trigger → discover sources → collectors (GitHub · Greenhouse/Lever/Ashby ·
 | Collector | What it reads |
 |---|---|
 | `github` | Org repos by push date (no forks/archived). Language bytes of the 10 most recent; file trees + manifests (`package.json`, `requirements.txt`, `pyproject.toml`, `go.mod`, `pom.xml`, `build.gradle`, …) and workflows of the 5 most recent. Activity, `sdk_heavy`, competitor detection. ETags + rate-limit headers. |
-| `jobs` | Greenhouse, Lever, Ashby public JSON. Engineering roles only; technologies tagged *requirement* / *nice to have* from section headings; initiative sentences (migrations, monolith breakup, platform team, CI reliability, build times, test infra, developer productivity). |
+| `jobs` | Greenhouse, Lever, Ashby, SmartRecruiters and Workday public JSON; the board is found by reading the company's careers page or probing slugs. Engineering roles only; technologies tagged *requirement* / *nice to have* from section headings; initiative sentences (migrations, monolith breakup, platform team, CI reliability, build times, test infra, developer productivity). |
 | `blog` | RSS/Atom feed (auto-discovered), posts from the last 90 days, max 5 new per run, Gemini extraction with verbatim-quote verification. |
 | `hn` | Algolia HN stories from the last 12 months linking to the company or blog domain. |
 | `talks` | Developer conference talks (YouTube, Vimeo, InfoQ, SpeakerDeck…) from the last 3 years, found key-free via Hacker News, kept only when the company owns the talk ("at Stripe", "Vercel's…") or it pairs the company with a technology and an engineering topic. |
-| `hosting` | DNS-over-HTTPS (CNAME/A) + one HEAD request → *public-facing hosting* only. |
+| `hosting` | DNS-over-HTTPS (CNAME/A) + one HEAD request → *public-facing hosting* only (CDNs, Vercel, Netlify, Heroku, Shopify, …). |
 
 Computed in code (`src/lib/compute.ts`, weights and thresholds documented inline): language share, CI/infra/cloud/test lists, confidence (high: 2+ sources or 3+ recent job posts), adopted/dropped (`tech_state`), competitor presence, fit score 0–100 with reasons, activity label, contradictions (GitHub vs job-post language), change events, coverage, and a hash of the normalised signal set (unchanged ⇒ `skipped_unchanged`, no Gemini call).
 

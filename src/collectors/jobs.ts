@@ -1,5 +1,5 @@
 import type { Collector, CollectorContext, CollectorResult, CompanyUpdates, DictEntry, RequirementLevel, Signal } from "@/lib/types";
-import { fetchJson } from "@/lib/http";
+import { fetchJson, fetchText } from "@/lib/http";
 import { htmlToLines, splitSentences, type TextLine } from "@/lib/text";
 import { matchText } from "@/lib/dictionary";
 
@@ -13,7 +13,7 @@ export interface JobPost {
   lines: TextLine[];
 }
 
-type Provider = "greenhouse" | "lever" | "ashby";
+type Provider = "greenhouse" | "lever" | "ashby" | "workday" | "smartrecruiters";
 
 // ---------- provider adapters ----------
 
@@ -78,18 +78,123 @@ async function fetchAshby(ctx: CollectorContext, slug: string): Promise<JobPost[
     }));
 }
 
+async function fetchSmartRecruiters(ctx: CollectorContext, slug: string): Promise<JobPost[] | null> {
+  const base = `https://api.smartrecruiters.com/v1/companies/${encodeURIComponent(slug)}/postings`;
+  const { status, data } = await fetchJson<{ content: any[]; totalFound: number }>(`${base}?limit=100`, { fetchImpl: ctx.fetch, timeoutMs: 20000 });
+  if (status !== 200 || !data?.content || !data.totalFound) return null;
+  const eng = data.content.filter((p) => isEngineeringRole(p.name)).slice(0, 25);
+  const out: JobPost[] = [];
+  for (const p of eng) {
+    const d = await fetchJson<any>(`${base}/${p.id}`, { fetchImpl: ctx.fetch, timeoutMs: 10000, retries: 1 }).catch(() => ({ data: null }));
+    const s = d.data?.jobAd?.sections ?? {};
+    const lines: TextLine[] = [];
+    for (const key of ["jobDescription", "qualifications", "additionalInformation"]) {
+      if (!s[key]?.text) continue;
+      lines.push({ text: String(s[key].title ?? key), heading: true });
+      lines.push(...htmlToLines(s[key].text));
+    }
+    out.push({ id: p.id, title: p.name, url: `https://jobs.smartrecruiters.com/${slug}/${p.id}`, department: p.department?.label ?? null, location: p.location?.city ?? null, postedAt: p.releasedDate ?? null, lines });
+  }
+  // keep non-engineering titles too so the job count reflects the board
+  for (const p of data.content.filter((p) => !isEngineeringRole(p.name)))
+    out.push({ id: p.id, title: p.name, url: `https://jobs.smartrecruiters.com/${slug}/${p.id}`, department: null, location: null, postedAt: p.releasedDate ?? null, lines: [] });
+  return out;
+}
+
+/** Workday "posted" labels: "Posted Today", "Posted Yesterday", "Posted 5 Days Ago", "Posted 30+ Days Ago". */
+export function workdayPostedDate(label: string | undefined, now: Date): string | null {
+  if (!label) return null;
+  if (/today/i.test(label)) return now.toISOString();
+  if (/yesterday/i.test(label)) return new Date(now.getTime() - 86_400_000).toISOString();
+  const m = label.match(/(\d+)\+?\s+days?/i);
+  return m ? new Date(now.getTime() - Number(m[1]) * 86_400_000).toISOString() : null;
+}
+
+/** Workday slug format: "tenant/wdN/site", e.g. "stryker/wd1/StrykerCareers". */
+async function fetchWorkday(ctx: CollectorContext, slug: string): Promise<JobPost[] | null> {
+  const [tenant, wd, site] = slug.split("/");
+  if (!tenant || !wd || !site) return null;
+  const host = `https://${tenant}.${wd}.myworkdayjobs.com`;
+  const api = `${host}/wday/cxs/${tenant}/${site}`;
+  const found = new Map<string, any>();
+  let reachable = false;
+  for (const q of ["software engineer", "engineer", "developer", "data", "devops"]) {
+    const { status, data } = await fetchJson<{ total: number; jobPostings: any[] }>(`${api}/jobs`, {
+      fetchImpl: ctx.fetch,
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify({ appliedFacets: {}, limit: 20, offset: 0, searchText: q }),
+      timeoutMs: 12000,
+      retries: 1,
+    }).catch(() => ({ status: 0, data: null }));
+    if (status !== 200 || !data) continue;
+    reachable = true;
+    for (const p of data.jobPostings ?? []) if (p.externalPath && !found.has(p.externalPath)) found.set(p.externalPath, p);
+  }
+  if (!reachable) return null;
+  const eng = [...found.values()].filter((p) => isEngineeringRole(p.title)).slice(0, 20);
+  const out: JobPost[] = [];
+  for (const p of eng) {
+    const d = await fetchJson<any>(`${api}${p.externalPath}`, { fetchImpl: ctx.fetch, headers: { accept: "application/json" }, timeoutMs: 10000, retries: 1 }).catch(() => ({ data: null }));
+    const info = d.data?.jobPostingInfo;
+    out.push({
+      id: p.externalPath,
+      title: p.title,
+      url: info?.externalUrl ?? `${host}/${site}${p.externalPath}`,
+      department: null,
+      location: p.locationsText ?? info?.location ?? null,
+      postedAt: info?.startDate ? new Date(info.startDate).toISOString() : workdayPostedDate(p.postedOn, ctx.now),
+      lines: htmlToLines(info?.jobDescription ?? ""),
+    });
+  }
+  return out;
+}
+
+/** Find a job board linked from the company's own careers pages (works for any supported provider). */
+export function atsFromHtml(html: string): { provider: Provider; slug: string } | null {
+  const wd = html.match(/https?:\/\/([a-z0-9-]+)\.(wd\d+)\.myworkdayjobs\.com\/(?:[a-z]{2}-[A-Z]{2}\/)?([A-Za-z0-9_-]+)/i);
+  if (wd && wd[3].toLowerCase() !== "wday") return { provider: "workday", slug: `${wd[1].toLowerCase()}/${wd[2].toLowerCase()}/${wd[3]}` };
+  const gh = html.match(/(?:boards|job-boards)(?:-api)?\.greenhouse\.io\/(?:embed\/job_board(?:\/js)?\?for=)?([a-z0-9_-]+)/i);
+  if (gh && !["embed", "v1"].includes(gh[1].toLowerCase())) return { provider: "greenhouse", slug: gh[1].toLowerCase() };
+  const lv = html.match(/jobs\.lever\.co\/([a-z0-9_.-]+)/i);
+  if (lv) return { provider: "lever", slug: lv[1].toLowerCase() };
+  const ab = html.match(/jobs\.ashbyhq\.com\/([A-Za-z0-9_.-]+)/i);
+  if (ab) return { provider: "ashby", slug: ab[1] };
+  const sr = html.match(/(?:jobs|careers)\.smartrecruiters\.com\/([A-Za-z0-9]+)/i);
+  if (sr) return { provider: "smartrecruiters", slug: sr[1] };
+  return null;
+}
+
+async function discoverFromCareersPages(ctx: CollectorContext, checked: string[]): Promise<{ provider: Provider; slug: string } | null> {
+  const d = ctx.company.domain;
+  for (const u of [`https://careers.${d}`, `https://${d}/careers`, `https://www.${d}/careers`, `https://jobs.${d}`, `https://${d}/jobs`, `https://${d}/company/careers`, `https://${d}`]) {
+    checked.push(u);
+    const r = await fetchText(u, { fetchImpl: ctx.fetch, timeoutMs: 8000, retries: 0 }).catch(() => null);
+    if (!r?.text) continue;
+    const hit = atsFromHtml(r.text);
+    if (hit) return hit;
+  }
+  return null;
+}
+
 const ADAPTERS: Record<Provider, (ctx: CollectorContext, slug: string) => Promise<JobPost[] | null>> = {
   greenhouse: fetchGreenhouse,
   lever: fetchLever,
   ashby: fetchAshby,
+  workday: fetchWorkday,
+  smartrecruiters: fetchSmartRecruiters,
 };
 
-export const boardUrl = (p: string, slug: string) =>
-  p === "greenhouse"
-    ? `https://boards.greenhouse.io/${slug}`
-    : p === "lever"
-      ? `https://jobs.lever.co/${slug}`
-      : `https://jobs.ashbyhq.com/${slug}`;
+export const boardUrl = (p: string, slug: string) => {
+  if (p === "greenhouse") return `https://boards.greenhouse.io/${slug}`;
+  if (p === "lever") return `https://jobs.lever.co/${slug}`;
+  if (p === "smartrecruiters") return `https://jobs.smartrecruiters.com/${slug}`;
+  if (p === "workday") {
+    const [tenant, wd, site] = slug.split("/");
+    return `https://${tenant}.${wd}.myworkdayjobs.com/${site}`;
+  }
+  return `https://jobs.ashbyhq.com/${slug}`;
+};
 
 export function slugCandidates(name: string, domain: string): string[] {
   const n = name.toLowerCase();
@@ -182,7 +287,7 @@ export function detectInitiatives(text: string): InitiativeMatch[] {
 export const jobsCollector: Collector = {
   name: "jobs",
   step: "Reading job posts",
-  timeoutMs: 60_000,
+  timeoutMs: 100_000,
   async collect(ctx): Promise<CollectorResult> {
     const checked: string[] = [];
     const updates: CompanyUpdates = {};
@@ -199,8 +304,23 @@ export const jobsCollector: Collector = {
       posts = await ADAPTERS[provider as Provider](ctx, slug);
       checked.push(`${provider} board "${slug}"`);
     } else {
+      const linked = await discoverFromCareersPages(ctx, checked);
+      if (linked) {
+        const r = await ADAPTERS[linked.provider](ctx, linked.slug).catch(() => null);
+        checked.push(`${linked.provider} board "${linked.slug}" linked from the careers page`);
+        if (r) {
+          posts = r;
+          provider = linked.provider;
+          slug = linked.slug;
+          updates.atsProvider = provider;
+          updates.atsSlug = slug;
+          updates.atsVerified = false;
+        }
+      }
+    }
+    if (!posts && !(ctx.company.atsProvider && ctx.company.atsSlug)) {
       for (const s of slugCandidates(ctx.company.companyName, ctx.company.domain)) {
-        for (const p of ["greenhouse", "lever", "ashby"] as Provider[]) {
+        for (const p of ["greenhouse", "lever", "ashby", "smartrecruiters"] as Provider[]) {
           checked.push(`${p}/${s}`);
           const r = await ADAPTERS[p](ctx, s).catch(() => null);
           if (r) {
@@ -217,7 +337,7 @@ export const jobsCollector: Collector = {
       }
     }
     if (!posts || !provider || !slug) {
-      checked.push("No public Greenhouse, Lever or Ashby board found");
+      checked.push("No public Greenhouse, Lever, Ashby, Workday or SmartRecruiters board found");
       return { signals, checked, updates };
     }
 

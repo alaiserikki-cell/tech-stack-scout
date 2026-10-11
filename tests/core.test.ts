@@ -4,7 +4,7 @@ import profileJson from "../data/product-profile.json";
 import type { DictEntry, ProductProfile, Signal } from "../src/lib/types";
 import { aggregateLanguages, isSdkHeavy, parseManifest } from "../src/collectors/github";
 import { matchFiles, matchDependencies, detectCompetitors, pathMatches, matchText } from "../src/lib/dictionary";
-import { detectInitiatives, isEngineeringRole, matchJobTech } from "../src/collectors/jobs";
+import { atsFromHtml, detectInitiatives, isEngineeringRole, matchJobTech, workdayPostedDate } from "../src/collectors/jobs";
 import { htmlToLines } from "../src/lib/text";
 import { verifyMentions, parseFeed } from "../src/collectors/blog";
 import { changeEvents, computeFields, confidenceFor, fitScore, signalHash, updateTechState, type Computed } from "../src/lib/compute";
@@ -362,5 +362,24 @@ describe("conference talks", () => {
   });
   it("extracts technologies from talk titles", () => {
     expect(talkTechMatches("Migrating to Kubernetes at Stripe", dict).map((m) => m.entry.canonical_name)).toContain("Kubernetes");
+  });
+});
+
+describe("job board discovery", () => {
+  it("finds Workday, Greenhouse, Lever, Ashby and SmartRecruiters links on careers pages", () => {
+    expect(atsFromHtml('<a href="https://stryker.wd1.myworkdayjobs.com/StrykerCareers/login">Jobs</a>')).toEqual({ provider: "workday", slug: "stryker/wd1/StrykerCareers" });
+    expect(atsFromHtml('<a href="https://acme.wd5.myworkdayjobs.com/en-US/External">Jobs</a>')).toEqual({ provider: "workday", slug: "acme/wd5/External" });
+    expect(atsFromHtml('<script src="https://boards.greenhouse.io/embed/job_board/js?for=acme"></script>')).toEqual({ provider: "greenhouse", slug: "acme" });
+    expect(atsFromHtml('<a href="https://jobs.lever.co/acme/123">')).toEqual({ provider: "lever", slug: "acme" });
+    expect(atsFromHtml('<a href="https://jobs.ashbyhq.com/Acme">')).toEqual({ provider: "ashby", slug: "Acme" });
+    expect(atsFromHtml('<a href="https://careers.smartrecruiters.com/AcmeCorp">')).toEqual({ provider: "smartrecruiters", slug: "AcmeCorp" });
+    expect(atsFromHtml("<p>No board here</p>")).toBeNull();
+  });
+  it("parses Workday posted labels", () => {
+    const now = new Date("2026-10-11T00:00:00Z");
+    expect(workdayPostedDate("Posted Today", now)).toBe(now.toISOString());
+    expect(workdayPostedDate("Posted 5 Days Ago", now)).toBe(new Date("2026-10-06T00:00:00Z").toISOString());
+    expect(workdayPostedDate("Posted 30+ Days Ago", now)).toBe(new Date("2026-09-11T00:00:00Z").toISOString());
+    expect(workdayPostedDate(undefined, now)).toBeNull();
   });
 });

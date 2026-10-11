@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db/client";
+import { logActivity } from "@/lib/activity";
 import { isAuthed, unauthorized } from "@/lib/auth";
 import { loadProfile } from "@/lib/repo";
 
@@ -18,5 +19,6 @@ export async function POST(req: Request) {
     c.verify = false;
     await db.insert(schema.productProfile).values({ data: p });
   } else return Response.json({ error: "Unknown type" }, { status: 400 });
+  await logActivity("entry_verified", `Marked ${name} (${b.type}) as verified`);
   return Response.json({ ok: true });
 }

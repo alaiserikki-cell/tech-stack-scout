@@ -1,6 +1,7 @@
 import { after } from "next/server";
 import { and, count, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db/client";
+import { logActivity } from "@/lib/activity";
 import { isAuthed, unauthorized } from "@/lib/auth";
 import { LIMITS, hit, dayMs } from "@/lib/ratelimit";
 import { createRun, executeRun } from "@/lib/pipeline";
@@ -36,6 +37,7 @@ export async function POST(req: Request) {
     const [row] = await db.insert(schema.watchlist).values({ companyName: name, domain, addedBy: "demo" }).returning({ id: schema.watchlist.id });
     id = row.id;
   }
+  await logActivity(existing ? "company_reactivated" : "company_added", `${existing ? "Re-added" : "Added"} ${existing?.companyName ?? name} (${domain})`, { companyId: id, detail: { domain } });
   const runId = await createRun(id, "on_add");
   after(() => executeRun(runId));
   return Response.json({ id, runId });

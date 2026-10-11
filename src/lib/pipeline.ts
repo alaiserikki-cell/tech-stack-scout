@@ -6,6 +6,7 @@ import { changeEvents, computeFields, signalHash, updateTechState, type Computed
 import { BLOG_JSON_SCHEMA, BLOG_SYSTEM, NO_SIGNAL_TEXT, generateBrief, selectBriefSignals } from "./brief";
 import { callGemini, geminiConfigured, geminiModel, GeminiQuotaError } from "./gemini";
 import { dbCache, latestSnapshot, loadDictionary, loadProfile, logLlmCall } from "./repo";
+import { logActivity } from "./activity";
 
 const DAY = 86_400_000;
 
@@ -153,6 +154,7 @@ export async function executeRun(runId: number): Promise<void> {
       await logLlmCall({ task: "brief", model: geminiModel(), inputTokens: 0, outputTokens: 0, status: "skipped_unchanged", companyId: company.id });
       await db.update(schema.watchlist).set({ lastRefreshedAt: now }).where(eq(schema.watchlist.id, company.id));
       await setRun({ status: "skipped_unchanged", step: "Done", inputHash: hash, collectorErrors: errors, finishedAt: new Date() });
+      await logActivity("refresh_finished", `${company.companyName}: nothing changed, previous brief kept`, { companyId: company.id, actor: run.trigger === "cron" ? "cron" : "system", detail: { runId, status: "skipped_unchanged" } });
       return;
     }
 
@@ -272,8 +274,14 @@ export async function executeRun(runId: number): Promise<void> {
     await db.update(schema.watchlist).set({ lastRefreshedAt: now }).where(eq(schema.watchlist.id, company.id));
     const partial = Object.keys(errors).length > 0;
     await setRun({ status: partial ? "partial" : "success", step: "Done", inputHash: hash, collectorErrors: errors, finishedAt: new Date() });
+    await logActivity(
+      "refresh_finished",
+      `${company.companyName}: ${events.length ? `${events.length} change${events.length > 1 ? "s" : ""} found` : "refreshed"}, fit ${computed.fit.score}, brief ${briefStatus === "ok" ? "written" : briefStatus}`,
+      { companyId: company.id, actor: run.trigger === "cron" ? "cron" : "system", detail: { runId, status: partial ? "partial" : "success" } },
+    );
   } catch (e) {
     errors.pipeline = (e instanceof Error ? e.message : String(e)).slice(0, 300);
     await setRun({ status: "failed", step: "Failed", collectorErrors: errors, finishedAt: new Date() }).catch(() => {});
+    await logActivity("refresh_finished", `${companyRow.companyName}: refresh failed`, { companyId: companyRow.id, actor: "system", detail: { runId, status: "failed" } });
   }
 }

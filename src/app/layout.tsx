@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { Inter, Inter_Tight, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { AddCompanyDialog } from "@/components/client";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const interTight = Inter_Tight({ variable: "--font-inter-tight", subsets: ["latin"], weight: ["500", "600", "700", "800"] });
@@ -22,9 +23,7 @@ export const viewport: Viewport = {
 const NAV = [
   { href: "/", label: "Watchlist" },
   { href: "/digests", label: "Digests" },
-  { href: "/system", label: "System" },
-  { href: "/costs", label: "Costs" },
-  { href: "/how-it-works", label: "How it works" },
+  { href: "/activity", label: "Activity" },
   { href: "/settings", label: "Settings" },
 ];
 
@@ -52,12 +51,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3">
             <Link href="/" className="flex items-center gap-2 text-ink no-underline">
               <LogoMark />
-              <span className="leading-tight">
-                <span className="block font-display text-[15px] font-bold tracking-tight">Tech Stack Scout</span>
-                <span className="block text-[10px] font-medium text-faint">
-                  for <span className="text-accent-ink">FlakeGuard</span>
-                </span>
-              </span>
+              <span className="font-display text-[15px] font-bold tracking-tight">Tech Stack Scout</span>
             </Link>
             <nav aria-label="Main" className="order-3 -mx-1 flex w-full gap-x-0.5 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden text-sm sm:order-none sm:w-auto sm:flex-1 sm:flex-wrap">
               {NAV.map((n) => (
@@ -66,9 +60,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                 </Link>
               ))}
             </nav>
-            <Link href="/#add" className="rounded-lg bg-btn px-3.5 py-2 text-sm font-medium text-btn-fg no-underline shadow-sm transition-opacity hover:opacity-90 sm:inline-block">
-              Add company
-            </Link>
+            <AddCompanyDialog />
           </div>
         </header>
         <main id="main" className="mx-auto max-w-6xl px-4 pb-24 pt-8 sm:pt-10">

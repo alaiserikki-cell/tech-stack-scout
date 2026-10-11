@@ -30,6 +30,14 @@ Each entry: decision, alternatives considered, why.
 | Neon Postgres kept instead of Supabase | Move to Supabase (problem statement wording) | Your decision. Your build brief specified Neon; both are hosted Postgres, and Nikhil adds or removes companies in Neon's table editor (or the dashboard) without touching code. |
 | Conference talks via Hacker News (Algolia) links to YouTube, Vimeo, InfoQ, SpeakerDeck | YouTube Data API | The problem statement lists conference talks as a source. The Gemini key is rejected by the YouTube API (it needs OAuth), so talks are found key-free. Precision rule: the company must own the talk, or the title must pair it with a technology and an engineering topic. |
 
+| App name is just "Tech Stack Scout" (no "for FlakeGuard" subtitle) | Product-name subtitle | Your request: keep the name simple. The product name still appears where it matters ("FlakeGuard fits here" on the stack map). |
+| Dropped the How it works, Costs and System pages; added one **Activity** page (old URLs redirect) | Keep them | Your request: How it works is covered in your viva; every add, remove, refresh, review, digest and daily run is now tracked in one timeline (`activity_log` table). Gemini token usage is still recorded in `llm_calls`. |
+| Brief page leads with **At a glance** key points and a **Stack map** diagram built in code; the two paragraphs and full evidence fold away | Show everything | Your request to reduce reading load. Built from computed fields, so no extra Gemini tokens and nothing outside the signals. |
+| Digest page: fit-vs-momentum **priority map** (2×2: Call now / Nurture / Watch / Later) plus a ranked top 5 with a why-now pill | Plain list | Your request for a visual. The digest now stores every account so the map is complete; the email still lists the top 5. |
+| Added Workday and SmartRecruiters job boards and careers-page discovery | Greenhouse/Lever/Ashby only | Stryker (Workday) showed no jobs before. Enterprises mostly use Workday; its public `wday/cxs` JSON endpoint needs no key. |
+| Shopify added to hosting detection | — | Minimalist (a D2C skincare brand) has no public engineering signal; its Shopify storefront is the one real signal. Its jobs are growth and sales roles on aggregators/LinkedIn, which cannot be read automatically. |
+| "Add company" in the header opens a dialog from any page | Anchor link to the home page | The old link did nothing visible when already on the home page. |
+
 ## Data and matching
 
 | Decision | Alternatives | Why |
