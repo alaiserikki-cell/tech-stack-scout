@@ -496,20 +496,18 @@ function Evidence({ c, company }: { c: Computed; company: typeof schema.watchlis
 function EmptySource({ source, c }: { source: "github" | "jobs" | "blog"; c: Computed }) {
   const msg = { github: "No public GitHub found.", jobs: "No public job board found.", blog: "No recent blog posts found." }[source];
   const checked = c.checked?.[source] ?? [];
+  if (!checked.length)
+    return <p className="text-sm text-muted">This source could not be read on the last refresh (see run history below). It will be retried on the next refresh.</p>;
   return (
     <div className="text-sm text-muted">
       <p>{msg} Here&apos;s what we checked:</p>
-      {checked.length ? (
-        <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs text-faint">
-          {checked.slice(0, 10).map((x) => (
-            <li key={x} className="break-all">
-              {x}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="text-xs text-faint">This source failed on the last refresh; see run history below.</p>
-      )}
+      <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs text-faint">
+        {checked.slice(0, 10).map((x) => (
+          <li key={x} className="break-all">
+            {x}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
