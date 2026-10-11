@@ -46,3 +46,4 @@ dev.cmd
 
 .vercel
 .env*
+!.env.example
