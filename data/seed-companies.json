@@ -24,11 +24,11 @@
     "blog_feed_url": "https://blog.postman.com/feed/"
   },
   {
-    "company_name": "Sweetgreen",
-    "domain": "sweetgreen.com",
+    "company_name": "Rothy's",
+    "domain": "rothys.com",
     "github_org": null,
-    "ats_provider": "greenhouse",
-    "ats_slug": "sweetgreen",
+    "ats_provider": "ashby",
+    "ats_slug": "rothys",
     "blog_feed_url": null
   },
   {

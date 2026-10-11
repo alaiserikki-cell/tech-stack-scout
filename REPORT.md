@@ -1,41 +1,49 @@
 # Report
 
 - **Production URL:** https://tech-stack-scout-zeta.vercel.app
-- **Repo URL:** pending: waiting on GitHub CLI login (see BLOCKED.md)
-- **DEMO_PASSCODE:** see README "For graders"
-- Status: **interim**, written before GitHub, Gemini and Gmail credentials were available.
+- **Repo URL:** https://github.com/alaiserikki-cell/tech-stack-scout
+- **DEMO_PASSCODE:** `amber-kite-birch`
+- Verified on 2026-10-11.
 
 ## Checks run
 
-| Check | Result |
-|---|---|
-| node 24.19, npm 11.17, git 2.53 present; gh 2.102 and Vercel CLI 63.1 installed; neonctl 8.3 via npx | Pass |
-| Vercel login, Neon login | Pass |
-| GitHub CLI login | **Blocked** (waiting on you) |
-| Neon project `tech-stack-scout` (aws-ap-southeast-1), pooled URL in `.env`, migrations applied (13 tables) | Pass |
-| Product profile + 241-entry dictionary seeded | Pass |
-| `verify-seed`: 10 companies pass (3 Indian, 1 thin) | Pass |
-| `tsc --noEmit`, `next build` | Pass |
-| Unit tests (`npm test`) | Pass: 43/43 |
-| Replay (`npm run replay`), 8 scenarios | Pass: 31/31 checks |
-| Live local pipeline, Sweetgreen (thin) and Linear (rich, GitHub unauthenticated) | Pass (partial: brief pending without Gemini key; GitHub rate-limited without token) |
-| Local: all pages 200, writes 401 without passcode, wrong passcode rejected, add-by-domain returns at once and steps progress, refresh within 10 min returns cached run | Pass |
-| Local: 375 px width, no horizontal scroll on the brief page | Pass |
-| Production deploy, all pages 200, cron without secret → 401 | Pass |
-| Gemini briefs, blog extraction | Pending `GEMINI_API_KEY` |
-| Digest email | Pending Gmail credentials |
-| Seed refresh on production data, full browser verification | Pending the above |
+| # | Check | Result |
+|---|---|---|
+| 1 | Tooling: node 24.19, npm 11.17, git 2.53, gh 2.102 (installed), Vercel CLI 63.1 (installed), neonctl 8.3 via npx | Pass |
+| 2 | Logins: GitHub (alaiserikki-cell), Vercel, Neon | Pass |
+| 3 | Neon project `tech-stack-scout` (aws-ap-southeast-1), pooled URL, Drizzle migrations (13 tables) | Pass |
+| 4 | Product profile + 241-entry dictionary seeded | Pass |
+| 5 | `verify-seed`: 10 seed companies, 3 Indian (Meesho, Razorpay, Postman), 1 thin (Rothy's) | Pass |
+| 6 | `tsc --noEmit`, `next build` | Pass |
+| 7 | Unit tests `npm test` | Pass: 44/44 |
+| 8 | Replay `npm run replay`: rich, sdk_heavy, no GitHub, no job board, invented blog mention, invalid Gemini JSON, GitHub 403, Gemini 429 | Pass: 31/31 checks |
+| 9 | Gemini keys: key 2 and key 3 valid, key 1 rejected (401); key 2 in use | Pass |
+| 10 | Full refresh of all 13 watchlist companies (10 seed + PostHog, Supabase, Sweetgreen) | Pass: 13/13 with a validated brief or `skipped_unchanged`; 0 corrupted briefs |
+| 11 | Hash skip: unchanged companies returned `skipped_unchanged` with no Gemini call | Pass |
+| 12 | Thin company (Rothy's): "No public GitHub found. Here's what we checked", empty opener because nothing connects | Pass |
+| 13 | Production: all 8 pages return 200 logged out, no error text | Pass |
+| 14 | Production: refresh via API steps through Reading GitHub → Reading blog → Writing brief → success | Pass (~18 s) |
+| 15 | Production: cron without secret → 401; with secret → refreshed 4 due companies in 143 s (under the 210 s budget), digest "not Monday" | Pass |
+| 16 | Production: digest emailed via API to `DIGEST_TO` (Resend); invalid address rejected | Pass |
+| 17 | Local (same code + DB): passcode form (wrong passcode rejected, right one accepted), add company by domain in UI → redirected with live step indicator → brief written | Pass |
+| 18 | Writes without passcode → 401; refresh within 10 min → cached run; opener feedback; source confirm; bad source edit rejected | Pass |
+| 19 | 375 px width: no horizontal scroll on watchlist and brief pages (production and local) | Pass |
+| 20 | Secret scan of all git history before making the repo public | Pass: no secrets found |
 
-## verify:true items for you to review
+Bug found and fixed during verification: a regex that removes inline `[12, 13]` citations from brief prose lost its backslashes and deleted every "s" and "d". Fixed, covered by a new unit test, affected briefs reset and regenerated.
+
+Not done in the browser: typing the passcode into the **production** site (my safety rules allow it only on localhost). The same flows were verified on localhost and against production through its API.
+
+## verify:true items for you to review (/settings)
 
 - Dictionary: **Heroku** (`Procfile`, `app.json` are generic), **AWS Lambda** (`template.yaml` is generic).
 - Competitor: **BuildPulse**: official docs did not show the GitHub Action name, so `buildpulse/buildpulse-action` is unconfirmed.
-- Mark either verified in /settings after checking.
 
 ## Vercel Hobby limits found
 
-Functions: 300 s default and max. Cron: once per day, ±59 min. Details and consequences in DECISIONS.md.
+- Functions: 300 s default and maximum → `maxDuration = 300`; cron stops starting work at 210 s.
+- Cron: once per day, ±59 min → `30 2 * * *` (08:00 IST).
 
-## Blocked
+## Blocked / limits (see BLOCKED.md)
 
-See BLOCKED.md.
+- Email uses the aangan Resend account without a verified domain, so it can only deliver to the alaiserikki Gmail. Graders who use "Email me this digest" with their own address will see "Sending failed". A verified Resend domain or Gmail credentials remove this.

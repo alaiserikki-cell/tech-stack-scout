@@ -36,7 +36,8 @@ const CANDIDATES: Candidate[] = [
   { name: "Groww", domain: "groww.in", github: "Groww", india: true },
   { name: "Meesho", domain: "meesho.com", github: "Meesho", ats: ["lever", "meesho"], india: true },
   { name: "Allbirds", domain: "allbirds.com", github: null, thin: true },
-  { name: "Sweetgreen", domain: "sweetgreen.com", github: null, thin: true },
+  { name: "Sweetgreen", domain: "sweetgreen.com", github: "sweetgreen" },
+  { name: "Rothy's", domain: "rothys.com", github: null, thin: true },
   { name: "Glossier", domain: "glossier.com", github: null, thin: true },
 ];
 
@@ -67,9 +68,11 @@ async function main() {
     // GitHub
     let github: string | null = null;
     let repos = 0;
-    if (c.github) {
-      const { data } = await fetchJson<{ login: string; public_repos: number }>(`https://api.github.com/orgs/${c.github}`, { headers: ghHeaders }).catch(() => ({ data: null }));
-      if (data) {
+    // thin candidates: confirm no org exists under the domain stem either
+    const probe = c.github ?? (c.thin ? c.domain.split(".")[0] : null);
+    if (probe) {
+      const { data } = await fetchJson<{ login: string; public_repos: number }>(`https://api.github.com/orgs/${probe}`, { headers: ghHeaders }).catch(() => ({ data: null }));
+      if (data && data.public_repos > 0) {
         github = data.login;
         repos = data.public_repos;
       }

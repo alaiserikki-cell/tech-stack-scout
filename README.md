@@ -11,7 +11,7 @@ A watchlist of target companies that stays current automatically. For each compa
 - **Three things to try**
   1. **Refresh a seeded company.** Open any company on the watchlist, press **Refresh now** and watch the live steps (Finding sources → Reading GitHub → Reading job posts → Reading blog → Writing brief). A company refreshed in the last 10 minutes returns the cached run.
   2. **Add a company by domain.** On the watchlist, type a domain (e.g. `posthog.com`) and press **Add company**. You land on its page while the brief builds (about a minute). Auto-discovered sources show as *Unverified* with Confirm / Edit.
-  3. **Email yourself the digest.** Open **Digests**, pick the current week (or build it), enter your email under *Email me this digest*. Max 3 per address per day; the address is never stored or shown.
+  3. **Email yourself the digest.** Open **Digests**, pick the current week (or build it), enter your email under *Email me this digest*. Max 3 per address per day; the address is never stored or shown. Note: the demo sends through a Resend account without a verified domain, so delivery only succeeds to the project owner's inbox; other addresses get a clear "Sending failed" message (see BLOCKED.md).
 
 Other pages: **System** (cron schedule, run history, collector errors), **Costs** (Gemini tokens and an estimate at paid rates; actual spend is zero), **How it works** (components by actor), **Settings** (product profile, entries waiting for verification).
 
@@ -36,7 +36,7 @@ Computed in code (`src/lib/compute.ts`, weights and thresholds documented inline
 
 ## Stack
 
-Next.js 16 App Router (TypeScript, Tailwind, Cache Components with Suspense skeletons) · Neon Postgres via `@neondatabase/serverless` + Drizzle ORM and migrations · Google Gen AI SDK (`@google/genai`) with `gemini-3.8-flash` · Nodemailer + Gmail SMTP · Vercel Hobby + Vercel Cron.
+Next.js 16 App Router (TypeScript, Tailwind, Cache Components with Suspense skeletons) · Neon Postgres via `@neondatabase/serverless` + Drizzle ORM and migrations · Google Gen AI SDK (`@google/genai`) with `gemini-3.8-flash` · Resend (Nodemailer + Gmail SMTP fallback) · Vercel Hobby + Vercel Cron.
 
 ## Setup
 
@@ -57,7 +57,8 @@ npm run dev
 | `GEMINI_API_KEY` | Google AI Studio key. **Do not enable billing** on its project; the free tier is used |
 | `GEMINI_MODEL` | `gemini-3.8-flash` |
 | `GEMINI_INPUT_COST_PER_1M`, `GEMINI_OUTPUT_COST_PER_1M` | Paid-tier rates, for the /costs estimate only |
-| `GMAIL_USER`, `GMAIL_APP_PASSWORD` | Gmail SMTP (2-Step Verification on, then an app password) |
+| `RESEND_API_KEY`, `RESEND_FROM` | Resend email (used when set; `RESEND_FROM` defaults to `onboarding@resend.dev`) |
+| `GMAIL_USER`, `GMAIL_APP_PASSWORD` | Gmail SMTP fallback (2-Step Verification on, then an app password) |
 | `DIGEST_TO` | Where the Monday digest goes |
 | `CRON_SECRET` | Vercel Cron sends `Authorization: Bearer <CRON_SECRET>` |
 | `DEMO_PASSCODE` | Passcode for write actions (stored as an httpOnly cookie) |
@@ -84,6 +85,7 @@ Remove a company with the link at the bottom of its page (or `update watchlist s
 | `npm run replay` | Replays recorded fixtures through the real collectors and validators: rich company, sdk_heavy, no GitHub, no job board, invented blog mention, invalid Gemini JSON, GitHub 403, Gemini 429. Prints expected vs actual; exits 1 on any failure |
 | `npm run verify-seed` | Checks seed candidates against live GitHub / job boards / feeds and writes `data/seed-companies.json` |
 | `npm run refresh-all [ids]` | Runs the full pipeline for all active companies (same code as the cron) |
+| `npx tsx scripts/send-digest.ts` | Builds this week's digest and emails it to `DIGEST_TO` |
 | `npm run dictionary` | Regenerates `data/tech-dictionary.json` with sanity checks |
 
 ## Free-tier notes

@@ -1,6 +1,7 @@
 # Blocked items
 
-| Item | Needs | Status |
+| Item | Status | What unblocks it |
 |---|---|---|
-| GitHub CLI login (`gh auth login --web`) | You to press Enter in the terminal tab, paste the one-time code at github.com/login/device and click Authorize | Waiting |
-| GEMINI_API_KEY, GMAIL_USER, GMAIL_APP_PASSWORD, DIGEST_TO | You to fill these 4 lines in `.env` | Waiting |
+| GitHub CLI login | Resolved | — |
+| Gemini API key | Resolved (key 2 of 3) | — |
+| Email to any address | **Limited.** Email goes through the aangan Resend account (as you asked), which has no verified domain, so it only delivers to that account's own address (the alaiserikki Gmail, set as `DIGEST_TO`). The Monday digest reaches it; a grader's "Email me this digest" to another address fails with a clear message. | Verify a domain at resend.com/domains and set `RESEND_FROM`, **or** set `GMAIL_USER` + `GMAIL_APP_PASSWORD` and clear `RESEND_API_KEY` (Gmail SMTP fallback). Then `vercel env add` the changed keys and redeploy. |
