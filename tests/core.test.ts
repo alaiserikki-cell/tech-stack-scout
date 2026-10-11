@@ -8,7 +8,7 @@ import { detectInitiatives, isEngineeringRole, matchJobTech } from "../src/colle
 import { htmlToLines } from "../src/lib/text";
 import { verifyMentions, parseFeed } from "../src/collectors/blog";
 import { changeEvents, computeFields, confidenceFor, fitScore, signalHash, updateTechState, type Computed } from "../src/lib/compute";
-import { validateBrief, type BriefSignal } from "../src/lib/brief";
+import { stripInlineIds, validateBrief, type BriefSignal } from "../src/lib/brief";
 import { rankAccounts } from "../src/lib/digest";
 
 const dict = dictJson as DictEntry[];
@@ -294,6 +294,12 @@ describe("brief validator", () => {
     expect(r.errors.join()).toMatch(/31 words/);
   });
   it("rejects invalid JSON", () => expect(validateBrief("{not json", sigs, dict).ok).toBe(false));
+  it("strips inline id brackets without touching other text", () => {
+    expect(stripInlineIds("Their job posts mention Kubernetes [200, 201] and Redis [7].")).toBe("Their job posts mention Kubernetes and Redis.");
+    expect(stripInlineIds("scale platform engineering and developer experience; tests [x] stay")).toBe("scale platform engineering and developer experience; tests [x] stay");
+    const r = validateBrief(JSON.stringify({ ...good, paragraph_1: "Their public GitHub is mostly Go [11], said to scale." }), sigs, dict);
+    expect(r.brief?.paragraph_1).toBe("Their public GitHub is mostly Go, said to scale.");
+  });
 });
 
 describe("digest ranking", () => {

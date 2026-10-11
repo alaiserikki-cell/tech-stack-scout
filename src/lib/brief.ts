@@ -165,6 +165,14 @@ export function allowedTechs(sigs: BriefSignal[], dict: DictEntry[]): Set<string
   return allowed;
 }
 
+/** Remove inline citation brackets like " [12, 13]" that the model sometimes leaves in prose. */
+export function stripInlineIds(s: string): string {
+  return s
+    .replace(/\s*\[\d+(?:\s*,\s*\d+)*\]/g, "")
+    .replace(/\s+([.,;:])/g, "$1")
+    .trim();
+}
+
 export interface ValidationResult {
   ok: boolean;
   errors: string[];
@@ -209,7 +217,7 @@ export function validateBrief(raw: string, sigs: BriefSignal[], dict: DictEntry[
   if (unknownTech.length) errors.push(`Mentions technologies not in the signals: ${unknownTech.join(", ")}`);
 
   // strip any inline id brackets the model left in prose
-  const strip = (s: string) => s.replace(/s*[(?:d+s*,?s*)+]/g, "").replace(/s+([.,;])/g, "$1").trim();
+  const strip = stripInlineIds;
   b.paragraph_1 = strip(b.paragraph_1);
   b.paragraph_2 = strip(b.paragraph_2);
   b.opener = strip(b.opener);
