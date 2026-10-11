@@ -4,26 +4,36 @@ export function cx(...c: (string | false | null | undefined)[]) {
   return c.filter(Boolean).join(" ");
 }
 
-export function PageTitle({ title, sub, right }: { title: string; sub?: ReactNode; right?: ReactNode }) {
+export function Eyebrow({ children }: { children: ReactNode }) {
+  return <span className="inline-flex items-center rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-fg shadow-sm">{children}</span>;
+}
+
+/** Display title; wrap a phrase in <Mint> for the green highlight. */
+export function PageTitle({ title, sub, right, eyebrow }: { title: ReactNode; sub?: ReactNode; right?: ReactNode; eyebrow?: string }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-        {sub && <p className="mt-1 text-sm text-muted">{sub}</p>}
+    <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+      <div className="max-w-3xl">
+        {eyebrow && <div className="mb-3"><Eyebrow>{eyebrow}</Eyebrow></div>}
+        <h1 className="font-display text-3xl font-bold leading-[1.08] tracking-[-0.025em] text-ink sm:text-[40px]">{title}</h1>
+        {sub && <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-muted sm:text-base">{sub}</p>}
       </div>
       {right}
     </div>
   );
 }
 
+export function Mint({ children }: { children: ReactNode }) {
+  return <span className="text-accent-ink">{children}</span>;
+}
+
 export function Card({ children, className, as: As = "section" }: { children: ReactNode; className?: string; as?: "section" | "div" | "article" }) {
-  return <As className={cx("rounded-xl border border-line bg-surface p-4 sm:p-5", className)}>{children}</As>;
+  return <As className={cx("rounded-2xl border border-line bg-surface p-5 shadow-card sm:p-6", className)}>{children}</As>;
 }
 
 export function H2({ children, right, id }: { children: ReactNode; right?: ReactNode; id?: string }) {
   return (
-    <div className="mb-3 flex items-baseline justify-between gap-3">
-      <h2 id={id} className="text-xs font-semibold uppercase tracking-wider text-faint">
+    <div className="mb-4 flex items-baseline justify-between gap-3">
+      <h2 id={id} className="font-display text-[15px] font-semibold tracking-tight text-ink">
         {children}
       </h2>
       {right}
@@ -33,15 +43,33 @@ export function H2({ children, right, id }: { children: ReactNode; right?: React
 
 export function Badge({ children, tone = "neutral", title }: { children: ReactNode; tone?: "neutral" | "good" | "warn" | "bad" | "accent"; title?: string }) {
   const tones = {
-    neutral: "border-line text-muted",
-    good: "border-good/40 text-good",
-    warn: "border-warn/40 text-warn",
-    bad: "border-bad/40 text-bad",
-    accent: "border-accent/40 text-accent",
+    neutral: "bg-surface-2 text-muted",
+    good: "bg-accent-soft text-accent-ink",
+    warn: "bg-warn/10 text-warn",
+    bad: "bg-bad/10 text-bad",
+    accent: "bg-accent-soft text-accent-ink",
   };
   return (
-    <span title={title} className={cx("inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium leading-4", tones[tone])}>
+    <span title={title} className={cx("inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold leading-4", tones[tone])}>
       {children}
+    </span>
+  );
+}
+
+/** Pill for activity / coverage levels. */
+export function LevelPill({ level, kind }: { level: string; kind: "activity" | "coverage" }) {
+  const strong = level === "high" || level === "rich";
+  const mid = level === "medium" || level === "thin";
+  return (
+    <span
+      className={cx(
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium capitalize",
+        strong ? "bg-accent-soft text-accent-ink" : mid ? "bg-surface-2 text-ink" : "bg-surface-2 text-faint",
+      )}
+    >
+      <span className={cx("h-1.5 w-1.5 rounded-full", strong ? "bg-accent" : mid ? "bg-muted" : "bg-faint")} aria-hidden />
+      {level}
+      <span className="sr-only"> {kind}</span>
     </span>
   );
 }
@@ -138,20 +166,36 @@ export const SOURCE_LABEL: Record<string, string> = {
   hosting: "DNS/HTTP",
 };
 
-export function FitScore({ score, reasons, align = "left" }: { score: number; reasons: { reason: string; points: number }[]; align?: "left" | "right" }) {
+/** Fit score as a mint ring (CSS conic-gradient, no chart library). */
+export function FitRing({ score, size = 44 }: { score: number; size?: number }) {
+  const pct = Math.max(0, Math.min(100, score));
+  return (
+    <span
+      className="relative inline-grid shrink-0 place-items-center rounded-full"
+      style={{ width: size, height: size, background: `conic-gradient(var(--accent) ${pct * 3.6}deg, var(--surface-2) 0)` }}
+      aria-hidden
+    >
+      <span className="grid place-items-center rounded-full bg-surface font-display font-bold tabular-nums text-ink" style={{ width: size - 8, height: size - 8, fontSize: size * 0.32 }}>
+        {score}
+      </span>
+    </span>
+  );
+}
+
+export function FitScore({ score, reasons, align = "left", size = 56 }: { score: number; reasons: { reason: string; points: number }[]; align?: "left" | "right"; size?: number }) {
   return (
     <details className="group relative inline-block">
-      <summary className="cursor-pointer list-none rounded font-mono text-sm tabular-nums [&::-webkit-details-marker]:hidden" aria-label={`Fit score ${score}. Show reasons`}>
-        <span className="font-semibold text-ink">{score}</span>
-        <span className="text-faint">/100</span>
+      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-full [&::-webkit-details-marker]:hidden" aria-label={`Fit score ${score} out of 100. Show reasons`}>
+        <FitRing score={score} size={size} />
       </summary>
-      <div className={cx("absolute z-20 mt-1 w-72 max-w-[80vw] rounded-lg border border-line bg-surface p-3 text-left text-xs shadow-lg", align === "right" ? "right-0" : "left-0")}>
-        <p className="mb-1 font-semibold text-ink">Top reasons</p>
+      <div className={cx("absolute z-20 mt-2 w-72 max-w-[80vw] rounded-xl border border-line bg-surface p-4 text-left text-xs shadow-card", align === "right" ? "right-0" : "left-0")}>
+        <p className="mb-2 font-display text-sm font-semibold text-ink">Why {score}/100</p>
         {reasons.length ? (
-          <ul className="space-y-1 text-muted">
+          <ul className="space-y-1.5 text-muted">
             {reasons.slice(0, 3).map((r) => (
-              <li key={r.reason}>
-                <span className="font-mono text-ink">+{r.points}</span> {r.reason}
+              <li key={r.reason} className="flex gap-2">
+                <span className="shrink-0 rounded-full bg-accent-soft px-1.5 font-mono text-[11px] font-semibold text-accent-ink">+{r.points}</span>
+                <span>{r.reason}</span>
               </li>
             ))}
           </ul>

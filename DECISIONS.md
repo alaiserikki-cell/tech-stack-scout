@@ -53,15 +53,14 @@ Each entry: decision, alternatives considered, why.
 
 Meesho, Razorpay, Postman (Indian tech companies), Rothy's (deliberately thin: no GitHub org, one Ashby engineering role, a Shopify blog without engineering posts), Spotify, Vercel, Stripe, Notion, Linear, GitLab. Sweetgreen was first picked as the thin company, but GitHub discovery then found its real org (github.com/sweetgreen, 67 repos, website matches), so verify-seed now probes the domain stem for thin candidates and Rothy's replaced it; Sweetgreen stays on the watchlist as a normal company. Failed checks: Ramp (no GitHub org `ramp`), PhonePe, Hasura (no public board/feed found), Groww (no GitHub org), Allbirds (nothing found).
 
-## Visual direction
+## Visual direction (revised 2026-10-11, after Common Room by Zoom)
 
-**"Field notes for a sales call."** The product is a reading tool used on a phone in the minute before a call, so it should feel like a well-typeset briefing card, not a dashboard.
+You asked for the look of Common Room (commonroom.io, by Zoom), a buyer-intelligence product close to this one.
 
-- **Type:** Geist Sans (already bundled by Next, highly legible at small sizes) for everything; Geist Mono only for counts and ids. Body 16px, line height 1.55. The opener is set at 20–22px, medium weight.
-- **Colour:** neutral zinc greys for all structure; one accent, a calm ink blue (`#2952cc` light / `#8aa4ff` dark), used only for links, the primary button and the focus ring. Status colours (amber for stale, red for errors, green for "new") appear only as small dots or badges, never as fills.
-- **Confidence:** a three-step marker (●●● / ●●○ / ●○○) in muted grey next to each technology, with a text label for screen readers. Never coloured.
-- **Layout:** single column, max-width 720px on reading pages, 16px gutters on phones, generous vertical rhythm (24–32px between sections). The watchlist is a table on desktop and stacked cards under 640px, so there is no horizontal scroll at 375px.
-- **Hierarchy on the brief page:** opener (copyable) → Already answered / Still unknown as compact cards → two paragraphs → What changed timeline → evidence (language bar drawn with divs, chips) → contradictions and source warnings → run controls.
-- **Motion:** none beyond a subtle skeleton shimmer and the live step indicator.
-- **Dark mode:** follows `prefers-color-scheme`, tokens defined as CSS variables.
-- **Copy:** plain, factual, no marketing language, no emoji, no illustrations. Empty states say what was checked.
+- **Canvas:** light sage background (#f3f7f5) with a soft mint wash at the top; white cards with 16px radius and a soft shadow.
+- **Type:** Inter Tight (bold, tight tracking) for headings, Inter for body. Headlines carry one mint-highlighted phrase, as Common Room does.
+- **Colour:** charcoal ink #2d2d2d for text and primary buttons; one mint accent (#1bc88c fills, #0b8a5f text for AA contrast) for pills, highlights, the fit ring and progress; amber only for competitors, red only for stale data.
+- **Components:** mint "eyebrow" pills, charcoal buttons, a single-bar add form (input + button) like Common Room's email capture, stat tiles, a fit-score ring drawn with a CSS conic-gradient (no chart library), level pills for activity and coverage, letter avatars.
+- **Brief page:** header card with fit ring and pills, mint-topped opener card with the opener at 21-26px, check-marked "Already answered" and question-marked "Still unknown" cards, evidence below.
+- **Dark mode:** same structure on a deep green-black, mint accent brightened.
+- **Phone:** nav becomes a horizontal strip under the logo; no horizontal page scroll at 375px.

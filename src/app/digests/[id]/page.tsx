@@ -53,7 +53,7 @@ async function Digest({ params }: PageProps<"/digests/[id]">) {
             <p className="mt-1 text-sm text-muted">
               {a.whyNow} {a.evidenceUrl && <Ext href={a.evidenceUrl}>evidence</Ext>}
             </p>
-            <Link href={`/company/${a.companyId}`} className="mt-3 inline-block rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-fg no-underline">
+            <Link href={`/company/${a.companyId}`} className="mt-3 inline-block rounded-lg bg-btn px-3 py-1.5 text-sm font-medium text-btn-fg no-underline">
               View brief
             </Link>
           </li>

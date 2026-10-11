@@ -7,14 +7,14 @@ import { getDb, schema } from "@/db/client";
 import type { RankedAccount } from "@/lib/digest";
 import { weekOfIST } from "@/lib/digest";
 import { BuildDigestButton } from "@/components/client";
-import { Card, Empty, PageTitle, SkeletonPage, fmtDate } from "@/components/ui";
+import { Card, Empty, Mint, PageTitle, SkeletonPage, fmtDate } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Digests" };
 
 export default function DigestsPage() {
   return (
     <div className="mx-auto max-w-3xl">
-      <PageTitle title="Digests" sub="Every Monday (India time) the daily job ranks which accounts to call this week and emails it. Ranking is computed in code: change-event weight plus fit score." />
+      <PageTitle eyebrow="Monday digest" title={<>Who to call, <Mint>every Monday.</Mint></>} sub="Every Monday (India time) the daily job ranks which accounts to call this week and emails it. Ranking is computed in code: change-event weight plus fit score." />
       <Suspense fallback={<SkeletonPage rows={4} />}>
         <DigestList />
       </Suspense>

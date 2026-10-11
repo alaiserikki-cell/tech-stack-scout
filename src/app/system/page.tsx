@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import Link from "next/link";
 import { count, desc, eq, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db/client";
-import { Card, H2, PageTitle, SkeletonPage, fmtDateTime } from "@/components/ui";
+import { Card, H2, Mint, PageTitle, SkeletonPage, fmtDateTime } from "@/components/ui";
 import { geminiConfigured } from "@/lib/gemini";
 import { emailConfigured } from "@/lib/email";
 
@@ -21,7 +21,7 @@ function nextCron(now: Date): Date {
 export default function SystemPage() {
   return (
     <>
-      <PageTitle title="System" sub="Schedule, run history and collector errors." />
+      <PageTitle eyebrow="System" title={<>Runs, schedule and <Mint>collector health.</Mint></>} sub="Daily cron schedule, every refresh run with its status, and any collector errors." />
       <Suspense fallback={<SkeletonPage rows={8} />}>
         <SystemData />
       </Suspense>

@@ -3,14 +3,14 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { sql } from "drizzle-orm";
 import { getDb } from "@/db/client";
-import { Card, H2, PageTitle, SkeletonPage } from "@/components/ui";
+import { Card, H2, Mint, PageTitle, SkeletonPage } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Costs" };
 
 export default function CostsPage() {
   return (
     <>
-      <PageTitle title="Costs" sub="Gemini usage by task and day, with an estimate at paid-tier rates. Actual spend is zero on the free tier." />
+      <PageTitle eyebrow="Costs" title={<>Gemini usage, <Mint>zero actual spend.</Mint></>} sub="Gemini usage by task and day, with an estimate at paid-tier rates. Actual spend is zero on the free tier." />
       <Suspense fallback={<SkeletonPage rows={6} />}>
         <CostData />
       </Suspense>

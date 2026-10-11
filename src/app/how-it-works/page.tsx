@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Card, H2, PageTitle } from "@/components/ui";
+import { Card, H2, Mint, PageTitle } from "@/components/ui";
 
 export const metadata: Metadata = { title: "How it works" };
 
@@ -46,7 +46,7 @@ const ROWS: { part: string; nikhil: string; system: string; ai: string }[] = [
 export default function HowItWorks() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <PageTitle title="How it works" sub="Signals in code, writing in Gemini. A fact that is not in the signals never appears in a brief." />
+      <PageTitle eyebrow="How it works" title={<>Signals in code, <Mint>writing in Gemini.</Mint></>} sub="Signals in code, writing in Gemini. A fact that is not in the signals never appears in a brief." />
       <Card className="bg-accent-soft">
         <H2>The flow in one line</H2>
         <p className="font-mono text-sm leading-relaxed">

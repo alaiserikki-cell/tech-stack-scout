@@ -6,14 +6,14 @@ import { getDb, schema } from "@/db/client";
 import { loadProfile } from "@/lib/repo";
 import { isAuthed } from "@/lib/auth";
 import { PasscodeForm, ProfileEditor, VerifyButton } from "@/components/client";
-import { Card, H2, PageTitle, SkeletonPage } from "@/components/ui";
+import { Card, H2, Mint, PageTitle, SkeletonPage } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Settings" };
 
 export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-3xl">
-      <PageTitle title="Settings" sub="The product profile shapes fit scores and briefs. Entries marked verify are excluded from matching until verified." />
+      <PageTitle eyebrow="Settings" title={<>Tune the profile <Mint>behind every brief.</Mint></>} sub="The product profile shapes fit scores and briefs. Entries marked verify are excluded from matching until verified." />
       <Suspense fallback={<SkeletonPage rows={6} />}>
         <SettingsData />
       </Suspense>

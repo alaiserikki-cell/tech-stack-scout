@@ -9,7 +9,7 @@ import type { Brief } from "@/lib/brief";
 import type { ChangeEvent, Computed, TechSummary } from "@/lib/compute";
 import { companyRuns, droppedTechs, recentSnapshots } from "@/lib/queries";
 import { AutoRunProgress, OpenerActions, RefreshButton, RemoveButton, SourceControl } from "@/components/client";
-import { Badge, Card, Confidence, Empty, Ext, FitScore, H2, SOURCE_LABEL, Skeleton, ago, cx, fmtDate, isStale } from "@/components/ui";
+import { Badge, Card, Confidence, Empty, Ext, FitScore, H2, LevelPill, SOURCE_LABEL, Skeleton, ago, cx, fmtDate, isStale } from "@/components/ui";
 import { boardUrl } from "@/collectors/jobs";
 
 export const metadata: Metadata = { title: "Company brief" };
@@ -67,34 +67,38 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
   return (
     <article className="mx-auto max-w-3xl space-y-6">
       {/* header */}
-      <header className="space-y-3">
-        <Link href="/" className="text-sm text-muted no-underline hover:underline">
+      <header className="space-y-4">
+        <Link href="/" className="inline-flex items-center gap-1 text-sm text-muted no-underline hover:text-ink">
           ← Watchlist
         </Link>
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{company.companyName}</h1>
-            <p className="text-sm text-muted">
-              <Ext href={`https://${company.domain}`}>{company.domain}</Ext>
-              {computed && (
-                <>
-                  {" · "}
-                  <span className="capitalize">{computed.activity.label}</span> activity · <span className="capitalize">{computed.coverage}</span> coverage
-                </>
-              )}
-            </p>
-          </div>
-          {computed && (
-            <div className="text-right">
-              <p className="text-xs text-faint">Fit score</p>
-              <FitScore score={computed.fit.score} reasons={computed.fit.reasons} align="right" />
+        <div className="rounded-2xl border border-line bg-surface p-5 shadow-card sm:p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <span aria-hidden className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-accent-soft font-display text-xl font-bold text-accent-ink">
+                {company.companyName.replace(/[^A-Za-z0-9]/g, "").slice(0, 1).toUpperCase()}
+              </span>
+              <div className="min-w-0">
+                <h1 className="font-display text-2xl font-bold tracking-[-0.02em] text-ink sm:text-3xl">{company.companyName}</h1>
+                <p className="truncate text-sm text-muted">
+                  <Ext href={`https://${company.domain}`}>{company.domain}</Ext>
+                </p>
+              </div>
             </div>
-          )}
+            {computed && (
+              <div className="flex flex-col items-center gap-1">
+                <FitScore score={computed.fit.score} reasons={computed.fit.reasons} align="right" size={60} />
+                <span className="text-[11px] font-medium text-faint">Fit score</span>
+              </div>
+            )}
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
+            {computed && <LevelPill level={computed.activity.label} kind="activity" />}
+            {computed && <LevelPill level={computed.coverage} kind="coverage" />}
+            {computed?.competitors.length ? <Badge tone="warn">Uses {computed.competitors[0].name}</Badge> : null}
+            <span className={isStale(company.lastRefreshedAt, now) ? "font-medium text-bad" : "text-faint"}>Refreshed {ago(company.lastRefreshedAt, now)}</span>
+            {!company.active && <span className="text-warn">· Removed from watchlist</span>}
+          </div>
         </div>
-        <p className="text-xs">
-          <span className={isStale(company.lastRefreshedAt, now) ? "text-bad" : "text-muted"}>Refreshed {ago(company.lastRefreshedAt, now)}</span>
-          {!company.active && <span className="text-warn"> · Removed from watchlist</span>}
-        </p>
         {progressRunId != null && <AutoRunProgress runId={progressRunId} />}
       </header>
 
@@ -103,11 +107,15 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
       {snap && (
         <>
           {/* opener */}
-          <Card className="border-accent/30">
-            <H2>Opener</H2>
+          <section className="relative overflow-hidden rounded-2xl border border-accent/40 bg-surface p-5 shadow-card sm:p-7">
+            <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-accent" />
+            <div className="mb-3 flex items-center gap-2">
+              <span className="rounded-full bg-accent px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-accent-fg">Opener</span>
+              <span className="text-xs text-faint">say this first</span>
+            </div>
             {brief?.opener ? (
               <>
-                <p className="text-xl font-medium leading-snug tracking-tight sm:text-[22px]">{brief.opener}</p>
+                <p className="font-display text-[21px] font-semibold leading-snug tracking-[-0.015em] text-ink sm:text-[26px]">{brief.opener}</p>
                 <p className="mt-2 text-xs text-muted">Based on {cite(brief.opener_signal_ids)}</p>
                 <div className="mt-4">
                   <OpenerActions snapshotId={snap.id} opener={brief.opener} />
@@ -116,7 +124,7 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
             ) : (
               <BriefStatusNote status={snap.briefStatus} hasBrief={Boolean(brief)} />
             )}
-          </Card>
+          </section>
 
           {brief && (
             <div className="grid gap-4 sm:grid-cols-2">
@@ -124,8 +132,11 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
                 <H2 id="answered">Already answered</H2>
                 <ul className="space-y-2">
                   {brief.already_answered.map((a) => (
-                    <li key={a.question} className="rounded-lg border border-line bg-surface p-3">
-                      <p className="text-sm font-medium">{a.question}</p>
+                    <li key={a.question} className="rounded-2xl border border-line bg-surface p-4 shadow-card">
+                      <p className="flex gap-2 text-sm font-semibold text-ink">
+                        <span aria-hidden className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-accent text-[10px] font-bold text-accent-fg">✓</span>
+                        {a.question}
+                      </p>
                       <p className="mt-1 text-sm text-muted">{a.answer}</p>
                       <p className="mt-1 text-xs text-faint">{cite(a.signal_ids)}</p>
                     </li>
@@ -136,8 +147,11 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
                 <H2 id="unknown">Still unknown</H2>
                 <ul className="space-y-2">
                   {brief.still_unknown.map((u) => (
-                    <li key={u.question} className="rounded-lg border border-dashed border-line p-3">
-                      <p className="text-sm font-medium">{u.question}</p>
+                    <li key={u.question} className="rounded-2xl border border-dashed border-line bg-surface/50 p-4">
+                      <p className="flex gap-2 text-sm font-semibold text-ink">
+                        <span aria-hidden className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full border border-faint text-[10px] font-bold text-faint">?</span>
+                        {u.question}
+                      </p>
                       <p className="mt-1 text-sm text-muted">{u.why_unknown}</p>
                     </li>
                   ))}
