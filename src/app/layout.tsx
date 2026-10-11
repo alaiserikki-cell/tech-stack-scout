@@ -59,7 +59,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                 </span>
               </span>
             </Link>
-            <nav aria-label="Main" className="order-3 -mx-1 flex w-full gap-x-0.5 overflow-x-auto whitespace-nowrap text-sm sm:order-none sm:w-auto sm:flex-1 sm:flex-wrap">
+            <nav aria-label="Main" className="order-3 -mx-1 flex w-full gap-x-0.5 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden text-sm sm:order-none sm:w-auto sm:flex-1 sm:flex-wrap">
               {NAV.map((n) => (
                 <Link key={n.href} href={n.href} className="rounded-lg px-2.5 py-1.5 text-muted no-underline transition-colors hover:bg-surface-2 hover:text-ink">
                   {n.label}
