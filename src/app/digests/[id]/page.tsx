@@ -61,6 +61,16 @@ async function Digest({ params }: PageProps<"/digests/[id]">) {
         {!ranked.length && <p className="text-sm text-muted">No accounts with snapshots when this digest was built.</p>}
       </ol>
       <Card>
+        <H2>The email itself</H2>
+        <p className="mb-3 text-sm text-muted">This is exactly what lands in Nikhil's inbox every Monday (subject above).</p>
+        <iframe
+          title="Digest email preview"
+          srcDoc={d.html}
+          sandbox="allow-popups allow-popups-to-escape-sandbox"
+          className="h-[620px] w-full rounded-lg border border-line bg-white"
+        />
+      </Card>
+      <Card>
         <H2>Email</H2>
         <EmailDigestForm digestId={d.id} />
         <p className="mt-3 text-xs text-faint">

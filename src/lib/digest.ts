@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { desc, eq, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db/client";
 import type { ChangeEvent, Computed } from "./compute";
-import { sendMail } from "./email";
+import { RecipientRestrictedError, sendMail } from "./email";
 
 export interface RankedAccount {
   companyId: number;
@@ -105,16 +105,16 @@ export async function buildDigest(weekOf = weekOfIST()): Promise<typeof schema.d
 
 export const hashRecipient = (email: string) => createHash("sha256").update(email.trim().toLowerCase()).digest("hex").slice(0, 24);
 
-export async function sendDigest(digestId: number, to: string): Promise<"sent" | "failed"> {
+export async function sendDigest(digestId: number, to: string): Promise<"sent" | "failed" | "restricted"> {
   const db = getDb();
   const [d] = await db.select().from(schema.digests).where(eq(schema.digests.id, digestId));
   if (!d) throw new Error("digest not found");
   const ranked = d.rankedAccounts as RankedAccount[];
-  let status: "sent" | "failed" = "sent";
+  let status: "sent" | "failed" | "restricted" = "sent";
   try {
     await sendMail(to, digestSubject(ranked.length, d.weekOf), d.html);
-  } catch {
-    status = "failed";
+  } catch (e) {
+    status = e instanceof RecipientRestrictedError ? "restricted" : "failed";
   }
   await db.insert(schema.digestSends).values({ digestId, recipient: hashRecipient(to), status });
   return status;

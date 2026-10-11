@@ -1,5 +1,8 @@
 import nodemailer from "nodemailer";
 
+/** Thrown when the provider only allows the account owner as recipient (Resend without a verified domain). */
+export class RecipientRestrictedError extends Error {}
+
 /**
  * Email transport. Resend (HTTP API) is used when RESEND_API_KEY is set; Gmail SMTP via Nodemailer
  * is the fallback when GMAIL_USER / GMAIL_APP_PASSWORD are set.
@@ -23,6 +26,7 @@ export async function sendMail(to: string, subject: string, html: string): Promi
       headers: { authorization: `Bearer ${process.env.RESEND_API_KEY}`, "content-type": "application/json" },
       body: JSON.stringify({ from, to: [to], subject, html }),
     });
+    if (res.status === 403) throw new RecipientRestrictedError("Resend: recipient not allowed without a verified domain");
     if (!res.ok) throw new Error(`Resend returned HTTP ${res.status}`);
     return;
   }

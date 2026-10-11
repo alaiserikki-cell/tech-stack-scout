@@ -591,7 +591,7 @@ export function EmailDigestForm({ digestId }: { digestId: number }) {
         </button>
       </form>
       <p className="mt-2 text-xs text-muted" aria-live="polite">
-        {ok ? "Sent. Check your inbox (and spam folder)." : "Max 3 per address per day. The address is not stored or shown."}
+        {ok ? "Sent. Check your inbox (and spam folder)." : "Max 3 per address per day. The address is not stored or shown. The demo sender can only deliver to the project owner's inbox; the preview above shows the exact email."}
       </p>
       {gate}
       {err}
