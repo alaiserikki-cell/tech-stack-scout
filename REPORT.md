@@ -24,7 +24,7 @@
 | 13 | Production: all 8 pages return 200 logged out, no error text | Pass |
 | 14 | Production: refresh via API steps through Reading GitHub → Reading blog → Writing brief → success | Pass (~18 s) |
 | 15 | Production: cron without secret → 401; with secret → refreshed 4 due companies in 143 s (under the 210 s budget), digest "not Monday" | Pass |
-| 16 | Production: digest emailed via API to `DIGEST_TO` (Resend); invalid address rejected | Pass |
+| 16 | Production: digest emailed via API to `DIGEST_TO` (Resend), links point to production; invalid address rejected; a non-owner address gets a clear explanation (422) and the digest page shows the exact email | Pass |
 | 17 | Local (same code + DB): passcode form (wrong passcode rejected, right one accepted), add company by domain in UI → redirected with live step indicator → brief written | Pass |
 | 18 | Writes without passcode → 401; refresh within 10 min → cached run; opener feedback; source confirm; bad source edit rejected | Pass |
 | 19 | 375 px width: no horizontal scroll on watchlist and brief pages (production and local) | Pass |
@@ -44,6 +44,6 @@ Not done in the browser: typing the passcode into the **production** site (my sa
 - Functions: 300 s default and maximum → `maxDuration = 300`; cron stops starting work at 210 s.
 - Cron: once per day, ±59 min → `30 2 * * *` (08:00 IST).
 
-## Blocked / limits (see BLOCKED.md)
+## Known limit (accepted)
 
-- Email uses the aangan Resend account without a verified domain, so it can only deliver to the alaiserikki Gmail. Graders who use "Email me this digest" with their own address will see "Sending failed". A verified Resend domain or Gmail credentials remove this.
+Email uses the aangan Resend account without a verified sending domain, so it only delivers to that account's own inbox (the alaiserikki Gmail, which is `DIGEST_TO`). The Monday digest arrives there. On /digests/[id] graders see the exact email in a preview, and "Email me this digest" to another address explains the restriction instead of failing silently. Decision: accepted for submission (option 3). Fix later with a verified Resend domain or Gmail SMTP credentials.
