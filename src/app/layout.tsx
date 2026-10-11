@@ -9,7 +9,7 @@ const interTight = Inter_Tight({ variable: "--font-inter-tight", subsets: ["lati
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: { default: "Tech Stack Scout", template: "%s · Tech Stack Scout" },
+  title: { default: "FlakeGuard", template: "%s · FlakeGuard" },
   description: "Call-prep briefs on how target companies build software, from public signals.",
 };
 
@@ -51,7 +51,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3">
             <Link href="/" className="flex items-center gap-2 text-ink no-underline">
               <LogoMark />
-              <span className="font-display text-[15px] font-bold tracking-tight">Tech Stack Scout</span>
+              <span className="font-display text-[15px] font-bold tracking-tight">FlakeGuard</span>
             </Link>
             <nav aria-label="Main" className="order-3 -mx-1 flex w-full gap-x-0.5 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden text-sm sm:order-none sm:w-auto sm:flex-1 sm:flex-wrap">
               {NAV.map((n) => (
@@ -67,7 +67,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {children}
         </main>
         <footer className="border-t border-line/70 py-6 text-center text-xs text-faint">
-          Tech Stack Scout · facts in code, prose by Gemini Flash · <a href="https://github.com/alaiserikki-cell/tech-stack-scout">source on GitHub</a>
+          FlakeGuard · facts in code, prose by Gemini Flash · <a href="https://github.com/alaiserikki-cell/tech-stack-scout">source on GitHub</a>
         </footer>
       </body>
     </html>

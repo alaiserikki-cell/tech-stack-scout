@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { FitRing, LevelPill } from "./ui";
 
@@ -209,7 +209,7 @@ export function RefreshButton({ companyId, activeRunId }: { companyId: number; a
 // ---------------------------------------------------------------------------
 // Add / remove company
 // ---------------------------------------------------------------------------
-export function AddCompanyForm({ hero, autoFocus }: { hero?: boolean; autoFocus?: boolean }) {
+export function AddCompanyForm({ hero, autoFocus, onAdded }: { hero?: boolean; autoFocus?: boolean; onAdded?: () => void }) {
   const [domain, setDomain] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
@@ -220,7 +220,11 @@ export function AddCompanyForm({ hero, autoFocus }: { hero?: boolean; autoFocus?
     setBusy(true);
     await run(
       () => postJson("/api/companies", { domain, name }),
-      (d) => router.push(`/company/${d.id}${d.runId ? `?run=${d.runId}` : ""}`),
+      (d) => {
+        onAdded?.();
+        setDomain("");
+        router.push(`/company/${d.id}${d.runId ? `?run=${d.runId}` : ""}`);
+      },
     );
     setBusy(false);
   };
@@ -472,6 +476,7 @@ export interface WatchRow {
   fitReasons: { reason: string; points: number }[];
   activity: string;
   languages: string[];
+  languagesFrom: "code" | "jobs" | null;
   competitor: string | null;
   lastRefreshed: string | null;
   lastRefreshedLabel: string;
@@ -555,9 +560,16 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
                 </td>
                 <td className="px-3 py-3">
                   <span className="flex flex-wrap gap-1">
-                    {r.languages.length ? r.languages.map((l) => (
-                      <span key={l} className="whitespace-nowrap rounded-md bg-surface-2 px-1.5 py-0.5 text-xs text-muted">{l}</span>
-                    )) : <span className="text-faint">–</span>}
+                    {r.languages.length ? (
+                      <>
+                        {r.languages.map((l) => (
+                          <span key={l} className="whitespace-nowrap rounded-md bg-surface-2 px-1.5 py-0.5 text-xs text-muted">{l}</span>
+                        ))}
+                        {r.languagesFrom === "jobs" && <span className="whitespace-nowrap px-0.5 py-0.5 text-[11px] text-faint" title="No public code; these languages come from job posts">from jobs</span>}
+                      </>
+                    ) : (
+                      <span className="whitespace-nowrap text-xs text-faint">No public code</span>
+                    )}
                   </span>
                 </td>
                 <td className="px-3 py-3 text-xs">{r.competitor ? <span className="rounded-full bg-warn/10 px-2 py-0.5 font-medium text-warn">{r.competitor}</span> : <span className="text-faint">None seen</span>}</td>
@@ -628,6 +640,8 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
                   {r.languages.map((l) => (
                     <span key={l} className="rounded-md bg-surface-2 px-1.5 py-0.5 text-xs text-muted">{l}</span>
                   ))}
+                  {r.languagesFrom === "jobs" && <span className="text-[11px] text-faint">from jobs</span>}
+                  {!r.languages.length && <span className="text-xs text-faint">No public code</span>}
                 </div>
                 <p className="mt-2 text-xs">
                   <span className={r.stale ? "font-medium text-bad" : "text-faint"}>{r.running ? "Refreshing…" : `Refreshed ${r.lastRefreshedLabel}`}</span>
@@ -851,6 +865,10 @@ export function Collapsible({ summary, children }: { summary: ReactNode; childre
 export function AddCompanyDialog() {
   const ref = useRef<HTMLDialogElement>(null);
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
   useEffect(() => {
     const d = ref.current;
     if (!d) return;
@@ -884,7 +902,7 @@ export function AddCompanyDialog() {
                 ×
               </button>
             </div>
-            <AddCompanyForm hero autoFocus />
+            <AddCompanyForm hero autoFocus onAdded={() => setOpen(false)} />
             <ul className="mt-4 space-y-1 text-xs text-faint">
               <li>We look for its public GitHub, job board, engineering blog, talks and hosting.</li>
               <li>To remove a company later, use Remove on its row in the watchlist.</li>

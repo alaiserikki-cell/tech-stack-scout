@@ -86,7 +86,7 @@ export function renderDigestHtml(accounts: RankedAccount[], weekOf: string, appU
   <tr><td style="padding:16px 0 4px;font:600 18px -apple-system,Segoe UI,Roboto,sans-serif;color:#18181b">Who to call this week</td></tr>
   <tr><td style="padding-bottom:8px;font:400 13px -apple-system,Segoe UI,Roboto,sans-serif;color:#71717a">Week of ${esc(weekOf)} · ranked by what changed plus fit score</td></tr>
   ${rows || `<tr><td style="padding:16px 0;color:#71717a">No accounts on the watchlist yet.</td></tr>`}
-  <tr><td style="padding:16px 0;font:400 12px -apple-system,Segoe UI,Roboto,sans-serif;color:#a1a1aa">Tech Stack Scout · facts collected from public GitHub, job boards, blogs, Hacker News and DNS</td></tr>
+  <tr><td style="padding:16px 0;font:400 12px -apple-system,Segoe UI,Roboto,sans-serif;color:#a1a1aa">FlakeGuard · facts collected from public GitHub, job boards, blogs, Hacker News and DNS</td></tr>
 </table></body></html>`;
 }
 
