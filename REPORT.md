@@ -2,7 +2,7 @@
 
 - **Production URL:** https://tech-stack-scout-zeta.vercel.app
 - **Repo URL:** https://github.com/alaiserikki-cell/tech-stack-scout
-- **DEMO_PASSCODE:** `amber-kite-birch`
+- **Passcode:** none required (switched off at your request; `REQUIRE_PASSCODE=true` re-enables it)
 - Verified on 2026-10-11.
 
 ## Checks run
@@ -34,7 +34,6 @@
 
 Bug found and fixed during verification: a regex that removes inline `[12, 13]` citations from brief prose lost its backslashes and deleted every "s" and "d". Fixed, covered by a new unit test, affected briefs reset and regenerated.
 
-Not done in the browser: typing the passcode into the **production** site (my safety rules allow it only on localhost). The same flows were verified on localhost and against production through its API.
 
 ## verify:true items for you to review (/settings)
 

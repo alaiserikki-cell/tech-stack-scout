@@ -25,6 +25,8 @@ Each entry: decision, alternatives considered, why.
 
 | Email via Resend HTTP API (`RESEND_API_KEY`, from `onboarding@resend.dev`), same setup as the aangan-enquiry-agent project; Gmail SMTP via Nodemailer kept as fallback | Gmail SMTP only (spec) | You asked to send email the same way as aangan. That Resend account has no verified domain, so it can only deliver to its own sign-up address, which is the alaiserikki Gmail; `DIGEST_TO` is set to it. A verified domain (`RESEND_FROM`) or Gmail credentials would allow any recipient. |
 
+| Demo passcode switched **off** by default (`REQUIRE_PASSCODE=true` turns it back on) | Passcode on all writes (spec) | Your instruction: graders must be able to test everything from the URL with no passcode. Rate limits (refresh 1 per company per 10 min, 10 adds/day, 40 active, email 3 per address and 20 per day) still protect the free tiers. |
+
 ## Data and matching
 
 | Decision | Alternatives | Why |

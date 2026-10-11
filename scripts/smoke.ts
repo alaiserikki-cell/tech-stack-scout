@@ -1,6 +1,6 @@
 // End-to-end smoke test against a deployed instance (read-only unless --writes is passed).
 // Usage: npx tsx scripts/smoke.ts [baseUrl] [--writes]
-// --writes also logs in with DEMO_PASSCODE from .env and checks the guarded write endpoints
+// --writes also exercises write endpoints (logging in with DEMO_PASSCODE first if the site requires it)
 // (refresh is expected to return a cached run if one ran in the last 10 minutes).
 import "dotenv/config";
 
@@ -42,17 +42,22 @@ async function main() {
   check("cron rejects missing secret", (await get("/api/cron/daily")).status === 401);
   const post = (path: string, body: unknown, cookie?: string) =>
     get(path, { method: "POST", headers: { "content-type": "application/json", ...(cookie ? { cookie } : {}) }, body: JSON.stringify(body) });
-  check("add company without passcode is 401", (await post("/api/companies", { domain: "example.com" })).status === 401);
-  check("refresh without passcode is 401", (await post(`/api/companies/${ids[0] ?? 1}/refresh`, {})).status === 401);
+  // open mode (default): writes need no passcode, invalid input -> 400; passcode mode -> 401
+  const probe = (await post("/api/companies", { domain: "not a domain" })).status;
+  const open = probe !== 401;
+  console.log(`      mode: ${open ? "open (no passcode)" : "passcode required"}`);
+  check("invalid domain rejected (400) or guarded (401)", probe === 400 || probe === 401, `HTTP ${probe}`);
   check("wrong passcode is rejected", (await post("/api/auth", { passcode: "not-the-passcode" })).status === 401);
 
   if (writes) {
-    const pass = process.env.DEMO_PASSCODE ?? "";
-    const auth = await fetch(base + "/api/auth", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ passcode: pass }) });
-    const cookie = (auth.headers.get("set-cookie") ?? "").split(";")[0];
-    check("correct passcode sets httpOnly cookie", auth.status === 200 && /httponly/i.test(auth.headers.get("set-cookie") ?? ""));
+    let cookie = "";
+    if (!open) {
+      const auth = await fetch(base + "/api/auth", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ passcode: process.env.DEMO_PASSCODE ?? "" }) });
+      cookie = (auth.headers.get("set-cookie") ?? "").split(";")[0];
+      check("correct passcode sets httpOnly cookie", auth.status === 200 && /httponly/i.test(auth.headers.get("set-cookie") ?? ""));
+    }
     const rf = await post(`/api/companies/${ids[0]}/refresh`, {}, cookie);
-    check("refresh with passcode returns a run", rf.status === 200 && /runId/.test(rf.text), rf.text.slice(0, 80));
+    check("refresh returns a run (or the cached one within 10 min)", rf.status === 200 && /runId/.test(rf.text), rf.text.slice(0, 80));
     const bad = await post("/api/companies", { domain: "not a domain" }, cookie);
     check("invalid domain rejected", bad.status === 400);
     const em = await post("/api/digests/1/send", { email: "nope" }, cookie);

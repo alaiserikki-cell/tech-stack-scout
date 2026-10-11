@@ -10,7 +10,7 @@ A watchlist of target companies that stays current automatically. For each compa
 ## For graders
 
 - **URL:** https://tech-stack-scout-zeta.vercel.app
-- **Passcode:** `amber-kite-birch` . All pages are readable without it. Adding, refreshing, confirming sources, opener feedback, settings and emailing need it.
+- **No passcode needed.** Every page and every action works straight from the URL. Rate limits protect the free tiers: one refresh per company per 10 minutes (else the cached run is shown), 10 new companies per day, 40 active companies max, digest email max 3 per address and 20 in total per day.
 - **Three things to try**
   1. **Refresh a seeded company.** Open any company on the watchlist, press **Refresh now** and watch the live steps (Finding sources → Reading GitHub → Reading job posts → Reading blog → Writing brief). A company refreshed in the last 10 minutes returns the cached run.
   2. **Add a company by domain.** On the watchlist, type a domain (e.g. `posthog.com`) and press **Add company**. You land on its page while the brief builds (about a minute). Auto-discovered sources show as *Unverified* with Confirm / Edit.
@@ -64,12 +64,13 @@ npm run dev
 | `GMAIL_USER`, `GMAIL_APP_PASSWORD` | Gmail SMTP fallback (2-Step Verification on, then an app password) |
 | `DIGEST_TO` | Where the Monday digest goes |
 | `CRON_SECRET` | Vercel Cron sends `Authorization: Bearer <CRON_SECRET>` |
-| `DEMO_PASSCODE` | Passcode for write actions (stored as an httpOnly cookie) |
+| `REQUIRE_PASSCODE` | `true` to require `DEMO_PASSCODE` for write actions (off by default) |
+| `DEMO_PASSCODE` | Passcode for write actions when `REQUIRE_PASSCODE=true` (stored as an httpOnly cookie) |
 | `APP_URL` | Production URL, used for links in the email |
 
 ## Adding companies (for Nikhil)
 
-- **Dashboard:** enter the domain on the watchlist, enter the passcode once. The brief builds immediately.
+- **Dashboard:** enter the domain on the watchlist and press Add company. The brief builds immediately.
 - **Neon console:** insert a row; the next daily cron picks it up because `last_refreshed_at` is null.
 
 ```sql

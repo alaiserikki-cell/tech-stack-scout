@@ -20,7 +20,13 @@ export function authCookieValue(): string {
   return token();
 }
 
+/** The demo passcode is off unless REQUIRE_PASSCODE=true; rate limits still apply to every write. */
+export function passcodeRequired(): boolean {
+  return process.env.REQUIRE_PASSCODE === "true";
+}
+
 export async function isAuthed(): Promise<boolean> {
+  if (!passcodeRequired()) return true;
   const v = (await cookies()).get(AUTH_COOKIE)?.value;
   if (!v) return false;
   const t = token();

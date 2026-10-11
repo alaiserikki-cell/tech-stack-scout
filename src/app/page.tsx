@@ -63,7 +63,7 @@ async function Watchlist() {
         <Card className="bg-accent-soft">
           <H2>Try it</H2>
           <ol className="list-decimal space-y-1 pl-5 text-sm text-muted">
-            <li>{authed ? "Passcode accepted. Changes are unlocked." : "Enter the demo passcode from the README."}</li>
+            {!authed && <li>Enter the demo passcode from the README.</li>}
             <li>Open a company and press Refresh now to watch the steps.</li>
             <li>Add a company by its domain, e.g. a startup you know.</li>
             <li>Open Digests and email yourself this week&apos;s ranking.</li>
