@@ -4,10 +4,11 @@ import { githubCollector } from "./github";
 import { jobsCollector } from "./jobs";
 import { blogCollector } from "./blog";
 import { hnCollector } from "./hn";
+import { talksCollector } from "./talks";
 import { hostingCollector } from "./hosting";
 
 /** Registry. Add a new source (e.g. TheirStack, YouTube) by writing a file that exports a Collector and listing it here. */
-export const COLLECTORS: Collector[] = [githubCollector, jobsCollector, blogCollector, hnCollector, hostingCollector];
+export const COLLECTORS: Collector[] = [githubCollector, jobsCollector, blogCollector, hnCollector, talksCollector, hostingCollector];
 
 export interface CollectorOutcome extends Omit<CollectorResult, "error"> {
   name: string;

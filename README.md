@@ -33,6 +33,7 @@ trigger → discover sources → collectors (GitHub · Greenhouse/Lever/Ashby ·
 | `jobs` | Greenhouse, Lever, Ashby public JSON. Engineering roles only; technologies tagged *requirement* / *nice to have* from section headings; initiative sentences (migrations, monolith breakup, platform team, CI reliability, build times, test infra, developer productivity). |
 | `blog` | RSS/Atom feed (auto-discovered), posts from the last 90 days, max 5 new per run, Gemini extraction with verbatim-quote verification. |
 | `hn` | Algolia HN stories from the last 12 months linking to the company or blog domain. |
+| `talks` | Developer conference talks (YouTube, Vimeo, InfoQ, SpeakerDeck…) from the last 3 years, found key-free via Hacker News, kept only when the company owns the talk ("at Stripe", "Vercel's…") or it pairs the company with a technology and an engineering topic. |
 | `hosting` | DNS-over-HTTPS (CNAME/A) + one HEAD request → *public-facing hosting* only. |
 
 Computed in code (`src/lib/compute.ts`, weights and thresholds documented inline): language share, CI/infra/cloud/test lists, confidence (high: 2+ sources or 3+ recent job posts), adopted/dropped (`tech_state`), competitor presence, fit score 0–100 with reasons, activity label, contradictions (GitHub vs job-post language), change events, coverage, and a hash of the normalised signal set (unchanged ⇒ `skipped_unchanged`, no Gemini call).
@@ -71,7 +72,8 @@ npm run dev
 ## Adding companies (for Nikhil)
 
 - **Dashboard:** enter the domain on the watchlist and press Add company. The brief builds immediately.
-- **Neon console:** insert a row; the next daily cron picks it up because `last_refreshed_at` is null.
+- **Remove:** press **Remove** on the company's row in the watchlist (confirm), or at the bottom of its page. History is kept; adding the domain again reactivates it.
+- **Neon console:** insert a row; the next daily cron picks it up because `last_refreshed_at` is null. (The problem statement mentions Supabase; this build uses Neon, which is also hosted Postgres; the same rows can be added or removed in Neon's table editor without touching code.)
 
 ```sql
 insert into watchlist (company_name, domain) values ('Acme', 'acme.com');

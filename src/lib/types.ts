@@ -1,4 +1,4 @@
-export type Source = "github" | "jobs" | "blog" | "hn" | "hosting";
+export type Source = "github" | "jobs" | "blog" | "hn" | "talks" | "hosting";
 export type Category =
   | "language"
   | "framework"

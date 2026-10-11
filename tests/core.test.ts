@@ -10,6 +10,7 @@ import { verifyMentions, parseFeed } from "../src/collectors/blog";
 import { changeEvents, computeFields, confidenceFor, fitScore, signalHash, updateTechState, type Computed } from "../src/lib/compute";
 import { stripInlineIds, validateBrief, type BriefSignal } from "../src/lib/brief";
 import { rankAccounts } from "../src/lib/digest";
+import { isTalkUrl, selectTalks, talkTechMatches } from "../src/collectors/talks";
 
 const dict = dictJson as DictEntry[];
 const profile = profileJson as ProductProfile;
@@ -333,5 +334,33 @@ describe("computeFields integration", () => {
     expect(c.sdkHeavy).toBe(true);
     expect(c.coverage).toBe("rich");
     expect(c.techs.find((t) => t.name === "Java")?.confidence).toBe("high");
+  });
+});
+
+describe("conference talks", () => {
+  const hit = (title: string, url: string | null, id = title) => ({ objectID: id, title, url, points: 10, num_comments: 1, created_at: "2026-09-01T00:00:00Z" });
+  it("keeps talk-host links whose title names the company, de-duplicated", () => {
+    const r = selectTalks(
+      [
+        hit("How Stripe builds reliable APIs [video]", "https://www.youtube.com/watch?v=abc"),
+        hit("How Stripe builds reliable APIs (repost)", "https://www.youtube.com/watch?v=abc", "dup"),
+        hit("Scaling CI at Stripe", "https://www.infoq.com/presentations/stripe-ci/"),
+        hit("Stripe raises money", "https://techcrunch.com/x"),
+        hit("Striped tables in CSS", "https://www.youtube.com/watch?v=zzz"),
+        hit("Unrelated talk", "https://vimeo.com/1"),
+        hit("Linear algebra for beginners", "https://www.youtube.com/watch?v=la"),
+      ],
+      "Stripe",
+    );
+    expect(r.map((h) => h.title)).toEqual(["How Stripe builds reliable APIs [video]", "Scaling CI at Stripe"]);
+  });
+  it("recognises talk hosts", () => {
+    expect(isTalkUrl("https://youtu.be/x")).toBe(true);
+    expect(isTalkUrl("https://speakerdeck.com/a/b")).toBe(true);
+    expect(isTalkUrl("https://example.com/talk")).toBe(false);
+    expect(isTalkUrl(null)).toBe(false);
+  });
+  it("extracts technologies from talk titles", () => {
+    expect(talkTechMatches("Migrating to Kubernetes at Stripe", dict).map((m) => m.entry.canonical_name)).toContain("Kubernetes");
   });
 });

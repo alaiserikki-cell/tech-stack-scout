@@ -27,6 +27,9 @@ Each entry: decision, alternatives considered, why.
 
 | Demo passcode switched **off** by default (`REQUIRE_PASSCODE=true` turns it back on) | Passcode on all writes (spec) | Your instruction: graders must be able to test everything from the URL with no passcode. Rate limits (refresh 1 per company per 10 min, 10 adds/day, 40 active, email 3 per address and 20 per day) still protect the free tiers. |
 
+| Neon Postgres kept instead of Supabase | Move to Supabase (problem statement wording) | Your decision. Your build brief specified Neon; both are hosted Postgres, and Nikhil adds or removes companies in Neon's table editor (or the dashboard) without touching code. |
+| Conference talks via Hacker News (Algolia) links to YouTube, Vimeo, InfoQ, SpeakerDeck | YouTube Data API | The problem statement lists conference talks as a source. The Gemini key is rejected by the YouTube API (it needs OAuth), so talks are found key-free. Precision rule: the company must own the talk, or the title must pair it with a technology and an engineering topic. |
+
 ## Data and matching
 
 | Decision | Alternatives | Why |

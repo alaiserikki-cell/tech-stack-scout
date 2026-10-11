@@ -112,6 +112,7 @@ export function selectBriefSignals(signals: Signal[], computed: Computed): Brief
   for (const s of signals.filter((s) => s.kind === "initiative").sort(byRecent).slice(0, 10)) add(s);
   for (const s of signals.filter((s) => s.kind === "blog_post").sort(byRecent).slice(0, 5)) add(s);
   for (const s of signals.filter((s) => s.kind === "hn_story").sort(byRecent).slice(0, 5)) add(s);
+  for (const s of signals.filter((s) => s.kind === "talk").sort(byRecent).slice(0, 5)) add(s);
   for (const s of signals.filter((s) => s.kind === "job_post").sort(byRecent).slice(0, 8)) add(s);
   return out;
 }
@@ -119,12 +120,12 @@ export function selectBriefSignals(signals: Signal[], computed: Computed): Brief
 export const BRIEF_SYSTEM = `You write call-prep briefs for an account executive. You ONLY rewrite facts from the provided signals into prose.
 Rules:
 - Every factual claim must come from the signals. Cite signal ids. Never mention a technology, product, or vendor that does not appear in the signals.
-- Name the source type behind each claim ("their public GitHub", "their job posts", "their engineering blog", "a Hacker News story", "DNS/HTTP headers").
+- Name the source type behind each claim ("their public GitHub", "their job posts", "their engineering blog", "a Hacker News story", "a conference talk", "DNS/HTTP headers").
 - Hedge inferences: write "their job posts mention X", not "they run X". Public GitHub often shows SDKs and open-source tools rather than the internal stack; job posts are stronger evidence of the internal stack. If sdk_heavy is true or a contradiction is listed, say so.
 - Hosting signals describe public-facing hosting only, never the backend.
 - paragraph_1: how they build (languages, CI, infrastructure, cloud), naming the source behind each claim. 3-5 sentences.
 - paragraph_2: how actively they build, what changed recently, and where the product is relevant. 3-5 sentences.
-- opener: ONE sentence, at most 30 words, that references one specific recent signal and links it to the product's problem. Prefer the most recent owned content (a blog post or a job-post initiative) over repo statistics. If nothing connects, return an empty string.
+- opener: ONE sentence, at most 30 words, that references one specific recent signal and links it to the product's problem. Prefer the most recent owned content (a blog post, a conference talk or a job-post initiative) over repo statistics. If nothing connects, return an empty string.
 - already_answered: exactly 3 discovery questions the evidence already answers, each with a short answer and the signal ids behind it.
 - still_unknown: exactly 2 important discovery questions the signals cannot answer, with why.
 - caveats: short notes on evidence limits (sdk_heavy, unverified sources, contradictions, thin coverage).

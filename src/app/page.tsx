@@ -21,8 +21,9 @@ export default function Home() {
           Languages, CI, infrastructure and hiring signals from public GitHub, job boards, blogs, Hacker News and DNS, turned into a sourced brief. Every account refreshes at least weekly.
         </p>
         <div id="add" className="mx-auto mt-7 max-w-xl scroll-mt-28 text-left">
+          <p className="mb-2 text-center font-display text-sm font-semibold text-ink">Add a company to the watchlist</p>
           <AddCompanyForm hero />
-          <p className="mt-2 text-center text-xs text-faint">Type a domain. The brief builds in about a minute; sources are matched automatically.</p>
+          <p className="mt-2 text-center text-xs text-faint">Type a domain and press Build brief (about a minute). To remove a company, use Remove on its row below.</p>
         </div>
       </section>
       <Suspense fallback={<WatchlistSkeleton />}>

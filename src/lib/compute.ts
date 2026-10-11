@@ -28,7 +28,7 @@ export interface FitReason {
 }
 
 export interface ChangeEvent {
-  type: "new_initiative" | "new_tech" | "dropped_tech" | "competitor_appeared" | "hiring_spike" | "new_blog_post" | "new_hn_story";
+  type: "new_initiative" | "new_tech" | "dropped_tech" | "competitor_appeared" | "hiring_spike" | "new_blog_post" | "new_hn_story" | "new_talk";
   title: string;
   date: string;
   evidenceUrl: string | null;
@@ -62,6 +62,7 @@ export interface Computed {
   initiatives: { label: string; sentence: string; jobTitle: string; evidenceUrl: string | null; signalId: number | null; date: string }[];
   blogPosts: { title: string; url: string | null; date: string; topic: string; signalId: number | null }[];
   hnStories: { title: string; url: string | null; date: string; points: number; comments: number; signalId: number | null }[];
+  talks?: { title: string; url: string | null; host: string; date: string; signalId: number | null }[];
   contradictions: Contradiction[];
   fit: { score: number; reasons: FitReason[] };
   coverage: "rich" | "thin" | "none";
@@ -355,6 +356,10 @@ export function computeFields(args: {
   const hnStories = signals
     .filter((s) => s.kind === "hn_story")
     .map((s) => ({ title: s.name, url: s.evidenceUrl, date: s.observedAt, points: Number(s.detail.points), comments: Number(s.detail.comments), signalId: sid(s) }));
+  const talks = signals
+    .filter((s) => s.kind === "talk")
+    .map((s) => ({ title: s.name, url: s.evidenceUrl, host: String(s.detail.host ?? ""), date: s.observedAt, signalId: sid(s) }))
+    .sort((a, b) => b.date.localeCompare(a.date));
   const hosting = signals.filter((s) => s.kind === "hosting").map((s) => ({ name: s.name, evidence: String(s.detail.evidence), signalId: sid(s) }));
   const competitors = signals.filter((s) => s.kind === "competitor").map((s) => ({ name: s.name, match: String(s.detail.match), evidenceUrl: s.evidenceUrl, signalId: sid(s) }));
 
@@ -384,6 +389,7 @@ export function computeFields(args: {
     initiatives,
     blogPosts,
     hnStories,
+    talks,
     contradictions,
     githubOrg: signals.find((s) => s.kind === "org")?.name ?? null,
     jobBoard: jc?.evidenceUrl ?? null,
@@ -395,7 +401,7 @@ export function computeFields(args: {
   const nonPatternTechs = techs.filter((t) => t.category !== "pattern").length;
   const sourcesWithData = [hasGithub, hasJobs, hasBlog].filter(Boolean).length;
   const coverage: Computed["coverage"] =
-    !hasGithub && !hasJobs && !hasBlog && hnStories.length === 0 ? "none" : sourcesWithData >= 2 && nonPatternTechs >= 5 ? "rich" : "thin";
+    !hasGithub && !hasJobs && !hasBlog && hnStories.length === 0 && talks.length === 0 ? "none" : sourcesWithData >= 2 && nonPatternTechs >= 5 ? "rich" : "thin";
 
   return { ...base, fit, coverage, checked: args.checked, hash: signalHash(signals) };
 }
@@ -411,6 +417,7 @@ export const EVENT_WEIGHTS: Record<ChangeEvent["type"], number> = {
   new_blog_post: 8,
   dropped_tech: 8,
   new_hn_story: 6,
+  new_talk: 8,
 };
 
 export function changeEvents(curr: Computed, prev: Computed | null, newTechs: string[], dropped: string[], now: Date): ChangeEvent[] {
@@ -444,6 +451,9 @@ export function changeEvents(curr: Computed, prev: Computed | null, newTechs: st
   for (const b of curr.blogPosts) if (!prevBlog.has(b.url)) push({ type: "new_blog_post", title: `New post: ${b.title}`, date: b.date, evidenceUrl: b.url, signalIds: b.signalId != null ? [b.signalId] : [] });
   const prevHn = new Set(prev.hnStories.map((b) => b.url));
   for (const h of curr.hnStories) if (!prevHn.has(h.url)) push({ type: "new_hn_story", title: `On Hacker News: ${h.title} (${h.points} points)`, date: h.date, evidenceUrl: h.url, signalIds: h.signalId != null ? [h.signalId] : [] });
+
+  const prevTalks = new Set((prev.talks ?? []).map((t) => t.url));
+  if (prev.talks) for (const t of curr.talks ?? []) if (!prevTalks.has(t.url)) push({ type: "new_talk", title: `Conference talk: ${t.title}`, date: t.date, evidenceUrl: t.url, signalIds: t.signalId != null ? [t.signalId] : [] });
 
   return ev.sort((a, b) => b.weight - a.weight || b.date.localeCompare(a.date));
 }

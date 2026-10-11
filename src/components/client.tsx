@@ -528,7 +528,10 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
               </th>
               {th("lastRefreshed", "Freshness")}
               {th("coverage", "Coverage")}
-              {th("changes", "Changes", "pr-5")}
+              {th("changes", "Changes")}
+              <th scope="col" className="py-2.5 pl-3 pr-5 text-right font-medium">
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -563,7 +566,7 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
                 <td className="px-3 py-3">
                   <LevelPill level={r.coverage} kind="coverage" />
                 </td>
-                <td className="py-3 pl-3 pr-5">
+                <td className="px-3 py-3">
                   {r.changes > 0 ? (
                     <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-accent-soft px-2 py-0.5 text-xs font-semibold text-accent-ink">
                       <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden />
@@ -572,6 +575,9 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
                   ) : (
                     <span className="text-faint">–</span>
                   )}
+                </td>
+                <td className="py-3 pl-3 pr-5 text-right">
+                  <RowRemove id={r.id} name={r.name} />
                 </td>
               </tr>
             ))}
@@ -627,11 +633,56 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
                   {r.competitor && <span className="text-warn"> · {r.competitor}</span>}
                 </p>
               </Link>
+              <div className="-mt-1 flex justify-end px-2 pt-2">
+                <RowRemove id={r.id} name={r.name} />
+              </div>
             </li>
           ))}
         </ul>
       </div>
     </>
+  );
+}
+
+/** Remove a company straight from the watchlist (two-step confirm; history is kept). */
+function RowRemove({ id, name }: { id: number; name: string }) {
+  const [confirm, setConfirm] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const router = useRouter();
+  const { run, gate, err } = useGuarded();
+  if (!confirm)
+    return (
+      <button
+        onClick={() => setConfirm(true)}
+        aria-label={`Remove ${name} from the watchlist`}
+        className="rounded-lg px-2 py-1 text-xs font-medium text-faint transition-colors hover:bg-bad/10 hover:text-bad"
+      >
+        Remove
+      </button>
+    );
+  return (
+    <span className="inline-flex flex-wrap items-center justify-end gap-1.5 text-xs">
+      <span className="text-muted">Remove {name}?</span>
+      <button
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true);
+          await run(
+            () => postJson(`/api/companies/${id}`, undefined, "DELETE"),
+            () => router.refresh(),
+          );
+          setBusy(false);
+        }}
+        className="rounded-lg bg-bad px-2 py-1 font-semibold text-white disabled:opacity-60"
+      >
+        {busy ? "Removing…" : "Yes, remove"}
+      </button>
+      <button onClick={() => setConfirm(false)} className="rounded-lg border border-line px-2 py-1">
+        Cancel
+      </button>
+      {gate}
+      {err}
+    </span>
   );
 }
 

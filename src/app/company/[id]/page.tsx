@@ -469,6 +469,25 @@ function Evidence({ c, company }: { c: Computed; company: typeof schema.watchlis
         </Card>
       </div>
 
+      <Card>
+        <H2>Conference talks</H2>
+        {(c.talks ?? []).length ? (
+          <ul className="space-y-2 text-sm">
+            {(c.talks ?? []).slice(0, 6).map((t) => (
+              <li key={t.url ?? t.title} className="flex items-start gap-2">
+                <span className="mt-0.5 shrink-0 rounded-md bg-surface-2 px-1.5 py-0.5 text-[11px] font-medium text-muted">{t.host.replace(/.(com|be|de|tech|org)$/, "")}</span>
+                <span>
+                  <Ext href={t.url}>{t.title}</Ext>
+                  <span className="block text-xs text-faint">{fmtDate(t.date)}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-muted">No talks naming {company.companyName} found on YouTube, Vimeo, InfoQ or SpeakerDeck (via Hacker News, last 3 years).</p>
+        )}
+      </Card>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <Card>
           <H2>Public-facing hosting</H2>

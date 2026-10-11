@@ -163,6 +163,7 @@ export const SOURCE_LABEL: Record<string, string> = {
   jobs: "Job posts",
   blog: "Blog",
   hn: "Hacker News",
+  talks: "Talk",
   hosting: "DNS/HTTP",
 };
 
