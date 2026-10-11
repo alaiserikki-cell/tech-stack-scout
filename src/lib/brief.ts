@@ -128,6 +128,7 @@ Rules:
 - already_answered: exactly 3 discovery questions the evidence already answers, each with a short answer and the signal ids behind it.
 - still_unknown: exactly 2 important discovery questions the signals cannot answer, with why.
 - caveats: short notes on evidence limits (sdk_heavy, unverified sources, contradictions, thin coverage).
+- Do not write signal ids or brackets in any text field; put ids only in the *_signal_ids / signal_ids arrays.
 - No templates, no flattery, no generic praise, no exclamation marks, no emoji.`;
 
 export function buildBriefPrompt(profile: ProductProfile, sigs: BriefSignal[], computed: Computed, events: ChangeEvent[], unverified: string[]): string {
@@ -207,6 +208,12 @@ export function validateBrief(raw: string, sigs: BriefSignal[], dict: DictEntry[
   const unknownTech = [...new Set(matchText(texts, nonPattern).map((m) => m.entry.canonical_name).filter((n) => !allowed.has(n)))];
   if (unknownTech.length) errors.push(`Mentions technologies not in the signals: ${unknownTech.join(", ")}`);
 
+  // strip any inline id brackets the model left in prose
+  const strip = (s: string) => s.replace(/s*[(?:d+s*,?s*)+]/g, "").replace(/s+([.,;])/g, "$1").trim();
+  b.paragraph_1 = strip(b.paragraph_1);
+  b.paragraph_2 = strip(b.paragraph_2);
+  b.opener = strip(b.opener);
+  b.already_answered.forEach((a) => (a.answer = strip(a.answer)));
   // keep cited ids complete
   b.cited_signal_ids = [...new Set(cited.filter((id) => ids.has(id)))];
   return { ok: errors.length === 0, errors, brief: errors.length ? null : b };

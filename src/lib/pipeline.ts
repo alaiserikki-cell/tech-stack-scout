@@ -76,7 +76,10 @@ export async function executeRun(runId: number): Promise<void> {
       .select()
       .from(schema.signals)
       .where(and(eq(schema.signals.companyId, company.id), eq(schema.signals.source, "blog"), gte(schema.signals.observedAt, new Date(now.getTime() - 90 * DAY))));
-    const seenBlogUrls = new Set(prevBlogRows.filter((r) => r.kind === "blog_post" && r.evidenceUrl).map((r) => r.evidenceUrl!));
+    // posts whose Gemini extraction did not succeed are fetched again so they get extracted
+    const seenBlogUrls = new Set(
+      prevBlogRows.filter((r) => r.kind === "blog_post" && r.evidenceUrl && (r.detail as Record<string, unknown>).extraction === "ok").map((r) => r.evidenceUrl!),
+    );
 
     const extractBlog = geminiConfigured()
       ? async (title: string, text: string): Promise<BlogExtraction | null> => {

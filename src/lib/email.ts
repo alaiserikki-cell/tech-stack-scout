@@ -1,18 +1,42 @@
 import nodemailer from "nodemailer";
 
+/**
+ * Email transport. Resend (HTTP API) is used when RESEND_API_KEY is set; Gmail SMTP via Nodemailer
+ * is the fallback when GMAIL_USER / GMAIL_APP_PASSWORD are set.
+ */
 export function emailConfigured(): boolean {
-  return Boolean(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD);
+  return Boolean(process.env.RESEND_API_KEY || (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD));
+}
+
+export function emailProvider(): "resend" | "gmail" | null {
+  if (process.env.RESEND_API_KEY) return "resend";
+  if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) return "gmail";
+  return null;
 }
 
 export async function sendMail(to: string, subject: string, html: string): Promise<void> {
-  if (!emailConfigured()) throw new Error("Gmail SMTP is not configured");
-  const transport = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
-  });
-  await transport.sendMail({ from: `Tech Stack Scout <${process.env.GMAIL_USER}>`, to, subject, html });
+  const provider = emailProvider();
+  if (provider === "resend") {
+    const from = process.env.RESEND_FROM || "Tech Stack Scout <onboarding@resend.dev>";
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { authorization: `Bearer ${process.env.RESEND_API_KEY}`, "content-type": "application/json" },
+      body: JSON.stringify({ from, to: [to], subject, html }),
+    });
+    if (!res.ok) throw new Error(`Resend returned HTTP ${res.status}`);
+    return;
+  }
+  if (provider === "gmail") {
+    const transport = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
+    });
+    await transport.sendMail({ from: `Tech Stack Scout <${process.env.GMAIL_USER}>`, to, subject, html });
+    return;
+  }
+  throw new Error("Email is not configured");
 }
 
 export function isEmail(s: string): boolean {

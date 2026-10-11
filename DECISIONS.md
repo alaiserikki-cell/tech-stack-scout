@@ -23,6 +23,8 @@ Each entry: decision, alternatives considered, why.
 - Cron: up to 100 jobs per project, but Hobby may only run **once per day**, with **hour-level precision (±59 min)**. Schedule `30 2 * * *` (02:30 UTC = 08:00 IST).
 - Consequence: one daily cron refreshes companies sequentially, oldest first, and stops starting new work at 70% of 300 s (210 s). At ~30–60 s per company that is roughly 4–7 refreshes a day, i.e. 28–49 a week, which covers the 40-company cap at least weekly. Companies added from the dashboard refresh immediately via `after()`.
 
+| Email via Resend HTTP API (`RESEND_API_KEY`), Gmail SMTP via Nodemailer kept as fallback | Gmail SMTP only (spec) | You asked to send email the same way as the aangan-enquiry-agent project (Resend). Resend free tier without a verified domain only delivers to the Resend account owner, so grader self-emails need a verified domain in `RESEND_FROM`. |
+
 ## Data and matching
 
 | Decision | Alternatives | Why |
