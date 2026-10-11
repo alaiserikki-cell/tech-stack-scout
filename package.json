@@ -6,7 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run",
+    "replay": "tsx scripts/replay.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "seed": "tsx scripts/seed.ts",
+    "verify-seed": "tsx scripts/verify-seed.ts",
+    "refresh-all": "tsx scripts/refresh-all.ts",
+    "dictionary": "node scripts/build-dictionary.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.28.0",

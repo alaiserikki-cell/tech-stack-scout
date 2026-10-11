@@ -176,6 +176,17 @@ export const githubCollector: Collector = {
     const checked: string[] = [];
     const updates: CompanyUpdates = {};
     const signals: Signal[] = [];
+    try {
+      return await collectGithub(ctx, checked, updates, signals);
+    } catch (e) {
+      // keep whatever was collected before GitHub rate-limited us
+      if (e instanceof GitHubRateLimitError && signals.length) return { signals, checked, updates, error: e.message };
+      throw e;
+    }
+  },
+};
+
+async function collectGithub(ctx: CollectorContext, checked: string[], updates: CompanyUpdates, signals: Signal[]): Promise<CollectorResult> {
     const now = ctx.now;
     const nowIso = now.toISOString();
 
@@ -325,5 +336,4 @@ export const githubCollector: Collector = {
     }
     checked.push(`${top10.length} most recently pushed repos (languages), ${top5.length} file trees, ${texts.length} config files`);
     return { signals, checked, updates };
-  },
-};
+}

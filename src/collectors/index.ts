@@ -9,7 +9,7 @@ import { hostingCollector } from "./hosting";
 /** Registry. Add a new source (e.g. TheirStack, YouTube) by writing a file that exports a Collector and listing it here. */
 export const COLLECTORS: Collector[] = [githubCollector, jobsCollector, blogCollector, hnCollector, hostingCollector];
 
-export interface CollectorOutcome extends CollectorResult {
+export interface CollectorOutcome extends Omit<CollectorResult, "error"> {
   name: string;
   error: string | null;
   ms: number;
@@ -20,7 +20,7 @@ export async function runCollector(c: Collector, ctx: CollectorContext): Promise
   const t0 = Date.now();
   try {
     const r = await withTimeout(c.collect(ctx), c.timeoutMs, c.name);
-    return { ...r, name: c.name, error: null, ms: Date.now() - t0 };
+    return { ...r, name: c.name, error: r.error ?? null, ms: Date.now() - t0 };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     return { name: c.name, signals: [], checked: [], error: msg.replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, "[email]").slice(0, 300), ms: Date.now() - t0 };

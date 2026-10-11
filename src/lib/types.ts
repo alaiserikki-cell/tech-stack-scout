@@ -98,6 +98,7 @@ export interface CollectorResult {
   signals: Signal[];
   updates?: CompanyUpdates;
   checked: string[]; // human readable list of what was looked at (for honest empty states)
+  error?: string; // non-fatal: partial results were returned
 }
 
 export interface Collector {
