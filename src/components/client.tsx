@@ -885,8 +885,8 @@ export function AddCompanyDialog() {
         aria-labelledby="add-company-title"
         className="m-auto w-[min(92vw,520px)] rounded-2xl border border-line bg-surface p-0 text-ink shadow-card backdrop:bg-black/40 backdrop:backdrop-blur-sm"
       >
-        {open && (
-          <div className="p-6">
+        {/* contents stay mounted so router navigation is not cancelled when the dialog closes */}
+        <div className="p-6">
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
                 <h2 id="add-company-title" className="font-display text-xl font-bold tracking-tight">
@@ -904,7 +904,6 @@ export function AddCompanyDialog() {
               <li>To remove a company later, use Remove on its row in the watchlist.</li>
             </ul>
           </div>
-        )}
       </dialog>
     </>
   );
