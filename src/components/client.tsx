@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, type ReactNode } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FitRing, LevelPill } from "./ui";
 
@@ -865,10 +865,6 @@ export function Collapsible({ summary, children }: { summary: ReactNode; childre
 export function AddCompanyDialog() {
   const ref = useRef<HTMLDialogElement>(null);
   const [open, setOpen] = useState(false);
-  const pathname = usePathname();
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
   useEffect(() => {
     const d = ref.current;
     if (!d) return;
