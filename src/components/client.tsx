@@ -221,9 +221,9 @@ export function AddCompanyForm({ hero, autoFocus, onAdded }: { hero?: boolean; a
     await run(
       () => postJson("/api/companies", { domain, name }),
       (d) => {
-        onAdded?.();
         setDomain("");
         router.push(`/company/${d.id}${d.runId ? `?run=${d.runId}` : ""}`);
+        onAdded?.(); // close after navigation has been scheduled
       },
     );
     setBusy(false);
