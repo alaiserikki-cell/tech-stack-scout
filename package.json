@@ -14,7 +14,8 @@
     "seed": "tsx scripts/seed.ts",
     "verify-seed": "tsx scripts/verify-seed.ts",
     "refresh-all": "tsx scripts/refresh-all.ts",
-    "dictionary": "node scripts/build-dictionary.mjs"
+    "dictionary": "node scripts/build-dictionary.mjs",
+    "smoke": "tsx scripts/smoke.ts"
   },
   "dependencies": {
     "@google/genai": "^2.28.0",

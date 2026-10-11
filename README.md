@@ -1,5 +1,6 @@
 # Tech Stack Scout
 
+
 A watchlist of target companies that stays current automatically. For each company it builds a call-prep brief for Nikhil, an enterprise AE selling **FlakeGuard** (a fictional flaky-test tool): how the company builds software, how actively, what changed recently, an outreach opener tied to a real signal, 3 discovery questions the evidence already answers and 2 it can't. Every Monday it emails a ranked "who to call this week" digest.
 
 **Live:** https://tech-stack-scout-zeta.vercel.app
@@ -83,6 +84,7 @@ Remove a company with the link at the bottom of its page (or `update watchlist s
 |---|---|
 | `npm test` | Unit tests (Vitest): aggregation, detection, sdk_heavy, job matching, initiatives, confidence, adopted/dropped, competitors, fit, change events, hash skip, blog quotes, brief validator |
 | `npm run replay` | Replays recorded fixtures through the real collectors and validators: rich company, sdk_heavy, no GitHub, no job board, invented blog mention, invalid Gemini JSON, GitHub 403, Gemini 429. Prints expected vs actual; exits 1 on any failure |
+| `npm run smoke [url] [--writes]` | End-to-end smoke test of a deployed instance (pages, API, auth guards; `--writes` also logs in) |
 | `npm run verify-seed` | Checks seed candidates against live GitHub / job boards / feeds and writes `data/seed-companies.json` |
 | `npm run refresh-all [ids]` | Runs the full pipeline for all active companies (same code as the cron) |
 | `npx tsx scripts/send-digest.ts` | Builds this week's digest and emails it to `DIGEST_TO` |

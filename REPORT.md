@@ -28,6 +28,7 @@
 | 17 | Local (same code + DB): passcode form (wrong passcode rejected, right one accepted), add company by domain in UI → redirected with live step indicator → brief written | Pass |
 | 18 | Writes without passcode → 401; refresh within 10 min → cached run; opener feedback; source confirm; bad source edit rejected | Pass |
 | 19 | 375 px width: no horizontal scroll on watchlist and brief pages (production and local) | Pass |
+| 21 | `npm run smoke https://tech-stack-scout-zeta.vercel.app --writes`: pages, company pages, API, auth guards, passcode cookie, refresh, input validation | Pass: 20/20 |
 | 20 | Secret scan of all git history before making the repo public | Pass: no secrets found |
 
 Bug found and fixed during verification: a regex that removes inline `[12, 13]` citations from brief prose lost its backslashes and deleted every "s" and "d". Fixed, covered by a new unit test, affected briefs reset and regenerated.
