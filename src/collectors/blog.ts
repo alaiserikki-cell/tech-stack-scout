@@ -95,7 +95,7 @@ export function verifyMentions(extraction: BlogExtraction, text: string, dict: D
   return { kept, rejected };
 }
 
-async function discoverFeed(ctx: CollectorContext, checked: string[]): Promise<string | null> {
+export async function discoverFeed(ctx: CollectorContext, checked: string[]): Promise<string | null> {
   const d = ctx.company.domain;
   const pages = [`https://${d}`, `https://${d}/blog`, `https://${d}/engineering`, `https://${d}/tech`, `https://engineering.${d}`, `https://blog.${d}`];
   for (const p of pages) {

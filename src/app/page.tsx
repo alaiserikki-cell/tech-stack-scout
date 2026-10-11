@@ -1,69 +1,88 @@
-import Image from "next/image";
+import { Suspense } from "react";
+import { connection } from "next/server";
+import { eq } from "drizzle-orm";
+import { getDb, schema } from "@/db/client";
+import { latestSnapshotsByCompany, runningRuns } from "@/lib/queries";
+import { isAuthed } from "@/lib/auth";
+import { AddCompanyForm, PasscodeForm, WatchlistTable, type WatchRow } from "@/components/client";
+import { Card, Empty, H2, PageTitle, SkeletonPage, ago, isStale } from "@/components/ui";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <>
+      <PageTitle title="Watchlist" sub="How each target company builds software, from public GitHub, job boards, blogs, Hacker News and DNS. Every company refreshes at least weekly." />
+      <Suspense fallback={<SkeletonPage rows={8} />}>
+        <Watchlist />
+      </Suspense>
+    </>
+  );
+}
+
+async function Watchlist() {
+  await connection();
+  const db = getDb();
+  const [companies, snaps, running, authed] = await Promise.all([
+    db.select().from(schema.watchlist).where(eq(schema.watchlist.active, true)),
+    latestSnapshotsByCompany(),
+    runningRuns(),
+    isAuthed(),
+  ]);
+  const now = new Date();
+  const runningSet = new Set(running.filter((r) => now.getTime() - r.startedAt.getTime() < 10 * 60_000).map((r) => r.companyId));
+  const rows: WatchRow[] = companies.map((c) => {
+    const s = snaps.get(c.id);
+    const comp = s?.computed;
+    const recentChanges = (s?.changeEvents ?? []).filter((e) => now.getTime() - (s?.generatedAt.getTime() ?? 0) <= 7 * 86_400_000 && e);
+    return {
+      id: c.id,
+      name: c.companyName,
+      domain: c.domain,
+      fit: s ? s.fitScore : null,
+      fitReasons: comp?.fit.reasons ?? [],
+      activity: comp?.activity.label ?? "unknown",
+      languages: (comp?.languages ?? []).slice(0, 3).map((l) => l.name),
+      competitor: comp?.competitors[0]?.name ?? null,
+      lastRefreshed: c.lastRefreshedAt?.toISOString() ?? null,
+      lastRefreshedLabel: ago(c.lastRefreshedAt, now),
+      stale: isStale(c.lastRefreshedAt, now),
+      coverage: s?.coverage ?? "pending",
+      changes: recentChanges.length,
+      briefStatus: s?.briefStatus ?? null,
+      running: runningSet.has(c.id),
+    };
+  });
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
+        <Card>
+          <H2>Add a company</H2>
+          <AddCompanyForm />
+          <p className="mt-3 text-xs text-muted">The brief builds immediately (about a minute). Sources are discovered automatically and marked unverified until you confirm them.</p>
+        </Card>
+        <Card className="bg-accent-soft">
+          <H2>Try it</H2>
+          <ol className="list-decimal space-y-1 pl-5 text-sm text-muted">
+            <li>{authed ? "Passcode accepted. Changes are unlocked." : "Enter the demo passcode from the README."}</li>
+            <li>Open a company and press Refresh now to watch the steps.</li>
+            <li>Add a company by its domain, e.g. a startup you know.</li>
+            <li>Open Digests and email yourself this week&apos;s ranking.</li>
+          </ol>
+          {!authed && (
+            <div className="mt-3">
+              <PasscodeForm compact />
+            </div>
+          )}
+        </Card>
+      </div>
+      {rows.length ? (
+        <WatchlistTable rows={rows} />
+      ) : (
+        <Empty title="No companies on the watchlist yet.">Add one above, or insert a row into the watchlist table in the Neon console; the next daily run picks it up.</Empty>
+      )}
+      <p className="text-xs text-faint">
+        Freshness turns red after 7 days. A dot in Changes means something changed in the last week. Fit score reasons appear on hover; open a company for the full brief.
+      </p>
     </div>
   );
 }

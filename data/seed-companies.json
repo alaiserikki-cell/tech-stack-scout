@@ -1,0 +1,82 @@
+[
+  {
+    "company_name": "Meesho",
+    "domain": "meesho.com",
+    "github_org": "Meesho",
+    "ats_provider": "lever",
+    "ats_slug": "meesho",
+    "blog_feed_url": null
+  },
+  {
+    "company_name": "Razorpay",
+    "domain": "razorpay.com",
+    "github_org": "razorpay",
+    "ats_provider": null,
+    "ats_slug": null,
+    "blog_feed_url": "https://engineering.razorpay.com/feed"
+  },
+  {
+    "company_name": "Postman",
+    "domain": "postman.com",
+    "github_org": "postmanlabs",
+    "ats_provider": null,
+    "ats_slug": null,
+    "blog_feed_url": "https://blog.postman.com/feed/"
+  },
+  {
+    "company_name": "Sweetgreen",
+    "domain": "sweetgreen.com",
+    "github_org": null,
+    "ats_provider": "greenhouse",
+    "ats_slug": "sweetgreen",
+    "blog_feed_url": null
+  },
+  {
+    "company_name": "Spotify",
+    "domain": "spotify.com",
+    "github_org": "spotify",
+    "ats_provider": "lever",
+    "ats_slug": "spotify",
+    "blog_feed_url": "https://engineering.atspotify.com/feed/"
+  },
+  {
+    "company_name": "Vercel",
+    "domain": "vercel.com",
+    "github_org": "vercel",
+    "ats_provider": "greenhouse",
+    "ats_slug": "vercel",
+    "blog_feed_url": "https://vercel.com/atom"
+  },
+  {
+    "company_name": "Stripe",
+    "domain": "stripe.com",
+    "github_org": "stripe",
+    "ats_provider": "greenhouse",
+    "ats_slug": "stripe",
+    "blog_feed_url": "https://stripe.com/blog/feed.rss"
+  },
+  {
+    "company_name": "Notion",
+    "domain": "notion.so",
+    "github_org": "makenotion",
+    "ats_provider": "ashby",
+    "ats_slug": "notion",
+    "blog_feed_url": null
+  },
+  {
+    "company_name": "Linear",
+    "domain": "linear.app",
+    "github_org": "linear",
+    "ats_provider": "ashby",
+    "ats_slug": "linear",
+    "blog_feed_url": "https://linear.app/rss/blog.xml"
+  },
+  {
+    "company_name": "GitLab",
+    "domain": "gitlab.com",
+    "github_org": "gitlabhq",
+    "ats_provider": "greenhouse",
+    "ats_slug": "gitlab",
+    "blog_feed_url": "https://about.gitlab.com/atom.xml"
+  }
+]
