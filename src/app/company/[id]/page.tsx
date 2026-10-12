@@ -87,7 +87,7 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
               <div className="min-w-0">
                 <h1 className="font-display text-2xl font-bold tracking-[-0.02em] text-ink sm:text-3xl">{company.companyName}</h1>
                 <p className="truncate text-sm text-muted">
-                  <Ext href={`https://${company.domain}`}>{company.domain}</Ext>
+                  {company.active ? <Ext href={`https://${company.domain}`}>{company.domain}</Ext> : company.domain}
                 </p>
               </div>
             </div>
