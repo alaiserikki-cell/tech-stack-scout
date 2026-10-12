@@ -109,7 +109,7 @@ npm run dev
 
 ## Adding companies (for Nikhil)
 
-- **Dashboard:** enter the domain on the dashboard and press Build brief. The brief builds immediately.
+- **+ Add company** (top of every page): *One company*, or *Several at once*: one website per line (commas or spaces also work), up to 10 per batch, each validated on its own. The dashboard holds up to 40 companies.
 - **Remove:** press **Remove** on the company's row on the dashboard (confirm), or at the bottom of its page. History is kept; adding the domain again reactivates it.
 - **Neon console:** insert a row; the next daily cron picks it up because `last_refreshed_at` is null. (The problem statement mentions Supabase; this build uses Neon, which is also hosted Postgres; the same rows can be added or removed in Neon's table editor without touching code.)
 
@@ -129,15 +129,30 @@ Remove a company with the link at the bottom of its page (or `update watchlist s
 | `npm run replay` | Replays recorded fixtures through the real collectors and validators: rich company, sdk_heavy, no GitHub, no job board, invented blog mention, invalid Gemini JSON, GitHub 403, Gemini 429. Prints expected vs actual; exits 1 on any failure |
 | `npm run smoke [url] [--writes]` | End-to-end smoke test of a deployed instance (pages, API, auth guards; `--writes` also logs in) |
 | `npm run verify-seed` | Checks seed candidates against live GitHub / job boards / feeds and writes `data/seed-companies.json` |
+| `npm run check-domains [-- --fix]` | Re-validates every tracked domain with the same rules as Add company |
+| `npx tsx scripts/probe.ts acme.com Acme` | Dry-runs every collector for a domain (no database writes, no Gemini) and prints what each source found and how it was proven |
 | `npm run refresh-all [ids]` | Runs the full pipeline for all active companies (same code as the cron) |
 | `npx tsx scripts/send-digest.ts` | Builds this week's digest and emails it to `DIGEST_TO` |
 | `npm run dictionary` | Regenerates `data/tech-dictionary.json` with sanity checks |
 
-## Free-tier notes
+## Operations: what keeps it running, and its limits
 
-- **Gemini:** free tier only. Never link a billing account to the Gemini API project; /costs shows what the same usage *would* cost at paid rates. Calls are sequential with backoff on 429; when the daily quota runs out the page shows signals with "Summary pending, will retry on next refresh".
-- **Vercel Hobby:** functions max 300 s; cron at most once a day with ±59 min precision. The daily job refreshes companies older than 7 days, oldest first, and stops starting work at 70% of 300 s. 40 active companies max.
-- **Neon free plan:** pooled HTTP connection, one retry on cold start.
-- **GitHub:** 5,000 requests/hour with a token; ETag revalidations (304) are free.
+Built to work whenever it is opened, without anyone looking after it.
+
+| Risk | What happens |
+|---|---|
+| A source is down or rate-limited (GitHub, a job board, a blog) | Each collector fails on its own; that source keeps its facts from the last good refresh, so nothing disappears from a brief. |
+| Gemini quota used up, model retired, or brief rejected by the validator | Falls back to a second model (`gemini-flash-latest`, separate quota). If no brief can be written, the **previous brief stays** and the daily job retries the next day. New companies show their facts with "summary pending" until then. |
+| A refresh is cut off (300 s limit, a deploy) | Runs stuck for 15 minutes are marked timed out at the next run or daily job; the previous brief stays. |
+| Database waking from sleep (Neon scales to zero after 5 idle minutes) | First request takes 1-2 s; queries retry 3 times over ~4 s. If a page still fails, a friendly "Try again" page shows instead of a crash. |
+| Briefs going stale | The daily job (08:00 IST) refreshes every company older than 3 days, 3 at a time, pending briefs first, and stops starting work at 70% of the 300 s limit. With 19 companies everything stays under 3-4 days old. |
+| Job posts closing | A closed posting's link can 404 until the next refresh (at most ~3 days); the board link stays valid. |
+| Monitoring | `GET /api/health` checks the database, configuration (never values), the daily job, stuck refreshes and brief integrity (200 or 503). A GitHub Actions workflow runs it and the read-only smoke test every day. |
+
+**Limits a tester may notice:** up to 40 companies on the dashboard; up to 10 per bulk add; one refresh per company per 10 minutes (a second press shows the running or cached run); briefs take about a minute; the Monday email goes to the team inbox (anyone can download the draft). The cleanup on the 1st of every other month only removes history older than 60 days and never touches current briefs.
+
+**Neon free plan** (checked 2026-10-12): 1 GB storage per project (we use ~20 MB; the cleanup keeps it small), 100 CU-hours of compute per month (the database sleeps when idle; the daily job keeps it awake roughly 10 minutes a day, so normal testing uses a small fraction), 5 GB data transfer per month, 6 hours of restore history. If compute hours were ever used up, Neon pauses the database until the next month: pages would show the "Try again" page and `/api/health` would report it. HTTP connections mean there is no connection pool to exhaust. The data can always be rebuilt with `npm run seed` + `npm run refresh-all`.
+
+**Other services:** Gemini free tier (no billing); GitHub token without expiry (5,000 requests/hour); Vercel Hobby (300 s functions, one cron run per day); Resend free (the Monday email to the team inbox).
 
 See `DECISIONS.md` for every judgement call and `REPORT.md` for the verification log.

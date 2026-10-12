@@ -38,6 +38,8 @@ async function main() {
   }
 
   // api
+  const health = await get("/api/health");
+  check("GET /api/health is healthy", health.status === 200 && /"ok":true/.test(health.text), health.text.slice(0, 160));
   const run = await get("/api/runs/1");
   check("GET /api/runs/1 returns JSON", run.status === 200 && /"status"/.test(run.text));
   check("GET /api/runs/999999 is 404", (await get("/api/runs/999999")).status === 404);

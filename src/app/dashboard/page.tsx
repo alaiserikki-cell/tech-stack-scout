@@ -7,7 +7,7 @@ import { latestSnapshotsByCompany, runningRuns } from "@/lib/queries";
 import { isAuthed } from "@/lib/auth";
 import { loadProfile } from "@/lib/repo";
 import { liveScores } from "@/lib/scores";
-import { AddCompanyForm, PasscodeForm, WatchlistTable, type WatchRow } from "@/components/client";
+import { PasscodeForm, WatchlistTable, type WatchRow } from "@/components/client";
 import { Card, Empty, Skeleton, SkeletonPage, ago, isStale } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -22,10 +22,7 @@ export default function DashboardPage() {
           </h1>
           <p className="mt-2 text-sm text-muted">Open a company for its call-prep brief. Every account refreshes at least weekly.</p>
         </div>
-        <div id="add" className="w-full max-w-md scroll-mt-28">
-          <AddCompanyForm hero />
-          <p className="mt-1.5 text-xs text-faint">Type a domain and press Build brief. Remove a company from its row below.</p>
-        </div>
+        <p className="text-xs text-faint">Add companies with <span className="font-semibold text-ink">+ Add company</span> at the top. Remove one from its row below.</p>
       </div>
       <Suspense fallback={<DashboardSkeleton />}>
         <Accounts />
@@ -118,7 +115,7 @@ async function Accounts() {
       {rows.length ? (
         <WatchlistTable rows={rows} />
       ) : (
-        <Empty title="No companies tracked yet.">Type a company website above and press Build brief.</Empty>
+        <Empty title="No companies tracked yet.">Press + Add company at the top and type a company website.</Empty>
       )}
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl border border-line bg-surface p-4 text-sm shadow-card">

@@ -293,11 +293,11 @@ export default function Landing() {
       {/* CTA */}
       <Band tone="plain">
         <div className="mx-auto max-w-3xl rounded-3xl bg-btn p-8 text-center text-btn-fg sm:p-12">
-          <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">Start with one company.</h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm opacity-80">Type its website on the dashboard. The brief is ready in about a minute and stays current every week.</p>
+          <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">See every account in one place.</h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm opacity-80">The dashboard ranks your accounts by fit. Add a company with + Add company; its brief is ready in about a minute and stays current.</p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Link href="/dashboard#add" className="rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-accent-fg no-underline">
-              Add a company
+            <Link href="/dashboard" className="rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-accent-fg no-underline">
+              Go to dashboard
             </Link>
             <Link href="/settings" className="rounded-xl border border-white/30 px-5 py-3 text-sm font-semibold text-btn-fg no-underline">
               Set your targeting

@@ -19,6 +19,9 @@ export function geminiModel(): string {
   return process.env.GEMINI_MODEL || "gemini-3.8-flash";
 }
 
+/** Used when the main model is retired (404) or its free quota is used up; it has its own quota. */
+export const FALLBACK_MODEL = process.env.GEMINI_FALLBACK_MODEL || "gemini-flash-latest";
+
 export function geminiConfigured(): boolean {
   return Boolean(process.env.GEMINI_API_KEY);
 }
@@ -27,11 +30,26 @@ export function geminiConfigured(): boolean {
  * Structured-JSON call to Gemini Flash via the official Google Gen AI SDK.
  * Sequential by design; backs off on 429 / 5xx; raises GeminiQuotaError when the free-tier quota is exhausted.
  */
-export const callGemini: GeminiCall = async ({ system, prompt, schema }) => {
+export const callGemini: GeminiCall = async (args) => {
+  const models = [...new Set([geminiModel(), FALLBACK_MODEL])];
+  let last: unknown;
+  for (const model of models) {
+    try {
+      return await callModel(model, args);
+    } catch (e) {
+      last = e;
+      const status = e instanceof ApiError ? e.status : 0;
+      const retired = status === 404 || /not found|is not supported|deprecated/i.test(e instanceof Error ? e.message : "");
+      if (!(e instanceof GeminiQuotaError) && !retired) throw e;
+    }
+  }
+  throw last;
+};
+
+async function callModel(model: string, { system, prompt, schema }: Parameters<GeminiCall>[0]): Promise<GeminiResult> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new GeminiUnavailableError("GEMINI_API_KEY not set");
   client ??= new GoogleGenAI({ apiKey });
-  const model = geminiModel();
   const delays = [2000, 6000, 15000];
   let lastErr: unknown;
   for (let attempt = 0; attempt <= delays.length; attempt++) {
@@ -44,7 +62,7 @@ export const callGemini: GeminiCall = async ({ system, prompt, schema }) => {
           responseMimeType: "application/json",
           responseJsonSchema: schema,
           temperature: 0.3,
-          thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+          ...(model === geminiModel() ? { thinkingConfig: { thinkingLevel: ThinkingLevel.LOW } } : {}),
         },
       });
       const u = res.usageMetadata;
@@ -72,4 +90,4 @@ export const callGemini: GeminiCall = async ({ system, prompt, schema }) => {
     }
   }
   throw lastErr;
-};
+}

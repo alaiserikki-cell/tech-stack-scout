@@ -1,0 +1,21 @@
+name: Production health
+
+on:
+  schedule:
+    - cron: "15 4 * * *" # daily, after the 08:00 IST refresh job
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Health endpoint
+        run: curl -fsS https://tech-stack-scout-zeta.vercel.app/api/health
+      - name: Smoke test (read-only)
+        run: npx tsx scripts/smoke.ts https://tech-stack-scout-zeta.vercel.app

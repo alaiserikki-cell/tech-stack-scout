@@ -957,8 +957,15 @@ export function BulkAddForm({ onDone }: { onDone?: () => void }) {
           className="w-full rounded-xl border border-line bg-surface p-3 font-mono text-sm text-ink placeholder:text-faint"
         />
       </label>
+      <ul className="mt-2 space-y-0.5 text-xs text-muted">
+        <li>· One website per line (commas or spaces also work). URLs like https://www.acme.com/about are fine.</li>
+        <li>· Up to 10 per batch; anything after the 10th is ignored. The dashboard holds up to 40 companies.</li>
+        <li>· Each one is checked on its own: typos, dead or parked domains get a reason; the rest are added.</li>
+        <li>· Briefs build in the background, about a minute each.</li>
+      </ul>
+      {text.split(/[\s,;]+/).filter(Boolean).length > 10 && <p className="mt-1 text-xs text-warn">Only the first 10 will be added.</p>}
       <div className="mt-2 flex items-center justify-between gap-3">
-        <span className="text-xs text-faint">{domains.length ? `${domains.length} domain${domains.length > 1 ? "s" : ""} (max 10)` : "One per line, up to 10"}</span>
+        <span className="text-xs text-faint">{domains.length ? `${domains.length} domain${domains.length > 1 ? "s" : ""} (max 10)` : "Up to 10 at a time"}</span>
         <button disabled={busy || !domains.length} className="rounded-xl bg-btn px-4 py-2.5 text-sm font-semibold text-btn-fg shadow-sm disabled:opacity-50">
           {busy ? `Adding ${results.length + 1} of ${domains.length}…` : "Add all"}
         </button>

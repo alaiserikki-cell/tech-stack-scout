@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, gte } from "drizzle-orm";
+import { and, desc, eq, inArray, gte, lt } from "drizzle-orm";
 import { getDb, schema } from "@/db/client";
 import { COLLECTORS, runCollector } from "@/collectors";
 import { BLOG_WINDOW_DAYS } from "@/collectors/blog";
@@ -13,8 +13,23 @@ const DAY = 86_400_000;
 
 export const STEPS = ["Finding sources", "Reading GitHub", "Reading job posts", "Reading blog", "Writing brief"] as const;
 
+/**
+ * A run cut off mid-way (the platform's 300 s limit, a deploy) would stay "running" forever and block that company.
+ * Anything queued/running for over 15 minutes is marked failed; the previous brief stays in place.
+ */
+export async function sweepStuckRuns(): Promise<number> {
+  const db = getDb();
+  const rows = await db
+    .update(schema.refreshRuns)
+    .set({ status: "failed", step: "Timed out", finishedAt: new Date(), collectorErrors: { pipeline: "timed out; previous brief kept" } })
+    .where(and(inArray(schema.refreshRuns.status, ["queued", "running"]), lt(schema.refreshRuns.startedAt, new Date(Date.now() - 15 * 60_000))))
+    .returning({ id: schema.refreshRuns.id });
+  return rows.length;
+}
+
 export async function createRun(companyId: number, trigger: "cron" | "manual" | "on_add"): Promise<number> {
   const db = getDb();
+  await sweepStuckRuns();
   const [r] = await db.insert(schema.refreshRuns).values({ companyId, trigger, status: "queued", step: "Queued" }).returning({ id: schema.refreshRuns.id });
   return r.id;
 }
@@ -126,6 +141,20 @@ export async function executeRun(runId: number): Promise<void> {
         Object.assign(ctx.company, out.updates);
         await db.update(schema.watchlist).set(out.updates).where(eq(schema.watchlist.id, company.id));
       }
+    }
+
+    // a source that is down or rate-limited this time keeps its facts from the last good refresh,
+    // so an outage never makes technologies "disappear" from a brief
+    const failedSources = COLLECTORS.map((c) => c.name).filter((n) => errors[n] && !collected.some((s) => s.source === n));
+    const lastGood = failedSources.length ? await latestSnapshot(company.id) : null;
+    if (lastGood?.runId) {
+      const kept = await db.select().from(schema.signals).where(and(eq(schema.signals.runId, lastGood.runId), inArray(schema.signals.source, failedSources)));
+      for (const r of kept) {
+        const s = rowToSignal(r);
+        delete s.id;
+        collected.push(s);
+      }
+      for (const n of failedSources) checked[n] = [...(checked[n] ?? []), "Unavailable this time; facts from the previous refresh kept"];
     }
 
     // carry forward blog evidence from earlier runs (posts are only fetched once)
@@ -277,6 +306,19 @@ export async function executeRun(runId: number): Promise<void> {
       }
     }
     if (briefError) errors.brief = briefError;
+
+    // Gemini unavailable or the brief failed validation: keep showing the previous good brief rather than a gap.
+    // lastRefreshedAt is not moved, so the daily job tries again tomorrow.
+    if (briefStatus !== "ok" && briefStatus !== "none" && prevSnap?.briefStatus === "ok") {
+      errors.brief = `${briefError ?? "brief not written"}; previous brief kept`;
+      await setRun({ status: "partial", step: "Done", inputHash: hash, collectorErrors: errors, finishedAt: new Date() });
+      await logActivity("refresh_finished", `${company.companyName}: new facts collected, brief not rewritten (${briefError ?? "error"}); previous brief kept, retried tomorrow`, {
+        companyId: company.id,
+        actor: run.trigger === "cron" ? "cron" : "system",
+        detail: { runId, status: "partial" },
+      });
+      return;
+    }
 
     await db.insert(schema.snapshots).values({
       companyId: company.id,

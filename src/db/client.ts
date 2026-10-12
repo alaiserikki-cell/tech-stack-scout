@@ -2,15 +2,18 @@ import { neon, neonConfig } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import * as schema from "./schema";
 
-// One retry on transient failures (Neon compute waking from scale-to-zero).
+// Retries transient failures (Neon compute waking from scale-to-zero, a dropped connection): 3 tries over ~4 s.
 neonConfig.fetchFunction = async (input: RequestInfo | URL, init?: RequestInit) => {
-  try {
-    const res = await fetch(input, init);
-    if (res.status >= 500) throw new Error(`neon http ${res.status}`);
-    return res;
-  } catch {
-    await new Promise((r) => setTimeout(r, 800));
-    return fetch(input, init);
+  const waits = [700, 2500];
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const res = await fetch(input, init);
+      if (res.status >= 500 && attempt < waits.length) throw new Error(`neon http ${res.status}`);
+      return res;
+    } catch (e) {
+      if (attempt >= waits.length) throw e;
+      await new Promise((r) => setTimeout(r, waits[attempt]));
+    }
   }
 };
 
