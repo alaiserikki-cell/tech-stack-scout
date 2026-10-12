@@ -1,3 +1,4 @@
+import { domainToASCII } from "node:url";
 import { parse } from "tldts";
 
 /**
@@ -66,8 +67,12 @@ export function validateDomainInput(input: string): DomainCheck {
 
   let host: string;
   try {
-    // URL() lowercases and converts international names to punycode (münchen.de -> xn--mnchen-3ya.de)
-    host = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : `https://${raw}`).hostname.replace(/\.$/, "");
+    // international names become punycode first (münchen.de -> xn--mnchen-3ya.de), independent of the runtime's URL parser
+    const withScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : `https://${raw}`;
+    const m = withScheme.match(/^([a-z][a-z0-9+.-]*:\/\/)([^/?#:]+)(.*)$/i);
+    const ascii = m ? domainToASCII(m[2].toLowerCase()) : "";
+    if (m && !ascii) return fail("invalid", "That is not a valid domain. Enter something like stripe.com.");
+    host = new URL(m ? `${m[1]}${ascii}${m[3]}` : withScheme).hostname.replace(/\.$/, "");
   } catch {
     return fail("invalid", "That is not a valid web address. Enter something like stripe.com.");
   }
