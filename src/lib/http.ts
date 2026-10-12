@@ -18,7 +18,7 @@ export interface FetchOpts extends RequestInit {
   passStatuses?: number[];
 }
 
-const UA = "FlakeGuard/1.0 (+https://github.com/alaiserikki-cell/tech-stack-scout)";
+const UA = "FlakeGuard/1.0 (+https://tech-stack-scout-zeta.vercel.app)";
 
 /** fetch with timeout, retries with exponential backoff on network errors, 429 and 5xx. */
 export async function fetchRetry(url: string, opts: FetchOpts = {}): Promise<Response> {

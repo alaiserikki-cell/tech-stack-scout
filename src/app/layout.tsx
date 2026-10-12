@@ -68,7 +68,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {children}
         </main>
         <footer className="border-t border-line/70 py-6 text-center text-xs text-faint">
-          FlakeGuard · facts in code, prose by Gemini Flash · <a href="https://github.com/alaiserikki-cell/tech-stack-scout">source on GitHub</a>
+          FlakeGuard · facts in code, prose by Gemini Flash
         </footer>
       </body>
     </html>
