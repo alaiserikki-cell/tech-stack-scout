@@ -74,7 +74,7 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
     <article className="mx-auto max-w-3xl space-y-6">
       {/* header */}
       <header className="space-y-4">
-        <Link href="/" className="inline-flex items-center gap-1 text-sm text-muted no-underline hover:text-ink">
+        <Link href="/watchlist" className="inline-flex items-center gap-1 text-sm text-muted no-underline hover:text-ink">
           ← Watchlist
         </Link>
         <div className="rounded-2xl border border-line bg-surface p-5 shadow-card sm:p-6">

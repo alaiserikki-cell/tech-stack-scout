@@ -133,7 +133,7 @@ export function TargetingForm({ profile, options }: { profile: ProductProfile; o
         </button>
         {status === "saved" && (
           <span className="text-sm text-accent-ink" aria-live="polite">
-            Saved. Fit scores are updated everywhere. <a href="/">See the watchlist</a>
+            Saved. Fit scores are updated everywhere. <a href="/watchlist">See the re-ranked watchlist</a>
           </span>
         )}
         {error && (

@@ -23,11 +23,11 @@ async function main() {
   console.log(`Smoke testing ${base}\n`);
 
   // pages
-  for (const p of ["/", "/digests", "/activity", "/how-it-works", "/settings"]) {
+  for (const p of ["/", "/watchlist", "/digests", "/activity", "/settings"]) {
     const r = await get(p);
     check(`GET ${p}`, r.status === 200 && !/Application error|Internal Server Error/.test(r.text), `HTTP ${r.status}`);
   }
-  const home = await get("/");
+  const home = await get("/watchlist");
   const ids = [...new Set([...home.text.matchAll(/\/company\/(\d+)/g)].map((m) => Number(m[1])))];
   check("watchlist lists companies", ids.length > 0, `${ids.length} companies`);
   for (const id of ids.slice(0, 3)) {

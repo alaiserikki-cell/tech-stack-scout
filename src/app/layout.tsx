@@ -20,12 +20,12 @@ export const viewport: Viewport = {
   ],
 };
 
+// ordered by how often Nikhil needs them: accounts first, then this week's ranking, then setup and history
 const NAV = [
-  { href: "/", label: "Watchlist" },
-  { href: "/digests", label: "Digests" },
-  { href: "/activity", label: "Activity" },
-  { href: "/how-it-works", label: "How it works" },
+  { href: "/watchlist", label: "Watchlist" },
+  { href: "/digests", label: "This week" },
   { href: "/settings", label: "Targeting" },
+  { href: "/activity", label: "Activity" },
 ];
 
 function LogoMark() {

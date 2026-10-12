@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
     return [
       { source: "/system", destination: "/activity", permanent: false },
       { source: "/costs", destination: "/activity", permanent: false },
+      { source: "/how-it-works", destination: "/", permanent: false },
     ];
   },
   partialPrefetching: true,

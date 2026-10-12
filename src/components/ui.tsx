@@ -239,7 +239,7 @@ export function EvidenceRing({ score, label, reasons, align = "right", size = 60
             </li>
           ))}
         </ul>
-        <a href="/how-it-works#scores" className="mt-3 inline-block text-[11px]">
+        <a href="/#scores" className="mt-3 inline-block text-[11px]">
           How evidence is scored
         </a>
       </div>

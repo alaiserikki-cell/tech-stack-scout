@@ -304,7 +304,7 @@ export function RemoveButton({ companyId }: { companyId: number }) {
           Remove from watchlist?
           <button
             className="rounded-lg border border-bad/50 px-2 py-1 text-bad"
-            onClick={() => run(() => postJson(`/api/companies/${companyId}`, undefined, "DELETE"), () => router.push("/"))}
+            onClick={() => run(() => postJson(`/api/companies/${companyId}`, undefined, "DELETE"), () => router.push("/watchlist"))}
           >
             Remove
           </button>
