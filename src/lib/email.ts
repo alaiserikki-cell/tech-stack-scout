@@ -2,6 +2,11 @@ import nodemailer from "nodemailer";
 
 /** Thrown when the provider only allows the account owner as recipient (Resend without a verified domain). */
 export class RecipientRestrictedError extends Error {}
+/** Thrown when the provider rejects the address itself (e.g. reserved domains such as example.com). */
+export class InvalidRecipientError extends Error {}
+
+/** Domains that can never receive mail (RFC 2606 / 6761). */
+const RESERVED = /(^|\.)(example\.(com|net|org)|test|invalid|localhost|local|example)$/i;
 
 /**
  * Email transport. Resend (HTTP API) is used when RESEND_API_KEY is set; Gmail SMTP via Nodemailer
@@ -26,6 +31,7 @@ export async function sendMail(to: string, subject: string, html: string): Promi
       headers: { authorization: `Bearer ${process.env.RESEND_API_KEY}`, "content-type": "application/json" },
       body: JSON.stringify({ from, to: [to], subject, html }),
     });
+    if (res.status === 422) throw new InvalidRecipientError("Resend rejected the recipient address");
     if (res.status === 403) throw new RecipientRestrictedError("Resend: recipient not allowed without a verified domain");
     if (!res.ok) throw new Error(`Resend returned HTTP ${res.status}`);
     return;
@@ -50,6 +56,7 @@ export function isEmail(s: string): boolean {
   if (!m) return false;
   const [, local, domain] = m;
   if (local.startsWith(".") || local.endsWith(".") || local.includes("..")) return false;
+  if (RESERVED.test(domain)) return false;
   const labels = domain.split(".");
   if (labels.length < 2 || !/^[A-Za-z]{2,}$/.test(labels[labels.length - 1])) return false;
   return labels.every((l) => l.length > 0 && l.length <= 63 && !l.startsWith("-") && !l.endsWith("-"));

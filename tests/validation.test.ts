@@ -3,8 +3,8 @@ import { isGenericDomain, registrableDomain, resolveCompanyDomain, validateDomai
 import { isEmail } from "../src/lib/email";
 
 describe("email validation", () => {
-  it.each(["name@company.com", "first.last+tag@sub.example.co.in", "a_b@x.io"])("accepts %s", (e) => expect(isEmail(e)).toBe(true));
-  it.each(["", "plainaddress", "a@b", "a@b.c", "@x.com", "a@.com", "a..b@x.com", ".a@x.com", "a@x..com", "a@-x.com", "a b@x.com", "a@x.com>", "a@x.c0m"])(
+  it.each(["name@company.com", "first.last+tag@sub.acme.co.in", "a_b@x.io"])("accepts %s", (e) => expect(isEmail(e)).toBe(true));
+  it.each(["", "plainaddress", "a@b", "a@b.c", "@x.com", "a@.com", "a..b@x.com", ".a@x.com", "a@x..com", "a@-x.com", "a b@x.com", "a@x.com>", "a@x.c0m", "test@example.com", "me@foo.test"])(
     "rejects %j",
     (e) => expect(isEmail(e)).toBe(false),
   );

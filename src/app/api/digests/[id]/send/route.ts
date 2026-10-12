@@ -18,12 +18,13 @@ export async function POST(req: Request, ctx: RouteContext<"/api/digests/[id]/se
   if (!d) return Response.json({ error: "Unknown digest." }, { status: 404 });
   if (!emailConfigured()) return Response.json({ error: "Email is not configured on this deployment yet." }, { status: 503 });
   const status = await sendDigest(id, email);
-  await logActivity("digest_sent", status === "sent" ? "Emailed the digest (address hidden)" : `Digest email not delivered (${status === "restricted" ? "sender can only reach the owner's inbox" : "send failed"})`, { detail: { digestId: id, status } });
+  await logActivity("digest_sent", status === "sent" ? "Emailed the digest (address hidden)" : `Digest email not delivered (${status === "restricted" ? "sender can only reach the owner's inbox" : status === "invalid" ? "address rejected" : "send failed"})`, { detail: { digestId: id, status } });
   if (status === "restricted")
     return Response.json(
       { error: "Not sent: this deployment's email account (Resend, free tier, no verified domain) can only deliver to the project owner's inbox. The preview above is exactly what the email contains." },
       { status: 422 },
     );
+  if (status === "invalid") return Response.json({ error: "That address can't receive email. Check it and try again." }, { status: 400 });
   if (status !== "sent") return Response.json({ error: "Sending failed. Please try again later." }, { status: 502 });
   return Response.json({ ok: true });
 }
