@@ -33,9 +33,12 @@ export function isMondayIST(d = new Date()): boolean {
 }
 
 /**
- * Ranking (code only, no Gemini): score = sum of change-event weights from the past 7 days + fit score.
+ * Ranking (code only, no Gemini): fit leads; this week's changes add at most 10 points, so they break near-ties
+ * (95 with a new initiative beats 93 with nothing new) but never push a much better-fitting account down.
  * "Why now" is the strongest change event; if nothing changed, the top fit reason.
  */
+export const MAX_CHANGE_BONUS = 10;
+
 export function rankAccounts(
   rows: { companyId: number; name: string; domain: string; fitScore: number; events: ChangeEvent[]; computed: Computed | null; generatedAt: Date }[],
   now = new Date(),
@@ -51,7 +54,7 @@ export function rankAccounts(
         name: r.name,
         domain: r.domain,
         fitScore: r.fitScore,
-        score: eventScore + r.fitScore,
+        score: r.fitScore + Math.min(MAX_CHANGE_BONUS, Math.round(eventScore / 3)),
         momentum: eventScore,
         whyType: top?.type ?? null,
         whyNow: top ? top.title : reason ? `No new changes this week. Strongest fit signal: ${reason}.` : "No new changes this week.",
@@ -89,7 +92,7 @@ export function renderDigestHtml(accounts: RankedAccount[], weekOf: string, appU
   return `<!doctype html><html><body style="margin:0;padding:24px;background:#fafafa">
 <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #e4e4e7;border-radius:10px;padding:8px 24px">
   <tr><td style="padding:16px 0 4px;font:600 18px -apple-system,Segoe UI,Roboto,sans-serif;color:#18181b">Who to call this week</td></tr>
-  <tr><td style="padding-bottom:8px;font:400 13px -apple-system,Segoe UI,Roboto,sans-serif;color:#71717a">Week of ${esc(weekOf)} · ranked by what changed this week plus fit</td></tr>
+  <tr><td style="padding-bottom:8px;font:400 13px -apple-system,Segoe UI,Roboto,sans-serif;color:#71717a">Week of ${esc(weekOf)} · ranked by fit, with this week's changes breaking ties</td></tr>
   <tr><td style="padding-bottom:8px;font:400 12px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;color:#71717a">Fit (0-100) = how well the company's verified stack matches what ${esc(product)} needs. Every fact links to its public source.</td></tr>
   ${rows || `<tr><td style="padding:16px 0;color:#71717a">No accounts tracked yet.</td></tr>`}
   <tr><td style="padding:16px 0;font:400 12px -apple-system,Segoe UI,Roboto,sans-serif;color:#a1a1aa">${esc(product)} account digest · facts from public GitHub, job boards, engineering blogs, talks, Hacker News and DNS · <a ${A} href="${esc(appUrl)}/digests" style="color:#a1a1aa">all digests</a></td></tr>
@@ -134,23 +137,3 @@ export async function sendDigest(digestId: number, to: string): Promise<"sent" |
   return status;
 }
 
-/** An unsent email draft (.eml): X-Unsent makes Outlook open it ready to send; the To field is left for the user. */
-export function emlDraft(subject: string, html: string): string {
-  const b64 = (t: string) => Buffer.from(t, "utf-8").toString("base64");
-  const body = b64(html).replace(/.{1,76}/g, "$&\r\n");
-  return [
-    "X-Unsent: 1",
-    "To: ",
-    `Subject: =?UTF-8?B?${b64(subject)}?=`,
-    "MIME-Version: 1.0",
-    'Content-Type: text/html; charset="UTF-8"',
-    "Content-Transfer-Encoding: base64",
-    "",
-    body,
-  ].join("\r\n");
-}
-
-/** For the in-site preview frame: open every link in a new tab even in digests stored before links had a target. */
-export function previewHtml(html: string): string {
-  return html.includes("<base ") ? html : html.replace(/<head>|<body([^>]*)>/i, (m) => (m.toLowerCase() === "<head>" ? `${m}<base target="_blank">` : `<base target="_blank">${m}`));
-}

@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db/client";
-import { TOP_N, digestSubject, previewHtml, type RankedAccount } from "@/lib/digest";
+import { TOP_N, type RankedAccount } from "@/lib/digest";
 import { Ext, FitRing, Mint, SkeletonPage, cx, fmtDate } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Digest" };
@@ -50,7 +50,7 @@ async function Digest({ params }: PageProps<"/digests/[id]">) {
         <h1 className="mt-1 font-display text-3xl font-bold tracking-[-0.025em] text-ink sm:text-[40px]">
           Who to call <Mint>this week.</Mint>
         </h1>
-        <p className="mt-2 text-sm text-muted">Ranked by what changed in the last 7 days plus fit score. Computed in code, no AI.</p>
+        <p className="mt-2 text-sm text-muted">Ranked by fit; changes from the last 7 days add up to 10 points, so they break near-ties. Computed in code, no AI.</p>
       </div>
 
       <PriorityMap accounts={all} />
@@ -96,29 +96,6 @@ async function Digest({ params }: PageProps<"/digests/[id]">) {
         </ol>
       </section>
 
-      <details className="group rounded-2xl border border-line bg-surface shadow-card">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-5 [&::-webkit-details-marker]:hidden">
-          <span>
-            <span className="block font-display text-[15px] font-semibold text-ink">Email draft</span>
-            <span className="block text-xs text-faint">Subject “{digestSubject(top.length, d.weekOf)}” · download it and send it from your own mail</span>
-          </span>
-          <span aria-hidden className="grid h-7 w-7 place-items-center rounded-full bg-surface-2 text-muted transition-transform group-open:rotate-180">
-            ⌄
-          </span>
-        </summary>
-        <div className="space-y-4 border-t border-line p-5">
-          <div className="flex flex-wrap items-center gap-2">
-            <a href={`/api/digests/${d.id}/download?format=eml`} download className="rounded-lg bg-btn px-3 py-2 text-sm font-medium text-btn-fg no-underline">
-              Download email draft (.eml)
-            </a>
-            <a href={`/api/digests/${d.id}/download?format=html`} download className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-ink no-underline">
-              Download as web page (.html)
-            </a>
-          </div>
-          <p className="text-xs text-muted">The .eml file opens as a ready-to-send draft in Outlook, Apple Mail or Thunderbird: add recipients and press Send. In Gmail, open the .html file, select all, copy and paste it into a new email. Links open the brief and each source.</p>
-          <iframe title="Digest email preview" srcDoc={previewHtml(d.html)} sandbox="allow-popups allow-popups-to-escape-sandbox" className="h-[560px] w-full rounded-xl border border-line bg-white" />
-        </div>
-      </details>
     </div>
   );
 }

@@ -4,7 +4,9 @@ import { isEmail } from "../src/lib/email";
 import { carriesBrand, extractLinks, linksToDomain, onDomain, proveOwnership } from "../src/lib/ownership";
 import { findFeedLinks, mediumFeed } from "../src/collectors/blog";
 import { isSampleCode, orgWebsiteProves } from "../src/collectors/github";
-import { emlDraft, previewHtml, renderDigestHtml } from "../src/lib/digest";
+import { renderDigestHtml } from "../src/lib/digest";
+import { gmailComposeUrl, mailtoUrl, outreachEmail } from "../src/lib/outreach";
+import profileJson from "../data/product-profile.json";
 
 /**
  * Fake network. `dns`: names with records. `sites`: URL -> { final URL after redirects, status, body }.
@@ -198,14 +200,33 @@ describe("digest email draft", () => {
     expect(html).toContain("https://app.example/company/7");
     expect(html).toContain("what FlakeGuard needs");
   });
-  it("is a valid unsent .eml draft", () => {
-    const eml = emlDraft("Who to call · 12 Oct", "<p>Hello ₹</p>");
-    expect(eml.startsWith("X-Unsent: 1\r\n")).toBe(true);
-    expect(eml).toContain("Content-Transfer-Encoding: base64");
-    const body = eml.split("\r\n\r\n")[1].replace(/\r\n/g, "");
-    expect(Buffer.from(body, "base64").toString("utf-8")).toBe("<p>Hello ₹</p>");
+});
+
+describe("outreach email draft", () => {
+  const computed = {
+    languages: [{ name: "Python", pct: 30, signalId: 1 }, { name: "Go", pct: 60, signalId: 2 }],
+    techs: [
+      { name: "GitHub Actions", category: "ci" },
+      { name: "pytest", category: "test_framework" },
+      { name: "Docker", category: "infra" },
+    ],
+  } as never;
+  const d = outreachEmail({ company: "Acme", opener: "Your post on cutting CI time with Bazel caught my eye.", computed, profile: profileJson as never });
+  it("starts with the opener and uses only verified facts", () => {
+    expect(d.body.split("\n\n")[1]).toBe("Your post on cutting CI time with Bazel caught my eye.");
+    expect(d.body).toContain("builds mostly in Go and Python, runs GitHub Actions and tests with pytest");
+    expect(d.body).not.toContain("Docker");
+    expect(d.body.endsWith("Best,\nNikhil")).toBe(true);
+    expect(d.subject).toBe("Acme's GitHub Actions pipeline and FlakeGuard");
   });
-  it("preview opens links in new tabs even for old digests", () => {
-    expect(previewHtml("<!doctype html><html><body style='x'><a href='https://a.com'>a</a></body></html>")).toContain('<base target="_blank">');
+  it("leaves out the facts line when nothing is known", () => {
+    const e = outreachEmail({ company: "Acme", opener: "Hello.", computed: { languages: [], techs: [] } as never, profile: profileJson as never });
+    expect(e.body).not.toContain("From what your team shares");
+    expect(e.subject).toBe("Acme's engineering team and FlakeGuard");
+  });
+  it("builds Gmail and mail-app links with the draft encoded", () => {
+    expect(gmailComposeUrl(d)).toContain("su=Acme's%20GitHub%20Actions");
+    expect(mailtoUrl(d).startsWith("mailto:?subject=")).toBe(true);
+    expect(decodeURIComponent(mailtoUrl(d).split("&body=")[1])).toBe(d.body);
   });
 });

@@ -40,7 +40,7 @@ export function glancePoints(c: Computed): GlancePoint[] {
   if (latest) pts.push({ label: "Latest signal", value: latest.text, href: latest.href });
 
   const watch = [
-    c.competitors[0] ? `Already uses ${c.competitors[0].name}` : null,
+    c.competitors[0] ? `Already uses a rival tool: ${c.competitors[0].name}` : null,
     c.contradictions[0] ? `GitHub says ${c.contradictions[0].github}, jobs say ${c.contradictions[0].jobs}` : null,
     c.sdkHeavy ? "Public repos are mostly SDKs" : null,
   ].filter(Boolean);

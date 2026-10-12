@@ -306,17 +306,19 @@ describe("brief validator", () => {
 });
 
 describe("digest ranking", () => {
-  it("ranks by change-event weight plus fit score and explains why now", () => {
+  it("ranks by fit; this week's changes only break near-ties, and explains why now", () => {
     const ev = (w: number, title: string) => ({ type: "new_initiative" as const, title, date: NOW.toISOString(), evidenceUrl: "e", signalIds: [], weight: w });
     const r = rankAccounts(
       [
-        { companyId: 1, name: "A", domain: "a", fitScore: 60, events: [], computed: null, generatedAt: NOW },
-        { companyId: 2, name: "B", domain: "b", fitScore: 40, events: [ev(25, "Migration: x")], computed: null, generatedAt: NOW },
+        { companyId: 1, name: "TopFitQuiet", domain: "a", fitScore: 98, events: [], computed: null, generatedAt: NOW },
+        { companyId: 2, name: "CloseFitChanged", domain: "b", fitScore: 95, events: [ev(25, "Migration: x")], computed: null, generatedAt: NOW },
+        { companyId: 3, name: "LowFitBusy", domain: "c", fitScore: 70, events: [ev(30, "a"), ev(30, "b"), ev(30, "c")], computed: null, generatedAt: NOW },
       ],
       NOW,
     );
-    expect(r.map((x) => x.name)).toEqual(["B", "A"]);
+    expect(r.map((x) => x.name)).toEqual(["CloseFitChanged", "TopFitQuiet", "LowFitBusy"]);
     expect(r[0].whyNow).toBe("Migration: x");
+    expect(r[2].score).toBe(80); // change bonus is capped at 10
   });
 });
 

@@ -34,7 +34,7 @@ async function main() {
   check("/watchlist redirects to /dashboard", [307, 308].includes(old.status) && (old.headers.get("location") ?? "").endsWith("/dashboard"), `HTTP ${old.status}`);
   for (const id of ids.slice(0, 3)) {
     const r = await get(`/company/${id}`);
-    check(`GET /company/${id}`, r.status === 200 && /Info/.test(r.text) && /Fit/.test(r.text), `HTTP ${r.status}`);
+    check(`GET /company/${id}`, r.status === 200 && /Info/.test(r.text) && /Fit/.test(r.text) && /Outreach email draft/.test(r.text), `HTTP ${r.status}`);
   }
 
   // api
@@ -53,8 +53,6 @@ async function main() {
   check("invalid domain rejected (400) or guarded (401)", probe === 400 || probe === 401, `HTTP ${probe}`);
   const typo = await post("/api/companies", { domain: "ritzy.com.com" });
   check("doubled ending rejected as a typo", typo.status === 400 && /typo/.test(typo.text), typo.text.slice(0, 90));
-  const dl = await get("/api/digests/1/download?format=eml");
-  check("digest downloads as an .eml draft", dl.status === 200 && /^X-Unsent: 1/.test(dl.text), `HTTP ${dl.status}`);
   check("digest send endpoint is gone", (await post("/api/digests/1/send", { email: "a@b.co" })).status === 404);
   check("wrong passcode is rejected", (await post("/api/auth", { passcode: "not-the-passcode" })).status === 401);
 

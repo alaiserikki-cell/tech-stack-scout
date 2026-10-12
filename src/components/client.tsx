@@ -217,18 +217,26 @@ function companyUrl(d: { id: number; runId?: number; redirectedFrom?: string | n
   return `/company/${d.id}${qs ? `?${qs}` : ""}`;
 }
 
-export function AddCompanyForm({ hero, autoFocus, onAdded }: { hero?: boolean; autoFocus?: boolean; onAdded?: () => void }) {
+type SameBrand = { existingId: number; existingName: string; existingDomain: string; error: string };
+
+export function AddCompanyForm({ autoFocus, onAdded }: { hero?: boolean; autoFocus?: boolean; onAdded?: () => void }) {
   const [domain, setDomain] = useState("");
-  const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [twin, setTwin] = useState<SameBrand | null>(null);
   const router = useRouter();
   const { run, gate, err } = useGuarded();
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const add = async (force: boolean) => {
     setBusy(true);
+    setTwin(null);
     await run(
-      () => postJson("/api/companies", { domain, name }),
+      async () => {
+        const r = await postJson("/api/companies", { domain, force });
+        // "same company?" is a question, not an error: answer it below the field
+        if (r.status === 409 && r.data.code === "same_brand") return { status: 200, data: { sameBrand: r.data } };
+        return r;
+      },
       (d) => {
+        if (d.sameBrand) return setTwin(d.sameBrand as SameBrand);
         setDomain("");
         router.push(companyUrl(d));
         onAdded?.(); // close after navigation has been scheduled
@@ -236,65 +244,55 @@ export function AddCompanyForm({ hero, autoFocus, onAdded }: { hero?: boolean; a
     );
     setBusy(false);
   };
-  if (hero)
-    return (
-      <div>
-        <form onSubmit={submit} className="flex items-center gap-2 rounded-2xl border border-line bg-surface p-2 shadow-card">
-          <label className="min-w-0 flex-1">
-            <span className="sr-only">Company domain</span>
-            <input
-              value={domain}
-              onChange={(e) => setDomain(e.target.value)}
-              placeholder="Company domain, e.g. sentry.io"
-              autoFocus={autoFocus}
-              inputMode="url"
-              autoCapitalize="none"
-              required
-              className="w-full bg-transparent px-3 py-2 text-[15px] text-ink placeholder:text-faint focus:outline-none"
-            />
-          </label>
-          <button disabled={busy} className="shrink-0 rounded-xl bg-btn px-4 py-2.5 text-sm font-semibold text-btn-fg shadow-sm transition-opacity hover:opacity-90 disabled:opacity-50">
-            {busy ? "Adding…" : "Build brief"}
-          </button>
-        </form>
-        {gate}
-        {err}
-      </div>
-    );
   return (
     <div>
       <form
-        className="flex flex-wrap items-end gap-2"
-        onSubmit={async (e) => {
+        onSubmit={(e) => {
           e.preventDefault();
-          setBusy(true);
-          await run(
-            () => postJson("/api/companies", { domain, name }),
-            (d) => router.push(companyUrl(d)),
-          );
-          setBusy(false);
+          add(false);
         }}
+        className="flex items-center gap-2 rounded-2xl border border-line bg-surface p-2 shadow-card"
       >
-        <label className="flex min-w-0 flex-1 flex-col text-xs text-muted sm:flex-none">
-          <span className="mb-1">Company domain</span>
+        <label className="min-w-0 flex-1">
+          <span className="sr-only">Company domain</span>
           <input
             value={domain}
-            onChange={(e) => setDomain(e.target.value)}
-            placeholder="example.com"
+            onChange={(e) => {
+              setDomain(e.target.value);
+              setTwin(null);
+            }}
+            placeholder="Company domain, e.g. sentry.io"
+            autoFocus={autoFocus}
             inputMode="url"
             autoCapitalize="none"
             required
-            className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink sm:w-56"
+            className="w-full bg-transparent px-3 py-2 text-[15px] text-ink placeholder:text-faint focus:outline-none"
           />
         </label>
-        <label className="flex min-w-0 flex-1 flex-col text-xs text-muted sm:flex-none">
-          <span className="mb-1">Name (optional)</span>
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Example Inc" className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink sm:w-44" />
-        </label>
-        <button disabled={busy} className="rounded-lg bg-btn px-4 py-2 text-sm font-medium text-btn-fg disabled:opacity-60">
-          {busy ? "Adding" : "Add company"}
+        <button disabled={busy} className="shrink-0 rounded-xl bg-btn px-4 py-2.5 text-sm font-semibold text-btn-fg shadow-sm transition-opacity hover:opacity-90 disabled:opacity-50">
+          {busy ? "Adding…" : "Build brief"}
         </button>
       </form>
+      {twin && (
+        <div className="mt-3 rounded-xl border border-warn/40 bg-warn/5 p-3 text-sm" role="status">
+          <p className="text-ink">{twin.error}</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                router.push(`/company/${twin.existingId}`);
+                onAdded?.();
+              }}
+              className="rounded-lg bg-btn px-3 py-1.5 text-sm font-medium text-btn-fg"
+            >
+              Open {twin.existingName}
+            </button>
+            <button type="button" onClick={() => add(true)} className="rounded-lg border border-line bg-surface px-3 py-1.5 text-sm font-medium text-ink">
+              It&apos;s a different company: add anyway
+            </button>
+          </div>
+        </div>
+      )}
       {gate}
       {err}
     </div>
@@ -519,7 +517,7 @@ function sortValue(r: WatchRow, k: SortKey): string | number {
 
 /** CSV of the visible rows: built in the browser, no server cost. */
 function downloadCsv(rows: WatchRow[]) {
-  const head = ["Company", "Domain", "Fit score", "Info score", "Info", "Activity", "Top languages", "Competitor", "Coverage", "Changes this week", "Last refreshed", "Technologies"];
+  const head = ["Company", "Domain", "Fit score", "Info score", "Info", "Activity", "Top languages", "Rival tool in use", "Coverage", "Changes this week", "Last refreshed", "Technologies"];
   const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
   const lines = rows.map((r) =>
     [r.name, r.domain, r.fit, r.info, r.infoLabel, r.activity, r.languages.join("; "), r.competitor, r.coverage, r.changes, r.lastRefreshed, r.techs.join("; ")].map(esc).join(","),
@@ -605,7 +603,7 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
                 Top languages
               </th>
               <th scope="col" className="px-3 py-2.5 font-medium">
-                Competitor
+                <span title="A product that overlaps with what you sell, found in their code (e.g. Develocity). A rival of yours, not of theirs.">Rival tool in use</span>
               </th>
               {th("lastRefreshed", "Freshness")}
               {th("coverage", "Coverage")}
@@ -651,7 +649,7 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
                     )}
                   </span>
                 </td>
-                <td className="px-3 py-3 text-xs">{r.competitor ? <span className="rounded-full bg-warn/10 px-2 py-0.5 font-medium text-warn">{r.competitor}</span> : <span className="text-faint">None seen</span>}</td>
+                <td className="px-3 py-3 text-xs">{r.competitor ? <span className="rounded-full bg-warn/10 px-2 py-0.5 font-medium text-warn" title={`${r.competitor} overlaps with what you sell and was found in their code`}>{r.competitor}</span> : <span className="text-faint">None seen</span>}</td>
                 <td className="px-3 py-3 text-xs">
                   <span className={r.stale ? "font-medium text-bad" : "text-muted"}>{r.running ? "Refreshing…" : r.lastRefreshedLabel}</span>
                 </td>
@@ -727,7 +725,7 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
                 </div>
                 <p className="mt-2 text-xs">
                   <span className={r.stale ? "font-medium text-bad" : "text-faint"}>{r.running ? "Refreshing…" : `Refreshed ${r.lastRefreshedLabel}`}</span>
-                  {r.competitor && <span className="text-warn"> · {r.competitor}</span>}
+                  {r.competitor && <span className="text-warn"> · uses rival {r.competitor}</span>}
                 </p>
               </Link>
               <div className="-mt-1 flex justify-end px-2 pt-2">
@@ -939,6 +937,11 @@ export function BulkAddForm({ onDone }: { onDone?: () => void }) {
         const out: { domain: string; ok: boolean; note: string }[] = [];
         for (const d of domains) {
           const r = await postJson("/api/companies", { domain: d });
+          if (r.status === 409 && r.data.code === "same_brand") {
+            out.push({ domain: d, ok: true, note: `skipped: same company as ${r.data.existingName} (${r.data.existingDomain}), already tracked` });
+            setResults([...out]);
+            continue;
+          }
           out.push({ domain: d, ok: r.status === 200, note: r.status === 200 ? (r.data.existing ? (r.data.note ? `${r.data.note} Already on the dashboard.` : "already on the dashboard") : r.data.note ? `${r.data.note} Added, brief building.` : "added, brief building") : (r.data.error ?? "failed") });
           setResults([...out]);
         }
@@ -961,6 +964,7 @@ export function BulkAddForm({ onDone }: { onDone?: () => void }) {
         <li>· One website per line (commas or spaces also work). URLs like https://www.acme.com/about are fine.</li>
         <li>· Up to 10 per batch; anything after the 10th is ignored. The dashboard holds up to 40 companies.</li>
         <li>· Each one is checked on its own: typos, dead or parked domains get a reason; the rest are added.</li>
+        <li>· A country domain of a company already tracked (amazon.in when amazon.com is there) is skipped as the same company.</li>
         <li>· Briefs build in the background, about a minute each.</li>
       </ul>
       {text.split(/[\s,;]+/).filter(Boolean).length > 10 && <p className="mt-1 text-xs text-warn">Only the first 10 will be added.</p>}
@@ -996,5 +1000,51 @@ export function PrintButton() {
     >
       Print / save as PDF
     </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Outreach email draft (company page)
+// ---------------------------------------------------------------------------
+export function EmailDraftCard({ subject: s0, body: b0 }: { subject: string; body: string }) {
+  const [subject, setSubject] = useState(s0);
+  const [body, setBody] = useState(b0);
+  const [copied, setCopied] = useState<"ok" | "failed" | null>(null);
+  const draft = { subject, body };
+  const enc = encodeURIComponent;
+  return (
+    <div className="space-y-3">
+      <label className="block text-xs text-muted">
+        Subject
+        <input value={subject} onChange={(e) => setSubject(e.target.value)} className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink" />
+      </label>
+      <label className="block text-xs text-muted">
+        Email
+        <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={12} className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm leading-relaxed text-ink" />
+      </label>
+      <div className="flex flex-wrap items-center gap-2">
+        <a
+          href={`https://mail.google.com/mail/?view=cm&fs=1&su=${enc(draft.subject)}&body=${enc(draft.body)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rounded-lg bg-btn px-3 py-2 text-sm font-medium text-btn-fg no-underline"
+        >
+          Open in Gmail
+        </a>
+        <a href={`mailto:?subject=${enc(draft.subject)}&body=${enc(draft.body)}`} className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-ink no-underline">
+          Open in email app
+        </a>
+        <button
+          type="button"
+          onClick={async () => setCopied((await copyText(`Subject: ${draft.subject}\n\n${draft.body}`)) ? "ok" : "failed")}
+          className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-ink"
+        >
+          Copy email
+        </button>
+        <span className="text-xs text-faint" aria-live="polite">
+          {copied === "ok" ? "Copied." : copied === "failed" ? "Copy was blocked by the browser: select the text and copy it." : "Edit anything above first; add the recipient in your mail."}
+        </span>
+      </div>
+    </div>
   );
 }

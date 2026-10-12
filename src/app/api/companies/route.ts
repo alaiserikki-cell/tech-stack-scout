@@ -33,6 +33,23 @@ export async function POST(req: Request) {
   const note = redirectedFrom ? `${redirectedFrom} redirects to ${domain}, so it is tracked as ${domain}.` : undefined;
   if (existing?.active) return Response.json({ id: existing.id, existing: true, domain, redirectedFrom, note });
 
+  // same name on another domain (amazon.in vs amazon.com) is usually the same company: ask before adding a second copy
+  if (!existing && body.force !== true) {
+    const active = await db.select({ id: schema.watchlist.id, name: schema.watchlist.companyName, domain: schema.watchlist.domain }).from(schema.watchlist).where(eq(schema.watchlist.active, true));
+    const twin = active.find((c) => c.domain !== domain && brandOf(c.domain) === brandOf(domain));
+    if (twin)
+      return Response.json(
+        {
+          code: "same_brand",
+          existingId: twin.id,
+          existingName: twin.name,
+          existingDomain: twin.domain,
+          error: `${domain} looks like the same company as ${twin.name} (${twin.domain}), which is already on the dashboard.`,
+        },
+        { status: 409 },
+      );
+  }
+
   const [{ n }] = await db.select({ n: count() }).from(schema.watchlist).where(eq(schema.watchlist.active, true));
   if (n >= LIMITS.maxActiveCompanies) return Response.json({ error: `The dashboard is full (${LIMITS.maxActiveCompanies} active companies). Remove one first.` }, { status: 429 });
 

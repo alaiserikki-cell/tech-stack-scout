@@ -94,3 +94,9 @@ You asked for the look of Common Room (commonroom.io, by Zoom), a buyer-intellig
 | Blog window 12 months (newest 5 posts) | 90 days | Many engineering blogs post a few times a year; recency is scored separately in the info score. |
 | Raw JSON profile editor removed from Targeting | Keep an "advanced" editor | Everything a user needs is in the form; raw JSON invited invalid edits and added nothing. |
 | Watchlist renamed Dashboard (`/watchlist` redirects) | Keep "watchlist" | Your request; adding a company lands you on the company page, the dashboard lists everything. |
+| Outreach email draft per company (Gmail / email app / copy) replaces the digest email download | Downloadable digest .eml | The problem statement asks for a first line for outreach to each company; the email Nikhil actually sends is to the company. .eml files did not open reliably. The draft is the Gemini opener plus facts computed from verified sources only. |
+| Call list ranked by fit; this week's changes add at most 10 points | Fit + sum of change weights | A few small changes (+30) pushed GitLab (fit 98) out of the top 5. Changes now only break near-ties. |
+| Adding a domain whose name matches a tracked company (amazon.in vs amazon.com) asks before adding | Silent merge, or two records | Country sites often do not redirect (bot checks), so they slipped through; a silent merge could join unrelated companies that share a name. |
+| "Competitor" column renamed "Rival tool in use" | Keep "Competitor" | It lists tools that compete with the product you sell (e.g. Develocity at LinkedIn), not the company's own competitors. |
+| Pre-launch digest for the week of 5 Oct deleted | Keep it | It was built on launch day from the same data as the week of 12 Oct, so it looked like static data. |
+

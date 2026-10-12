@@ -10,8 +10,9 @@ import type { ChangeEvent, Computed, TechSummary } from "@/lib/compute";
 import { companyRuns, droppedTechs, recentSnapshots } from "@/lib/queries";
 import { loadProfile } from "@/lib/repo";
 import { liveScores } from "@/lib/scores";
+import { outreachEmail } from "@/lib/outreach";
 import { AtAGlance, StackMap } from "@/components/brief-glance";
-import { AutoRunProgress, OpenerActions, PrintButton, RefreshButton, RemoveButton, SourceControl } from "@/components/client";
+import { AutoRunProgress, EmailDraftCard, OpenerActions, PrintButton, RefreshButton, RemoveButton, SourceControl } from "@/components/client";
 import { Badge, Card, Confidence, Empty, InfoRing, Ext, FitScore, H2, LevelPill, SOURCE_LABEL, Skeleton, ago, cx, fmtDate, isStale } from "@/components/ui";
 import { boardUrl } from "@/collectors/jobs";
 
@@ -112,7 +113,7 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
           <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
             {computed && <LevelPill level={computed.activity.label} kind="activity" />}
             {computed && <LevelPill level={computed.coverage} kind="coverage" />}
-            {computed?.competitors.length ? <Badge tone="warn">Uses {computed.competitors[0].name}</Badge> : null}
+            {computed?.competitors.length ? <Badge tone="warn">Uses a rival tool: {computed.competitors[0].name}</Badge> : null}
             <span className={isStale(company.lastRefreshedAt, now) ? "font-medium text-bad" : "text-faint"}>Refreshed {ago(company.lastRefreshedAt, now)}</span>
             {!company.active && <span className="text-warn">· Removed from the dashboard</span>}
             <span className="ml-auto">
@@ -151,6 +152,12 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
               <BriefStatusNote status={snap.briefStatus} hasBrief={Boolean(brief)} />
             )}
           </section>
+
+          {brief?.opener && computed && (
+            <Fold title="Outreach email draft" hint={`ready to send to ${company.companyName}: the opener plus verified facts, nothing invented`}>
+              <EmailDraftCard {...outreachEmail({ company: company.companyName, opener: brief.opener, computed, profile })} />
+            </Fold>
+          )}
 
           {computed && <AtAGlance c={computed} />}
           {computed && <StackMap c={computed} productName={productName} />}
@@ -535,7 +542,7 @@ function Evidence({ c, company }: { c: Computed; company: typeof schema.watchlis
           <p className="mt-2 text-[11px] text-faint">Describes the public website only, not where the backend runs.</p>
         </Card>
         <Card>
-          <H2>Competitors and adjacent tools</H2>
+          <H2>Rival tools in use (yours, not theirs)</H2>
           {c.competitors.length ? (
             <ul className="space-y-1 text-sm">
               {c.competitors.map((x) => (
