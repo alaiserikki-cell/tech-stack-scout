@@ -17,8 +17,8 @@ export const STEPS = ["Finding sources", "Reading GitHub", "Reading job posts", 
  * A run cut off mid-way (the platform's 300 s limit, a deploy) would stay "running" forever and block that company.
  * Anything queued/running for over 15 minutes is marked failed; the previous brief stays in place.
  */
-/** Bump when computed fields change meaning (3: non-engineering job titles excluded from language counts). */
-export const COMPUTE_VERSION = 3;
+/** Bump when computed fields change meaning (3: non-engineering job titles excluded; 4: sdk_heavy halves GitHub-only fit factors). */
+export const COMPUTE_VERSION = 4;
 
 export async function sweepStuckRuns(): Promise<number> {
   const db = getDb();

@@ -105,3 +105,33 @@ describe("job filtering", async () => {
     expect(c.contradictions).toEqual([]); // without the filter: "GitHub says Go, jobs say Python"
   });
 });
+
+describe("fit with sdk_heavy", async () => {
+  const { fitScore } = await import("../src/lib/compute");
+  const tech = (name: string, category: string, sources: string[]) => ({ name, category, sources, confidence: "high", jobPosts: 0, requirementLevel: null, firstSeen: null, lastSeen: null, status: "active", signalIds: [1], evidenceUrl: null });
+  const base = {
+    languages: [{ name: "Go", pct: 100, signalId: 1 }],
+    jobLanguages: [],
+    techs: [tech("GitHub Actions", "ci", ["github"]), tech("pytest", "test_framework", ["github", "jobs"])],
+    hosting: [],
+    activity: { label: "unknown", pushed30: null, pushed90: null, created90: null, totalRepos: null, engineeringJobs: null },
+    initiatives: [],
+    blogPosts: [],
+    hnStories: [],
+    contradictions: [],
+    sdkHeavy: false,
+  } as never;
+  const p = { ...(profile as object), target_languages: ["Go"], target_ci_systems: ["GitHub Actions"], target_clouds: [], importance: {} } as never;
+
+  it("halves factors backed only by GitHub and says why", () => {
+    const normal = fitScore(base, p);
+    const sdk = fitScore({ ...(base as object), sdkHeavy: true } as never, p);
+    const ci = sdk.reasons.find((r) => r.reason.startsWith("CI defined in code"))!;
+    expect(ci.reason).toBe("CI defined in code: GitHub Actions (public SDK repos)");
+    expect(ci.points).toBe(Math.round(normal.reasons.find((r) => r.reason.startsWith("CI defined"))!.points / 2));
+    // pytest is also in job posts: the tests factor keeps full points and no suffix
+    const tests = sdk.reasons.find((r) => r.reason.includes("test framework"))!;
+    expect(tests.reason).not.toContain("public SDK repos");
+    expect(sdk.score).toBeLessThan(normal.score);
+  });
+});

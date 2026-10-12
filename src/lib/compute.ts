@@ -265,6 +265,27 @@ export function fitScore(c: Omit<Computed, "fit" | "hash" | "coverage" | "checke
     if (used.length) raw.push({ key: "cloud", reason: `Uses ${list(used, 9)}`, points: FIT_WEIGHTS.cloud, signalIds: ids(used.map((t) => t.name)) });
   }
 
+  // When the public GitHub is mostly SDKs, it shows what they publish, not how they build: a factor supported
+  // only by GitHub evidence counts half.
+  if (c.sdkHeavy) {
+    const onlyGithub = (names: string[]) => names.length > 0 && names.every((n) => (techByName.get(n)?.sources ?? ["github"]).every((s) => s === "github"));
+    const names = (xs: { name: string }[]) => xs.map((x) => x.name);
+    const githubOnly: Partial<Record<FitComponent, boolean>> = {
+      languages: ghShare > 0,
+      ci: onlyGithub(names(ci)),
+      tests: onlyGithub(names(tests)),
+      services: svc.length ? onlyGithub(names(svc)) : true, // otherwise based on repos pushed
+      monorepo: onlyGithub(names(mono)),
+      activity: !(c.activity.engineeringJobs ?? 0),
+      cloud: onlyGithub(names(c.techs.filter((t) => t.category === "cloud" && clouds.includes(t.name)))),
+    };
+    for (const r of raw)
+      if (githubOnly[r.key]) {
+        r.points = r.points / 2;
+        r.reason = `${r.reason} (public SDK repos)`;
+      }
+  }
+
   const included = (Object.keys(FIT_WEIGHTS) as FitComponent[]).filter((k) => (k !== "cloud" || clouds.length > 0) && imp(k) > 0);
   const max = included.reduce((a, k) => a + FIT_WEIGHTS[k] * imp(k), 0) || 1;
   const counted = raw.filter((r) => imp(r.key) > 0);
