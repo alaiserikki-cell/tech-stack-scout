@@ -150,7 +150,7 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
 
           {brief?.opener && computed && (
             <Fold title="Outreach email draft" hint={`ready to send to ${company.companyName}: the opener plus verified facts, nothing invented`}>
-              <EmailDraftCard {...outreachEmail({ company: company.companyName, opener: brief.opener, computed, profile })} />
+              <EmailDraftCard {...outreachEmail({ company: company.companyName, brief, computed, profile })} />
             </Fold>
           )}
 

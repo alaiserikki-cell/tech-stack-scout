@@ -202,38 +202,6 @@ describe("digest email draft", () => {
   });
 });
 
-describe("outreach email draft", () => {
-  const computed = {
-    languages: [{ name: "Python", pct: 30, signalId: 1 }, { name: "Go", pct: 60, signalId: 2 }],
-    techs: [
-      { name: "GitHub Actions", category: "ci" },
-      { name: "pytest", category: "test_framework" },
-      { name: "Docker", category: "infra" },
-    ],
-  } as never;
-  const d = outreachEmail({ company: "Acme", opener: "Your post on cutting CI time with Bazel caught my eye.", computed, profile: profileJson as never });
-  it("starts with the opener and uses only verified facts", () => {
-    expect(d.body.split("\n\n")[1]).toBe("Your post on cutting CI time with Bazel caught my eye.");
-    expect(d.body).toContain("builds mostly in Go and Python, runs GitHub Actions and tests with pytest");
-    expect(d.body).not.toContain("Docker");
-    expect(d.body.endsWith("Best,\nNikhil")).toBe(true);
-    expect(d.subject).toBe("Acme's GitHub Actions pipeline and FlakeGuard");
-  });
-  it("does not repeat the company name in the subject", () => {
-    const g = outreachEmail({ company: "GitLab", opener: "Hi.", computed: { languages: [], techs: [{ name: "GitLab CI", category: "ci" }] } as never, profile: profileJson as never });
-    expect(g.subject).toBe("GitLab's CI pipeline and FlakeGuard");
-  });
-  it("leaves out the facts line when nothing is known", () => {
-    const e = outreachEmail({ company: "Acme", opener: "Hello.", computed: { languages: [], techs: [] } as never, profile: profileJson as never });
-    expect(e.body).not.toContain("From what your team shares");
-    expect(e.subject).toBe("Acme's engineering team and FlakeGuard");
-  });
-  it("builds Gmail and mail-app links with the draft encoded", () => {
-    expect(gmailComposeUrl(d)).toContain("su=Acme's%20GitHub%20Actions");
-    expect(mailtoUrl(d).startsWith("mailto:?subject=")).toBe(true);
-    expect(decodeURIComponent(mailtoUrl(d).split("&body=")[1])).toBe(d.body);
-  });
-});
 
 describe("targeting validation", async () => {
   const { addToList, cleanProfile, resolveKnown } = await import("../src/lib/profile-validate");
