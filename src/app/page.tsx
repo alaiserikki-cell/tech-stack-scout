@@ -4,6 +4,8 @@ import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db/client";
 import { latestSnapshotsByCompany, runningRuns } from "@/lib/queries";
 import { isAuthed } from "@/lib/auth";
+import { loadProfile } from "@/lib/repo";
+import { liveScores } from "@/lib/scores";
 import { AddCompanyForm, PasscodeForm, WatchlistTable, type WatchRow } from "@/components/client";
 import { Card, Empty, Eyebrow, Skeleton, SkeletonPage, ago, isStale } from "@/components/ui";
 
@@ -59,11 +61,12 @@ function Stat({ label, value, hint }: { label: string; value: string | number; h
 async function Watchlist() {
   await connection();
   const db = getDb();
-  const [companies, snaps, running, authed] = await Promise.all([
+  const [companies, snaps, running, authed, profile] = await Promise.all([
     db.select().from(schema.watchlist).where(eq(schema.watchlist.active, true)),
     latestSnapshotsByCompany(),
     runningRuns(),
     isAuthed(),
+    loadProfile(),
   ]);
   const now = new Date();
   const runningSet = new Set(running.filter((r) => now.getTime() - r.startedAt.getTime() < 10 * 60_000).map((r) => r.companyId));
@@ -71,12 +74,16 @@ async function Watchlist() {
     const s = snaps.get(c.id);
     const comp = s?.computed;
     const recentChanges = (s?.changeEvents ?? []).filter((e) => now.getTime() - (s?.generatedAt.getTime() ?? 0) <= 7 * 86_400_000 && e);
+    const live = comp ? liveScores(comp, profile, c, now) : null;
     return {
       id: c.id,
       name: c.companyName,
       domain: c.domain,
-      fit: s ? s.fitScore : null,
-      fitReasons: comp?.fit.reasons ?? [],
+      fit: live ? live.fit.score : null,
+      fitReasons: live?.fit.reasons ?? [],
+      evidence: live ? live.evidence.score : null,
+      evidenceLabel: live?.evidence.label ?? null,
+      techs: (comp?.techs ?? []).map((t) => t.name),
       activity: comp?.activity.label ?? "unknown",
       languages: (comp?.languages?.length ? comp.languages.map((l) => l.name) : (comp?.jobLanguages ?? []).map((l) => l.name)).slice(0, 3),
       languagesFrom: comp?.languages?.length ? "code" : comp?.jobLanguages?.length ? "jobs" : null,
@@ -105,16 +112,25 @@ async function Watchlist() {
       )}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label="Accounts tracked" value={rows.length} hint="max 40 active" />
-        <Stat label="Average fit" value={avgFit} hint="out of 100" />
+        <Stat label="Average fit" value={avgFit} hint="for what you sell" />
         <Stat label="Changed this week" value={changed} hint="new tech, posts, hiring" />
-        <Stat label="Stale (> 7 days)" value={stale} hint="refreshed by the daily job" />
+        <Stat label="Strong evidence" value={rows.filter((r) => r.evidenceLabel === "strong").length} hint={`${stale} stale (> 7 days)`} />
       </div>
       {rows.length ? (
         <WatchlistTable rows={rows} />
       ) : (
         <Empty title="No companies on the watchlist yet.">Add one above, or insert a row into the watchlist table in the Neon console; the next daily run picks it up.</Empty>
       )}
-      <p className="text-xs text-faint">Freshness turns red after 7 days. A mint dot means something changed in the last week. Tap a fit score for its reasons; open a company for the full brief.</p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-2xl border border-line bg-surface p-4 text-sm shadow-card">
+          <p className="font-display font-semibold text-ink">Fit score: is this a good account for you?</p>
+          <p className="mt-1 text-muted">Matches each company against what you sell and who you target. <a href="/settings">Change your targeting</a> and every score updates instantly.</p>
+        </div>
+        <div className="rounded-2xl border border-line bg-surface p-4 text-sm shadow-card">
+          <p className="font-display font-semibold text-ink">Evidence score: how sure are we?</p>
+          <p className="mt-1 text-muted">How much of the stack comes from verified sources, confirmed twice, recently. <a href="/how-it-works#scores">How both scores work</a></p>
+        </div>
+      </div>
     </div>
   );
 }

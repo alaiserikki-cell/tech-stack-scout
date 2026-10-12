@@ -140,7 +140,20 @@ export function normalizeOrgCandidate(s: string): string {
 
 // ---------- org discovery ----------
 
-async function guessOrg(ctx: CollectorContext, checked: string[]): Promise<string | null> {
+/** Proof that a GitHub org belongs to the company: its profile website is on the company's domain. */
+export function orgWebsiteMatches(blog: string | null | undefined, domain: string): boolean {
+  if (!blog) return false;
+  const url = /^https?:\/\//i.test(blog) ? blog : `https://${blog}`;
+  try {
+    const host = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+    const d = domain.toLowerCase().replace(/^www\./, "");
+    return host === d || host.endsWith(`.${d}`);
+  } catch {
+    return false;
+  }
+}
+
+async function guessOrg(ctx: CollectorContext, checked: string[]): Promise<{ login: string; proven: boolean } | null> {
   const { companyName, domain } = ctx.company;
   const stem = domain.split(".")[0];
   const candidates = new Set<string>([
@@ -154,14 +167,14 @@ async function guessOrg(ctx: CollectorContext, checked: string[]): Promise<strin
   ).catch(() => null);
   for (const it of search?.items ?? []) candidates.add(it.login);
   checked.push(`GitHub org search for "${companyName}" and "${stem}"`);
-  let weak: string | null = null;
+  let weak: { login: string; proven: boolean } | null = null;
   for (const login of candidates) {
     if (!login) continue;
     const org = await gh<{ login: string; blog: string | null; public_repos: number; type?: string }>(ctx, `/orgs/${login}`).catch(() => null);
     if (!org) continue;
     const blog = (org.blog ?? "").toLowerCase();
-    if (blog && blog.includes(domain.toLowerCase())) return org.login; // org website matches the domain
-    if (!weak && org.login.toLowerCase() === normalizeOrgCandidate(stem) && org.public_repos > 0) weak = org.login;
+    if (orgWebsiteMatches(org.blog, domain)) return { login: org.login, proven: true }; // org website is on the company's domain
+    if (!weak && org.login.toLowerCase() === normalizeOrgCandidate(stem) && org.public_repos > 0) weak = { login: org.login, proven: false };
   }
   return weak;
 }
@@ -192,16 +205,20 @@ async function collectGithub(ctx: CollectorContext, checked: string[], updates: 
 
     let org = ctx.company.githubOrg;
     if (!org) {
-      org = await guessOrg(ctx, checked);
+      const guess = await guessOrg(ctx, checked);
+      org = guess?.login ?? null;
       if (!org) {
         checked.push("No public GitHub organization found");
         return { signals, checked };
       }
       updates.githubOrg = org;
-      updates.githubOrgVerified = false;
+      updates.githubOrgVerified = Boolean(guess?.proven);
+      checked.push(guess?.proven ? `GitHub org ${org}: verified (its website is ${ctx.company.domain})` : `GitHub org ${org}: unverified (name match only)`);
     }
     const orgUrl = `https://github.com/${org}`;
-    const orgInfo = await gh<{ public_repos: number; login: string }>(ctx, `/orgs/${org}`);
+    const orgInfo = await gh<{ public_repos: number; login: string; blog?: string | null }>(ctx, `/orgs/${org}`);
+    // an org set earlier but never verified gets verified once its website proves the link
+    if (orgInfo && !ctx.company.githubOrgVerified && updates.githubOrgVerified !== true && orgWebsiteMatches(orgInfo.blog, ctx.company.domain)) updates.githubOrgVerified = true;
     const userInfo = orgInfo ? null : await gh<{ public_repos: number; login: string }>(ctx, `/users/${org}`);
     const owner = orgInfo ?? userInfo;
     checked.push(`GitHub ${orgUrl}`);

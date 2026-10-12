@@ -142,16 +142,32 @@ export function updateTechState(
 }
 
 // ---------------------------------------------------------------------------
-// Fit score. Weights (sum to 100):
-//   target languages ............ 20  (share of GitHub bytes in target languages; 15 if only job posts show them)
-//   CI defined in code .......... 20  (any target CI system detected)
-//   test frameworks ............. 15  (5 per distinct framework, max 3)
-//   multiple services ........... 10  (microservices pattern, Kubernetes/Helm, or 20+ repos pushed in 90 days)
-//   monorepo tooling ............ 10  (Nx, Turborepo, Bazel, Lerna, pnpm workspaces, Pants, or monorepo pattern)
-//   target patterns in jobs ..... 15  (5 per distinct target pattern / matching initiative, max 3)
-//   activity / hiring ........... 10  (high 10, medium 5)
+// FIT SCORE: "does this account look like a good customer for what Nikhil sells?"
+// Driven by the targeting profile in Settings (target languages, CI systems, clouds, patterns and an
+// importance level per factor). Base weights (default importance, sum to 100):
+//   languages ... 20  share of recent public code in target languages (15 if only job posts show them)
+//   ci .......... 20  a target CI system is defined in code
+//   tests ....... 15  5 per distinct test framework, max 3
+//   services .... 10  microservices pattern, Kubernetes/Helm, or 20+ repos pushed in 90 days
+//   monorepo .... 10  Nx, Turborepo, Bazel, Lerna, pnpm workspaces, Pants, or monorepo pattern
+//   patterns .... 15  5 per target pattern seen in job posts / initiatives, max 3
+//   activity .... 10  high 10, medium 5
+//   cloud ....... 10  only counted when target clouds are set: a target cloud is in use
+// Importance multiplies a factor's weight (off = 0, normal = 1, high = 2); the score is the share of the
+// maximum possible points, so it always stays 0-100 and default settings give the original weights.
 // ---------------------------------------------------------------------------
-export const FIT_WEIGHTS = { languages: 20, ci: 20, tests: 15, services: 10, monorepo: 10, patterns: 15, activity: 10 } as const;
+export const FIT_WEIGHTS = { languages: 20, ci: 20, tests: 15, services: 10, monorepo: 10, patterns: 15, activity: 10, cloud: 10 } as const;
+export type FitComponent = keyof typeof FIT_WEIGHTS;
+export const FIT_COMPONENTS: { key: FitComponent; label: string; what: string }[] = [
+  { key: "languages", label: "Target languages", what: "Share of recent public code (or job posts) in your target languages" },
+  { key: "ci", label: "CI in code", what: "One of your target CI systems is configured in their repos" },
+  { key: "tests", label: "Test suites", what: "How many test frameworks they visibly use" },
+  { key: "services", label: "Many services", what: "Microservices, Kubernetes/Helm, or lots of active repos" },
+  { key: "monorepo", label: "Monorepo", what: "Monorepo tooling such as Nx, Turborepo or Bazel" },
+  { key: "patterns", label: "Hiring themes", what: "Your target themes (CI reliability, platform team...) in job posts" },
+  { key: "activity", label: "Momentum", what: "How actively they push code and hire engineers" },
+  { key: "cloud", label: "Target clouds", what: "They use one of your target clouds (only if you set some)" },
+];
 const MONOREPO_TOOLS = ["Nx", "Turborepo", "Bazel", "Lerna", "pnpm workspaces", "Pants"];
 const INITIATIVE_TO_PATTERN: Record<string, string> = {
   "Platform team": "platform team",
@@ -163,9 +179,12 @@ const INITIATIVE_TO_PATTERN: Record<string, string> = {
 };
 
 export function fitScore(c: Omit<Computed, "fit" | "hash" | "coverage" | "checked">, profile: ProductProfile): { score: number; reasons: FitReason[] } {
-  const reasons: FitReason[] = [];
+  const raw: (FitReason & { key: FitComponent })[] = [];
   const techByName = new Map(c.techs.map((t) => [t.name, t]));
   const ids = (names: string[]) => names.flatMap((n) => techByName.get(n)?.signalIds.slice(0, 2) ?? []);
+  const imp = (k: FitComponent): number => profile.importance?.[k] ?? 1;
+  const clouds = profile.target_clouds ?? [];
+  const list = (xs: { name: string }[], n = 3) => xs.slice(0, n).map((x) => x.name).join(", ");
 
   // languages
   const targetLangs = new Set(profile.target_languages);
@@ -174,26 +193,27 @@ export function fitScore(c: Omit<Computed, "fit" | "hash" | "coverage" | "checke
   if (ghShare > 0) {
     const pts = Math.round((Math.min(ghShare, 100) / 100) * FIT_WEIGHTS.languages);
     if (pts > 0)
-      reasons.push({
-        reason: `${Math.round(ghShare)}% of recent public code is in target languages (${ghTarget.slice(0, 3).map((l) => l.name).join(", ")})`,
+      raw.push({
+        key: "languages",
+        reason: `${Math.round(ghShare)}% of recent public code is in target languages (${list(ghTarget)})`,
         points: pts,
         signalIds: ghTarget.map((l) => l.signalId).filter((x): x is number => x != null),
       });
   } else {
     const jl = c.jobLanguages.filter((l) => targetLangs.has(l.name));
-    if (jl.length)
-      reasons.push({ reason: `Job posts ask for ${jl.slice(0, 3).map((l) => l.name).join(", ")}`, points: 15, signalIds: ids(jl.map((l) => l.name)) });
+    if (jl.length) raw.push({ key: "languages", reason: `Job posts ask for ${list(jl)}`, points: 15, signalIds: ids(jl.map((l) => l.name)) });
   }
 
   // CI in code
   const ci = c.techs.filter((t) => profile.target_ci_systems.includes(t.name));
-  if (ci.length) reasons.push({ reason: `CI defined in code: ${ci.map((t) => t.name).join(", ")}`, points: FIT_WEIGHTS.ci, signalIds: ids(ci.map((t) => t.name)) });
+  if (ci.length) raw.push({ key: "ci", reason: `CI defined in code: ${list(ci, 9)}`, points: FIT_WEIGHTS.ci, signalIds: ids(ci.map((t) => t.name)) });
 
   // tests
   const tests = c.techs.filter((t) => t.category === "test_framework");
   if (tests.length)
-    reasons.push({
-      reason: `${tests.length} test framework${tests.length > 1 ? "s" : ""} in use (${tests.slice(0, 3).map((t) => t.name).join(", ")})`,
+    raw.push({
+      key: "tests",
+      reason: `${tests.length} test framework${tests.length > 1 ? "s" : ""} in use (${list(tests)})`,
       points: Math.min(3, tests.length) * 5,
       signalIds: ids(tests.slice(0, 3).map((t) => t.name)),
     });
@@ -201,15 +221,16 @@ export function fitScore(c: Omit<Computed, "fit" | "hash" | "coverage" | "checke
   // multiple services
   const svc = c.techs.filter((t) => ["microservices", "Kubernetes", "Helm"].includes(t.name));
   if (svc.length || (c.activity.pushed90 ?? 0) >= 20)
-    reasons.push({
-      reason: svc.length ? `Multiple services: ${svc.map((t) => t.name).join(", ")}` : `${c.activity.pushed90} repos pushed in the last 90 days`,
+    raw.push({
+      key: "services",
+      reason: svc.length ? `Multiple services: ${list(svc, 9)}` : `${c.activity.pushed90} repos pushed in the last 90 days`,
       points: FIT_WEIGHTS.services,
       signalIds: ids(svc.map((t) => t.name)),
     });
 
   // monorepo
   const mono = c.techs.filter((t) => MONOREPO_TOOLS.includes(t.name) || t.name === "monorepo");
-  if (mono.length) reasons.push({ reason: `Monorepo tooling: ${mono.map((t) => t.name).join(", ")}`, points: FIT_WEIGHTS.monorepo, signalIds: ids(mono.map((t) => t.name)) });
+  if (mono.length) raw.push({ key: "monorepo", reason: `Monorepo tooling: ${list(mono, 9)}`, points: FIT_WEIGHTS.monorepo, signalIds: ids(mono.map((t) => t.name)) });
 
   // target patterns in jobs / initiatives
   const patterns = new Map<string, number[]>();
@@ -219,20 +240,112 @@ export function fitScore(c: Omit<Computed, "fit" | "hash" | "coverage" | "checke
     if (p && profile.target_patterns.includes(p) && !patterns.has(p) && i.signalId != null) patterns.set(p, [i.signalId]);
   }
   if (patterns.size) {
-    const list = [...patterns.keys()].slice(0, 3);
-    reasons.push({ reason: `Job posts mention ${list.join(", ")}`, points: Math.min(3, patterns.size) * 5, signalIds: list.flatMap((p) => patterns.get(p)!) });
+    const names = [...patterns.keys()].slice(0, 3);
+    raw.push({ key: "patterns", reason: `Job posts mention ${names.join(", ")}`, points: Math.min(3, patterns.size) * 5, signalIds: names.flatMap((p) => patterns.get(p)!) });
   }
 
   // activity
   if (c.activity.label === "high" || c.activity.label === "medium")
-    reasons.push({
+    raw.push({
+      key: "activity",
       reason: `${c.activity.label === "high" ? "High" : "Moderate"} engineering activity${c.activity.engineeringJobs ? ` (${c.activity.engineeringJobs} open engineering roles)` : ""}`,
       points: c.activity.label === "high" ? 10 : 5,
       signalIds: [],
     });
 
-  reasons.sort((a, b) => b.points - a.points);
-  return { score: Math.min(100, reasons.reduce((a, r) => a + r.points, 0)), reasons };
+  // target clouds (only when the profile names some)
+  if (clouds.length) {
+    const used = c.techs.filter((t) => t.category === "cloud" && clouds.includes(t.name));
+    if (used.length) raw.push({ key: "cloud", reason: `Uses ${list(used, 9)}`, points: FIT_WEIGHTS.cloud, signalIds: ids(used.map((t) => t.name)) });
+  }
+
+  const included = (Object.keys(FIT_WEIGHTS) as FitComponent[]).filter((k) => (k !== "cloud" || clouds.length > 0) && imp(k) > 0);
+  const max = included.reduce((a, k) => a + FIT_WEIGHTS[k] * imp(k), 0) || 1;
+  const counted = raw.filter((r) => imp(r.key) > 0);
+  const reasons: FitReason[] = counted
+    .map((r) => ({ reason: r.reason, points: Math.round((r.points * imp(r.key) * 100) / max), signalIds: r.signalIds }))
+    .filter((r) => r.points > 0)
+    .sort((x, y) => y.points - x.points);
+  const total = counted.reduce((a, r) => a + r.points * imp(r.key), 0);
+  return { score: Math.min(100, Math.round((total * 100) / max)), reasons };
+}
+
+// ---------------------------------------------------------------------------
+// EVIDENCE SCORE: "how much can you trust what we found about this company's stack?"
+// Independent of what Nikhil sells. Weights (sum to 100):
+//   verified sources .. 40  data from a VERIFIED GitHub org (15), job board (15), blog feed (10);
+//                           auto-discovered sources count 0 until there is proof or you confirm them
+//   corroboration ..... 25  share of technologies seen in 2+ independent sources
+//   freshness ......... 20  refreshed within 7 days (10) + recent activity in the last 90 days (10)
+//   breadth ........... 15  3 points per source type with data (GitHub, jobs, blog, talks, HN, hosting)
+// ---------------------------------------------------------------------------
+export interface EvidenceScore {
+  score: number;
+  label: "strong" | "moderate" | "weak";
+  reasons: { reason: string; points: number; max: number }[];
+}
+
+export function evidenceScore(
+  c: Pick<Computed, "languages" | "techs" | "activity" | "blogPosts" | "hnStories" | "hosting" | "initiatives"> & { talks?: Computed["talks"] },
+  v: { github: boolean; jobs: boolean; blog: boolean },
+  lastRefreshedAt: Date | string | null,
+  now = new Date(),
+): EvidenceScore {
+  const DAY90 = 90 * 86_400_000;
+  const hasGithub = c.languages.length > 0 || c.activity.pushed30 != null;
+  const hasJobs = (c.activity.engineeringJobs ?? 0) > 0;
+  const hasBlog = c.blogPosts.length > 0;
+  const reasons: EvidenceScore["reasons"] = [];
+
+  const verified: string[] = [];
+  const unverified: string[] = [];
+  let vPts = 0;
+  const check = (has: boolean, ok: boolean, name: string, pts: number) => {
+    if (!has) return;
+    if (ok) {
+      vPts += pts;
+      verified.push(name);
+    } else unverified.push(name);
+  };
+  check(hasGithub, v.github, "GitHub", 15);
+  check(hasJobs, v.jobs, "job board", 15);
+  check(hasBlog, v.blog, "blog", 10);
+  reasons.push({
+    reason: verified.length
+      ? `Verified sources: ${verified.join(", ")}${unverified.length ? `; not yet verified: ${unverified.join(", ")}` : ""}`
+      : unverified.length
+        ? `No verified sources yet (found but unconfirmed: ${unverified.join(", ")})`
+        : "No GitHub, job board or blog found",
+    points: vPts,
+    max: 40,
+  });
+
+  const techs = c.techs.filter((t) => t.category !== "pattern");
+  const corroborated = techs.filter((t) => t.sources.length >= 2).length;
+  const corrPts = techs.length ? Math.round(25 * (corroborated / techs.length) * Math.min(1, techs.length / 3)) : 0;
+  reasons.push({ reason: techs.length ? `${corroborated} of ${techs.length} technologies confirmed by 2+ independent sources` : "No technologies found", points: corrPts, max: 25 });
+
+  const fresh = lastRefreshedAt ? now.getTime() - new Date(lastRefreshedAt).getTime() <= 7 * 86_400_000 : false;
+  const recentDates = [...c.blogPosts.map((b) => b.date), ...(c.talks ?? []).map((t) => t.date), ...c.initiatives.map((i) => i.date)];
+  const recent = (c.activity.pushed30 ?? 0) > 0 || hasJobs || recentDates.some((d) => now.getTime() - Date.parse(d) <= DAY90);
+  reasons.push({
+    reason: `${fresh ? "Refreshed this week" : "Not refreshed in the last 7 days"}; ${recent ? "recent activity in the last 90 days" : "no recent activity found"}`,
+    points: (fresh ? 10 : 0) + (recent ? 10 : 0),
+    max: 20,
+  });
+
+  const types = [
+    hasGithub && "GitHub",
+    hasJobs && "jobs",
+    hasBlog && "blog",
+    (c.talks ?? []).length > 0 && "talks",
+    c.hnStories.length > 0 && "Hacker News",
+    c.hosting.length > 0 && "hosting",
+  ].filter(Boolean) as string[];
+  reasons.push({ reason: types.length ? `Data from ${types.length} source type${types.length > 1 ? "s" : ""}: ${types.join(", ")}` : "No sources with data", points: Math.min(15, types.length * 3), max: 15 });
+
+  const score = Math.min(100, reasons.reduce((a, r) => a + r.points, 0));
+  return { score, label: score >= 70 ? "strong" : score >= 40 ? "moderate" : "weak", reasons };
 }
 
 // ---------------------------------------------------------------------------

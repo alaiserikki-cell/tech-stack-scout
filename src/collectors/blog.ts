@@ -1,6 +1,6 @@
 import type { BlogExtraction, Collector, CollectorContext, CollectorResult, CompanyUpdates, DictEntry, Signal } from "@/lib/types";
 import { fetchText } from "@/lib/http";
-import { articleText, decodeEntities, normalizeText, hostnameOf } from "@/lib/text";
+import { articleText, decodeEntities, normalizeText, hostnameOf, sameSite } from "@/lib/text";
 import { resolveName, textMentions } from "@/lib/dictionary";
 
 const DAY = 86_400_000;
@@ -128,7 +128,13 @@ export const blogCollector: Collector = {
         return { signals, checked };
       }
       updates.blogFeedUrl = feed;
-      updates.blogVerified = false;
+      // the feed was advertised on the company's own pages; it is proof when it is also hosted there
+      const fh = hostnameOf(feed);
+      updates.blogVerified = Boolean(fh && sameSite(fh, ctx.company.domain));
+    }
+    if (!ctx.company.blogVerified && !updates.blogFeedUrl && feed !== "none") {
+      const fh = hostnameOf(feed);
+      if (fh && sameSite(fh, ctx.company.domain)) updates.blogVerified = true;
     }
     checked.push(`Feed ${feed}`);
     const r = await fetchText(feed, { fetchImpl: ctx.fetch, timeoutMs: 15000 });

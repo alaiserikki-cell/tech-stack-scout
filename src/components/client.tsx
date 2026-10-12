@@ -478,6 +478,9 @@ export interface WatchRow {
   domain: string;
   fit: number | null;
   fitReasons: { reason: string; points: number }[];
+  evidence: number | null;
+  evidenceLabel: string | null;
+  techs: string[];
   activity: string;
   languages: string[];
   languagesFrom: "code" | "jobs" | null;
@@ -491,20 +494,78 @@ export interface WatchRow {
   running: boolean;
 }
 
-type SortKey = "name" | "fit" | "activity" | "lastRefreshed" | "changes" | "coverage";
+type SortKey = "name" | "fit" | "evidence" | "activity" | "lastRefreshed" | "changes" | "coverage";
 const ACT_RANK: Record<string, number> = { high: 3, medium: 2, low: 1, unknown: 0 };
 const COV_RANK: Record<string, number> = { rich: 2, thin: 1, none: 0 };
 
+function sortValue(r: WatchRow, k: SortKey): string | number {
+  if (k === "name") return r.name.toLowerCase();
+  if (k === "fit") return r.fit ?? -1;
+  if (k === "evidence") return r.evidence ?? -1;
+  if (k === "activity") return ACT_RANK[r.activity] ?? -1;
+  if (k === "coverage") return COV_RANK[r.coverage] ?? -1;
+  if (k === "changes") return r.changes;
+  return r.lastRefreshed ?? "";
+}
+
+/** CSV of the visible rows: built in the browser, no server cost. */
+function downloadCsv(rows: WatchRow[]) {
+  const head = ["Company", "Domain", "Fit score", "Evidence score", "Evidence", "Activity", "Top languages", "Competitor", "Coverage", "Changes this week", "Last refreshed", "Technologies"];
+  const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const lines = rows.map((r) =>
+    [r.name, r.domain, r.fit, r.evidence, r.evidenceLabel, r.activity, r.languages.join("; "), r.competitor, r.coverage, r.changes, r.lastRefreshed, r.techs.join("; ")].map(esc).join(","),
+  );
+  const blob = new Blob([[head.map(esc).join(","), ...lines].join("\n")], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `watchlist-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function EvidencePill({ score, label }: { score: number | null; label: string | null }) {
+  if (score == null) return <span className="text-faint">–</span>;
+  const tone = label === "strong" ? "bg-accent-soft text-accent-ink" : label === "moderate" ? "bg-surface-2 text-ink" : "bg-warn/10 text-warn";
+  return (
+    <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${tone}`} title={`Evidence ${score}/100 (${label})`}>
+      <span className="font-mono tabular-nums">{score}</span>
+      <span className="font-medium capitalize opacity-80">{label}</span>
+    </span>
+  );
+}
+
 export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: "fit", dir: -1 });
-  const sorted = [...rows].sort((a, b) => {
-    const k = sort.key;
-    const va =
-      k === "name" ? a.name.toLowerCase() : k === "fit" ? (a.fit ?? -1) : k === "activity" ? ACT_RANK[a.activity] : k === "coverage" ? COV_RANK[a.coverage] ?? -1 : k === "changes" ? a.changes : a.lastRefreshed ?? "";
-    const vb =
-      k === "name" ? b.name.toLowerCase() : k === "fit" ? (b.fit ?? -1) : k === "activity" ? ACT_RANK[b.activity] : k === "coverage" ? COV_RANK[b.coverage] ?? -1 : k === "changes" ? b.changes : b.lastRefreshed ?? "";
+  const [q, setQ] = useState("");
+  const query = q.trim().toLowerCase();
+  const matchTech = (r: WatchRow) => (query ? r.techs.find((t) => t.toLowerCase().includes(query)) : undefined);
+  const filtered = query ? rows.filter((r) => r.name.toLowerCase().includes(query) || r.domain.includes(query) || matchTech(r)) : rows;
+  const sorted = [...filtered].sort((a, b) => {
+    const va = sortValue(a, sort.key);
+    const vb = sortValue(b, sort.key);
     return (va < vb ? -1 : va > vb ? 1 : 0) * sort.dir;
   });
+  const toolbar = (
+    <div className="flex flex-wrap items-center gap-2">
+      <label className="relative min-w-0 flex-1 sm:w-72 sm:flex-none">
+        <span className="sr-only">Search companies or technologies</span>
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search a company or a technology, e.g. Kubernetes"
+          className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-faint"
+        />
+      </label>
+      <button onClick={() => downloadCsv(sorted)} className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-ink hover:bg-surface-2">
+        Download CSV
+      </button>
+      {query && (
+        <span className="text-xs text-faint">
+          {sorted.length} of {rows.length} match
+        </span>
+      )}
+    </div>
+  );
   const th = (key: SortKey, label: string, cls = "") => (
     <th scope="col" className={`px-3 py-2.5 font-medium ${cls}`} aria-sort={sort.key === key ? (sort.dir === 1 ? "ascending" : "descending") : "none"}>
       <button className="inline-flex items-center gap-1 hover:text-ink" onClick={() => setSort({ key, dir: sort.key === key ? ((-sort.dir) as 1 | -1) : key === "name" ? 1 : -1 })}>
@@ -521,7 +582,7 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
       <div className="hidden overflow-hidden rounded-2xl border border-line bg-surface shadow-card md:block">
         <div className="flex items-center justify-between border-b border-line px-5 py-4">
           <h2 className="font-display text-base font-semibold tracking-tight text-ink">Watchlist</h2>
-          <span className="text-xs text-faint">{rows.length} accounts · click a column to sort</span>
+          {toolbar}
         </div>
         <table className="w-full text-left text-sm">
           <caption className="sr-only">Watchlist companies, sortable</caption>
@@ -529,6 +590,7 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
             <tr>
               {th("name", "Company", "pl-5")}
               {th("fit", "Fit")}
+              {th("evidence", "Evidence")}
               {th("activity", "Activity")}
               <th scope="col" className="px-3 py-2.5 font-medium">
                 Top languages
@@ -553,11 +615,15 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
                     <span className="min-w-0">
                       <span className="block font-semibold group-hover:underline">{r.name}</span>
                       <span className="block text-xs text-faint">{r.domain}</span>
+                      {matchTech(r) && <span className="mt-0.5 inline-block rounded bg-accent-soft px-1.5 text-[11px] font-medium text-accent-ink">uses {matchTech(r)}</span>}
                     </span>
                   </Link>
                 </td>
                 <td className="px-3 py-3" title={r.fitReasons.slice(0, 3).map((x) => `+${x.points} ${x.reason}`).join("\n")}>
                   {r.fit != null ? <FitRing score={r.fit} size={38} /> : <span className="text-faint">–</span>}
+                </td>
+                <td className="px-3 py-3">
+                  <EvidencePill score={r.evidence} label={r.evidenceLabel} />
                 </td>
                 <td className="px-3 py-3">
                   <LevelPill level={r.activity} kind="activity" />
@@ -616,6 +682,7 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
               className="rounded-lg border border-line bg-surface px-2 py-1.5 text-ink"
             >
               <option value="fit:-1">Fit score</option>
+            <option value="evidence:-1">Evidence score</option>
               <option value="changes:-1">Changes</option>
               <option value="activity:-1">Activity</option>
               <option value="lastRefreshed:1">Oldest refresh</option>
@@ -623,6 +690,7 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
             </select>
           </label>
         </div>
+        <div className="mb-3">{toolbar}</div>
         <ul className="space-y-2.5">
           {sorted.map((r) => (
             <li key={r.id}>
@@ -639,6 +707,7 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
                   {r.fit != null && <FitRing score={r.fit} size={42} />}
                 </div>
                 <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                  <EvidencePill score={r.evidence} label={r.evidenceLabel} />
                   <LevelPill level={r.activity} kind="activity" />
                   <LevelPill level={r.coverage} kind="coverage" />
                   {r.languages.map((l) => (
@@ -869,6 +938,7 @@ export function Collapsible({ summary, children }: { summary: ReactNode; childre
 export function AddCompanyDialog() {
   const ref = useRef<HTMLDialogElement>(null);
   const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<"one" | "several">("one");
   useEffect(() => {
     const d = ref.current;
     if (!d) return;
@@ -902,7 +972,14 @@ export function AddCompanyDialog() {
                 ×
               </button>
             </div>
-            <AddCompanyForm hero autoFocus onAdded={() => setOpen(false)} />
+            <div role="tablist" aria-label="Add one or several" className="mb-3 inline-flex rounded-lg border border-line p-0.5 text-sm">
+              {(["one", "several"] as const).map((m) => (
+                <button key={m} type="button" role="tab" aria-selected={mode === m} onClick={() => setMode(m)} className={"rounded-md px-3 py-1 font-medium " + (mode === m ? "bg-btn text-btn-fg" : "text-muted hover:text-ink")}>
+                  {m === "one" ? "One company" : "Several at once"}
+                </button>
+              ))}
+            </div>
+            {mode === "one" ? <AddCompanyForm hero autoFocus onAdded={() => setOpen(false)} /> : <BulkAddForm onDone={() => setOpen(false)} />}
             <ul className="mt-4 space-y-1 text-xs text-faint">
               <li>We look for its public GitHub, job board, engineering blog, talks and hosting.</li>
               <li>To remove a company later, use Remove on its row in the watchlist.</li>
@@ -910,5 +987,74 @@ export function AddCompanyDialog() {
           </div>
       </dialog>
     </>
+  );
+}
+
+/** Add several companies at once (one domain per line). Each is added like a single add; limits still apply. */
+export function BulkAddForm({ onDone }: { onDone?: () => void }) {
+  const router = useRouter();
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [results, setResults] = useState<{ domain: string; ok: boolean; note: string }[]>([]);
+  const domains = [...new Set(text.split(/[\s,;]+/).map((d) => d.trim()).filter(Boolean))].slice(0, 10);
+  return (
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setBusy(true);
+        setResults([]);
+        const out: { domain: string; ok: boolean; note: string }[] = [];
+        for (const d of domains) {
+          const r = await postJson("/api/companies", { domain: d });
+          out.push({ domain: d, ok: r.status === 200, note: r.status === 200 ? (r.data.existing ? "already on the watchlist" : "added, brief building") : (r.data.error ?? "failed") });
+          setResults([...out]);
+        }
+        setBusy(false);
+        router.refresh();
+        if (out.every((x) => x.ok)) setTimeout(() => onDone?.(), 1200);
+      }}
+    >
+      <label className="block text-sm">
+        <span className="sr-only">Domains, one per line</span>
+        <textarea
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          rows={5}
+          placeholder={"sentry.io\nretool.com\nzerodha.com"}
+          className="w-full rounded-xl border border-line bg-surface p-3 font-mono text-sm text-ink placeholder:text-faint"
+        />
+      </label>
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <span className="text-xs text-faint">{domains.length ? `${domains.length} domain${domains.length > 1 ? "s" : ""} (max 10)` : "One per line, up to 10"}</span>
+        <button disabled={busy || !domains.length} className="rounded-xl bg-btn px-4 py-2.5 text-sm font-semibold text-btn-fg shadow-sm disabled:opacity-50">
+          {busy ? `Adding ${results.length + 1} of ${domains.length}…` : "Add all"}
+        </button>
+      </div>
+      {results.length > 0 && (
+        <ul className="mt-3 space-y-1 text-sm" aria-live="polite">
+          {results.map((r) => (
+            <li key={r.domain} className="flex justify-between gap-3">
+              <span className="font-mono text-xs text-ink">{r.domain}</span>
+              <span className={r.ok ? "text-xs text-accent-ink" : "text-xs text-bad"}>{r.note}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </form>
+  );
+}
+
+/** Browser print = free "save as PDF" for a brief. Folded sections are opened first so nothing is hidden. */
+export function PrintButton() {
+  return (
+    <button
+      onClick={() => {
+        document.querySelectorAll("details").forEach((d) => d.setAttribute("open", ""));
+        window.print();
+      }}
+      className="no-print rounded-lg border border-line bg-surface px-3 py-1.5 text-xs font-medium text-ink hover:bg-surface-2"
+    >
+      Print / save as PDF
+    </button>
   );
 }

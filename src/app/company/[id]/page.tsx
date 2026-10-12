@@ -9,9 +9,10 @@ import type { Brief } from "@/lib/brief";
 import type { ChangeEvent, Computed, TechSummary } from "@/lib/compute";
 import { companyRuns, droppedTechs, recentSnapshots } from "@/lib/queries";
 import { loadProfile } from "@/lib/repo";
+import { liveScores } from "@/lib/scores";
 import { AtAGlance, StackMap } from "@/components/brief-glance";
-import { AutoRunProgress, OpenerActions, RefreshButton, RemoveButton, SourceControl } from "@/components/client";
-import { Badge, Card, Confidence, Empty, Ext, FitScore, H2, LevelPill, SOURCE_LABEL, Skeleton, ago, cx, fmtDate, isStale } from "@/components/ui";
+import { AutoRunProgress, OpenerActions, PrintButton, RefreshButton, RemoveButton, SourceControl } from "@/components/client";
+import { Badge, Card, Confidence, Empty, EvidenceRing, Ext, FitScore, H2, LevelPill, SOURCE_LABEL, Skeleton, ago, cx, fmtDate, isStale } from "@/components/ui";
 import { boardUrl } from "@/collectors/jobs";
 
 export const metadata: Metadata = { title: "Company brief" };
@@ -62,6 +63,7 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
   const computed = snap?.computed as Computed | undefined;
   const brief = snap?.briefStatus === "ok" ? (snap.brief as Brief) : null;
   const now = new Date();
+  const live = computed ? liveScores(computed, profile, company, now) : null;
   const activeRun = runs.find((r) => ["queued", "running"].includes(r.status) && now.getTime() - r.startedAt.getTime() < 10 * 60_000);
   const runParam = Number(sp.run);
   const progressRunId = activeRun?.id ?? (Number.isInteger(runParam) && runs.some((r) => r.id === runParam && ["queued", "running"].includes(r.status)) ? runParam : null);
@@ -88,10 +90,16 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
                 </p>
               </div>
             </div>
-            {computed && (
-              <div className="flex flex-col items-center gap-1">
-                <FitScore score={computed.fit.score} reasons={computed.fit.reasons} align="right" size={60} />
-                <span className="text-[11px] font-medium text-faint">Fit score</span>
+            {live && (
+              <div className="flex shrink-0 items-start gap-3">
+                <div className="flex flex-col items-center gap-1">
+                  <FitScore score={live.fit.score} reasons={live.fit.reasons} align="right" size={60} />
+                  <span className="text-[11px] font-medium text-faint">Fit for you</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <EvidenceRing score={live.evidence.score} label={live.evidence.label} reasons={live.evidence.reasons} size={60} />
+                  <span className="text-[11px] font-medium text-faint">Evidence</span>
+                </div>
               </div>
             )}
           </div>
@@ -101,6 +109,9 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
             {computed?.competitors.length ? <Badge tone="warn">Uses {computed.competitors[0].name}</Badge> : null}
             <span className={isStale(company.lastRefreshedAt, now) ? "font-medium text-bad" : "text-faint"}>Refreshed {ago(company.lastRefreshedAt, now)}</span>
             {!company.active && <span className="text-warn">· Removed from watchlist</span>}
+            <span className="ml-auto">
+              <PrintButton />
+            </span>
           </div>
         </div>
         {progressRunId != null && <AutoRunProgress runId={progressRunId} />}
@@ -177,7 +188,7 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
 
           {computed && <WhatChanged history={history.map((h) => ({ events: (h.changeEvents as ChangeEvent[]) ?? [], at: h.generatedAt }))} dropped={dropped.map((d) => ({ tech: d.tech, at: d.lastSeen }))} />}
 
-          {sigs.length > 0 && <SourcesList sigs={sigs} />}
+          {sigs.length > 0 && <SourcesList sigs={sigs} verified={{ github: company.githubOrgVerified, jobs: company.atsVerified, blog: company.blogVerified }} />}
 
           {brief && (
             <Fold title="Read the full engineering summary" hint="two paragraphs written by Gemini from the signals">
@@ -657,7 +668,7 @@ function sourceLabel(s: SigRow): string {
 }
 
 /** Every link behind the brief, grouped by where it came from (one entry per URL). */
-function SourcesList({ sigs }: { sigs: SigRow[] }) {
+function SourcesList({ sigs, verified }: { sigs: SigRow[]; verified: Record<string, boolean> }) {
   const groups = SOURCE_GROUPS.map((g) => {
     const seen = new Set<string>();
     const rows = sigs
@@ -681,6 +692,12 @@ function SourcesList({ sigs }: { sigs: SigRow[] }) {
           <div key={g.source}>
             <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-faint">
               {g.title} <span className="font-normal normal-case">({g.rows.length})</span>
+              {g.source in verified &&
+                (verified[g.source] ? (
+                  <span className="ml-2 rounded-full bg-accent-soft px-1.5 py-0.5 text-[10px] font-semibold normal-case text-accent-ink">verified</span>
+                ) : (
+                  <span className="ml-2 rounded-full bg-warn/10 px-1.5 py-0.5 text-[10px] font-semibold normal-case text-warn">unverified: not used in the brief until confirmed</span>
+                ))}
             </p>
             <SourceLinks rows={g.rows} />
           </div>

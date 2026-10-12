@@ -37,6 +37,10 @@ export interface ProductProfile {
   target_patterns: string[];
   competitors_and_adjacent: Competitor[];
   proof_points: string[];
+  /** optional: clouds Nikhil targets (adds a cloud factor to the fit score) */
+  target_clouds?: string[];
+  /** optional: importance per fit factor, 0 = ignore, 1 = normal, 2 = high */
+  importance?: Partial<Record<"languages" | "ci" | "tests" | "services" | "monorepo" | "patterns" | "activity" | "cloud", 0 | 1 | 2>>;
 }
 
 /** A fact collected deterministically in code. */

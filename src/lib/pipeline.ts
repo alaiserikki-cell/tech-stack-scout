@@ -234,13 +234,21 @@ export async function executeRun(runId: number): Promise<void> {
       briefStatus = "pending";
       briefError = "GEMINI_API_KEY not configured";
     } else {
-      const sigs = selectBriefSignals(inserted, computed);
+      // only facts from verified sources go to Gemini: an auto-matched, unproven source could be the wrong company
+      const fromVerified = inserted.filter(
+        (x) => !(x.source === "github" && !ctx.company.githubOrgVerified) && !(x.source === "jobs" && !ctx.company.atsVerified) && !(x.source === "blog" && !ctx.company.blogVerified),
+      );
+      const briefComputed =
+        fromVerified.length === inserted.length
+          ? computed
+          : computeFields({ signals: fromVerified, dict, profile, techState: ts.next, newTechs: new Set(ts.newTechs), hasPreviousRun: Boolean(prevSnap), checked, now });
+      const sigs = selectBriefSignals(fromVerified, briefComputed);
       const outcome = await generateBrief({
         gemini: callGemini,
         profile,
         dict,
         sigs,
-        computed,
+        computed: briefComputed,
         events,
         unverified,
         onCall: (r) => logLlmCall({ task: "brief", model: r.model || geminiModel(), inputTokens: r.inputTokens, outputTokens: r.outputTokens, status: r.status, companyId: company.id }),

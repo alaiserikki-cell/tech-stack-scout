@@ -16,7 +16,23 @@ FlakeGuard is a tech-stack intelligence app for Nikhil, an enterprise account ex
   2. **Add a company by domain.** On the watchlist, type a domain (e.g. `posthog.com`) and press **Add company**. You land on its page while the brief builds (about a minute). Auto-discovered sources show as *Unverified* with Confirm / Edit.
   3. **Email yourself the digest.** Open **Digests**, pick the current week (or build it), enter your email under *Email me this digest*. Max 3 per address per day; the address is never stored or shown. Note: the demo sends through a Resend account without a verified domain, so delivery only succeeds to the project owner's inbox. The digest page shows the exact email, and other addresses get an explanation (see BLOCKED.md).
 
-Other pages: **Digests** (weekly ranking with a fit-vs-momentum priority map), **Activity** (one timeline of every add, remove, refresh, review, digest and daily run), **Settings** (product profile, entries waiting for verification).
+Other pages: **Digests** (weekly ranking with a fit-vs-momentum priority map), **Activity** (one timeline of every add, remove, refresh, review, digest and daily run), **How it works** (steps, both scores, sources, what the AI does), **Targeting** (what you sell, who you target, what matters most).
+
+
+## Two scores
+
+| | Fit score | Evidence score |
+|---|---|---|
+| Question | Is this a good account for what I sell? | How sure are we about this company's stack? |
+| Depends on | Your targeting (Targeting page): target languages, CI systems, clouds, hiring themes, and the importance of each factor | The data only: same for every user |
+| Made of | languages 20 · CI in code 20 · test suites 15 · many services 10 · monorepo 10 · hiring themes 15 · momentum 10 · target clouds 10 (only if set). Importance off/normal/high = ×0/×1/×2, rescaled to 0-100 | verified sources 40 (GitHub 15, job board 15, blog 10) · corroboration 25 (techs seen in 2+ sources) · freshness 20 · breadth 15 |
+| Updates | Instantly when you change your targeting (computed at read time, no AI) | On every refresh, and when you confirm a source |
+
+**Verified sources only.** A source is verified automatically only with proof: the GitHub org's own website is the company's domain; the job board is linked from the company's careers page; the blog feed is hosted on the company's domain. Anything matched by name only stays *unverified*, earns no evidence points, and is **not sent to Gemini**, so it can never appear in an opener or summary until you confirm it.
+
+## Free-of-cost features
+
+Everything runs on free tiers. Built in: bulk add (up to 10 domains at once), search the watchlist by technology (e.g. "Kubernetes"), CSV export of the watchlist, print / save a brief as PDF, conference-talk discovery, Workday and SmartRecruiters job boards, Activity log, weekly digest with a priority map.
 
 ## How it works
 

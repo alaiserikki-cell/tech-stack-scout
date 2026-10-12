@@ -303,6 +303,14 @@ export const jobsCollector: Collector = {
     if (provider && slug && provider in ADAPTERS) {
       posts = await ADAPTERS[provider as Provider](ctx, slug);
       checked.push(`${provider} board "${slug}"`);
+      // a board found by guessing its slug becomes verified once the company's own careers page links to it
+      if (posts && !ctx.company.atsVerified) {
+        const linked = await discoverFromCareersPages(ctx, []);
+        if (linked && linked.provider === provider && linked.slug.toLowerCase() === slug.toLowerCase()) {
+          updates.atsVerified = true;
+          checked.push("Board verified: linked from the company's careers page");
+        }
+      }
     } else {
       const linked = await discoverFromCareersPages(ctx, checked);
       if (linked) {
@@ -314,7 +322,7 @@ export const jobsCollector: Collector = {
           slug = linked.slug;
           updates.atsProvider = provider;
           updates.atsSlug = slug;
-          updates.atsVerified = false;
+          updates.atsVerified = true; // linked from the company's own site
         }
       }
     }

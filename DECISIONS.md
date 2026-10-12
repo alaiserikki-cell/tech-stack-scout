@@ -38,6 +38,12 @@ Each entry: decision, alternatives considered, why.
 | Shopify added to hosting detection | — | Minimalist (a D2C skincare brand) has no public engineering signal; its Shopify storefront is the one real signal. Its jobs are growth and sales roles on aggregators/LinkedIn, which cannot be read automatically. |
 | "Add company" in the header opens a dialog from any page | Anchor link to the home page | The old link did nothing visible when already on the home page. |
 
+| Two scores: **Fit** (driven by an editable targeting profile) and **Evidence** (data quality) | One fit score | Your request: Nikhil should be able to say what he wants, and the app should show how trustworthy each brief is. Both are computed in code at read time, so changing targeting re-ranks instantly with no AI cost. |
+| Targeting page with chips and an importance level (off/normal/high) per fit factor; optional target clouds | JSON editor only | The problem statement does not say what Nikhil's product needs, so he can define it. Default settings reproduce the original weights exactly (unit-tested). |
+| Sources are verified only with proof (org website = company domain; board linked from careers page; feed on company domain); unverified sources earn no evidence points and are excluded from Gemini input | Treat auto-matched sources as true | Your request: verified sources only, nothing invented. |
+| How it works page restored, rebuilt after stackscout.ca (colour bands, numbered steps, audience cards) | Keep it removed | Your request after reviewing StackScout. |
+| Free features added: bulk add, tech search, CSV export, print to PDF | Paid enrichment APIs | Zero cost: all run in the browser or on existing endpoints. |
+
 ## Data and matching
 
 | Decision | Alternatives | Why |

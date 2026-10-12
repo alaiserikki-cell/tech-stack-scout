@@ -24,7 +24,8 @@ const NAV = [
   { href: "/", label: "Watchlist" },
   { href: "/digests", label: "Digests" },
   { href: "/activity", label: "Activity" },
-  { href: "/settings", label: "Settings" },
+  { href: "/how-it-works", label: "How it works" },
+  { href: "/settings", label: "Targeting" },
 ];
 
 function LogoMark() {

@@ -21,6 +21,9 @@
   --warn: #b45309;
   --bad: #c2410c;
   --shadow: 0 1px 2px rgba(20, 40, 30, 0.04), 0 10px 30px -14px rgba(20, 40, 30, 0.18);
+  --band-mint: #e6f4ec;
+  --band-butter: #fbf1d3;
+  --band-peach: #fdeee6;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -44,6 +47,9 @@
     --warn: #fbbf24;
     --bad: #fb923c;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -16px rgba(0, 0, 0, 0.6);
+    --band-mint: #12211b;
+    --band-butter: #221e12;
+    --band-peach: #231914;
   }
 }
 
@@ -68,6 +74,9 @@
   --font-display: var(--font-inter-tight);
   --font-mono: var(--font-geist-mono);
   --shadow-card: var(--shadow);
+  --color-band-mint: var(--band-mint);
+  --color-band-butter: var(--band-butter);
+  --color-band-peach: var(--band-peach);
 }
 
 @layer base {
@@ -80,6 +89,7 @@
       radial-gradient(1200px 520px at 50% -120px, var(--bg-wash), transparent 70%),
       var(--bg);
     background-repeat: no-repeat;
+    overflow-x: clip;
     color: var(--text);
     font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
     font-size: 16px;
@@ -124,5 +134,27 @@
 @media (prefers-reduced-motion: reduce) {
   .skeleton {
     animation: none;
+  }
+}
+
+@media print {
+  header,
+  footer,
+  nav,
+  dialog,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff !important;
+    color: #111 !important;
+  }
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+  section,
+  li {
+    break-inside: avoid;
   }
 }

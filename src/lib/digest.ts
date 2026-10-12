@@ -3,6 +3,8 @@ import { desc, eq, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db/client";
 import type { ChangeEvent, Computed } from "./compute";
 import { RecipientRestrictedError, sendMail } from "./email";
+import { fitScore } from "./compute";
+import { loadProfile } from "./repo";
 
 export interface RankedAccount {
   companyId: number;
@@ -93,11 +95,12 @@ export function renderDigestHtml(accounts: RankedAccount[], weekOf: string, appU
 export async function buildDigest(weekOf = weekOfIST()): Promise<typeof schema.digests.$inferSelect> {
   const db = getDb();
   const companies = await db.select().from(schema.watchlist).where(eq(schema.watchlist.active, true));
+  const profile = await loadProfile(); // fit follows the current targeting in Settings
   const rows = [];
   for (const c of companies) {
     const [s] = await db.select().from(schema.snapshots).where(eq(schema.snapshots.companyId, c.id)).orderBy(desc(schema.snapshots.generatedAt)).limit(1);
     if (!s) continue;
-    rows.push({ companyId: c.id, name: c.companyName, domain: c.domain, fitScore: s.fitScore, events: (s.changeEvents as ChangeEvent[]) ?? [], computed: s.computed as Computed, generatedAt: s.generatedAt });
+    rows.push({ companyId: c.id, name: c.companyName, domain: c.domain, fitScore: fitScore(s.computed as Computed, profile).score, events: (s.changeEvents as ChangeEvent[]) ?? [], computed: s.computed as Computed, generatedAt: s.generatedAt });
   }
   const ranked = rankAccounts(rows);
   const appUrl = (process.env.APP_URL ?? "").replace(/\/$/, "");

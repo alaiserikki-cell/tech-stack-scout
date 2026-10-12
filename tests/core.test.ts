@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import dictJson from "../data/tech-dictionary.json";
 import profileJson from "../data/product-profile.json";
 import type { DictEntry, ProductProfile, Signal } from "../src/lib/types";
-import { aggregateLanguages, isSdkHeavy, parseManifest } from "../src/collectors/github";
+import { aggregateLanguages, isSdkHeavy, orgWebsiteMatches, parseManifest } from "../src/collectors/github";
 import { matchFiles, matchDependencies, detectCompetitors, pathMatches, matchText } from "../src/lib/dictionary";
 import { atsFromHtml, detectInitiatives, isEngineeringRole, matchJobTech, workdayPostedDate } from "../src/collectors/jobs";
 import { htmlToLines } from "../src/lib/text";
 import { verifyMentions, parseFeed } from "../src/collectors/blog";
-import { changeEvents, computeFields, confidenceFor, fitScore, signalHash, updateTechState, type Computed } from "../src/lib/compute";
+import { changeEvents, computeFields, confidenceFor, evidenceScore, fitScore, signalHash, updateTechState, type Computed } from "../src/lib/compute";
 import { stripInlineIds, validateBrief, type BriefSignal } from "../src/lib/brief";
 import { rankAccounts } from "../src/lib/digest";
 import { isTalkUrl, selectTalks, talkTechMatches } from "../src/collectors/talks";
@@ -381,5 +381,66 @@ describe("job board discovery", () => {
     expect(workdayPostedDate("Posted 5 Days Ago", now)).toBe(new Date("2026-10-06T00:00:00Z").toISOString());
     expect(workdayPostedDate("Posted 30+ Days Ago", now)).toBe(new Date("2026-09-11T00:00:00Z").toISOString());
     expect(workdayPostedDate(undefined, now)).toBeNull();
+  });
+});
+
+describe("fit score follows the targeting profile", () => {
+  const t = (name: string, category: any, sources: any[] = ["github"]) => ({ name, category, confidence: "high" as const, sources, jobPosts: 0, requirementLevel: null, firstSeen: null, lastSeen: null, status: "active" as const, signalIds: [1], evidenceUrl: null });
+  const c = baseComputed({
+    languages: [{ name: "Go", pct: 100, signalId: 1 }],
+    techs: [t("GitHub Actions", "ci"), t("AWS", "cloud")],
+    activity: { label: "low", pushed30: 1, pushed90: 2, created90: 0, totalRepos: 3, engineeringJobs: 0 },
+  });
+  it("default importance keeps the original weights", () => expect(fitScore(c, profile).score).toBe(40)); // 20 languages + 20 CI out of 100
+  it("turning a factor off removes it and rescales", () => {
+    const f = fitScore(c, { ...profile, importance: { ci: 0 } });
+    expect(f.score).toBe(25); // 20 of the remaining 80
+    expect(f.reasons.some((r) => r.reason.includes("CI"))).toBe(false);
+  });
+  it("high importance counts a factor double", () => expect(fitScore(c, { ...profile, importance: { ci: 2 } }).score).toBe(50)); // (20 + 40) / 120
+  it("target clouds add a cloud factor only when set", () => {
+    expect(fitScore(c, { ...profile, target_clouds: ["AWS"] }).score).toBe(45); // (20 + 20 + 10) / 110
+    expect(fitScore(c, { ...profile, target_clouds: ["Azure"] }).score).toBe(36); // 40 / 110
+  });
+});
+
+describe("evidence score", () => {
+  const t = (name: string, sources: any[]) => ({ name, category: "infra" as const, confidence: "high" as const, sources, jobPosts: 0, requirementLevel: null, firstSeen: null, lastSeen: null, status: "active" as const, signalIds: [1], evidenceUrl: null });
+  const NOW2 = new Date("2026-10-11T00:00:00Z");
+  const c = baseComputed({
+    languages: [{ name: "Go", pct: 100, signalId: 1 }],
+    techs: [t("Docker", ["github", "jobs"]), t("Kubernetes", ["jobs"]), t("Terraform", ["github", "jobs"])],
+    activity: { label: "high", pushed30: 5, pushed90: 9, created90: 0, totalRepos: 9, engineeringJobs: 12 },
+    hosting: [{ name: "Cloudflare", evidence: "cf-ray", signalId: 2 }],
+  });
+  it("gives verified sources full credit", () => {
+    const e = evidenceScore(c, { github: true, jobs: true, blog: false }, NOW2, NOW2);
+    // verified 30 + corroboration round(25*2/3)=17 + freshness 20 + breadth 3 types*3=9
+    expect(e.score).toBe(76);
+    expect(e.label).toBe("strong");
+  });
+  it("gives unverified sources no verification credit", () => {
+    const e = evidenceScore(c, { github: false, jobs: false, blog: false }, NOW2, NOW2);
+    expect(e.reasons[0]).toMatchObject({ points: 0 });
+    expect(e.reasons[0].reason).toMatch(/not|No verified/);
+    expect(e.score).toBe(46);
+  });
+  it("loses freshness when stale", () => {
+    const old = new Date("2026-09-01T00:00:00Z");
+    expect(evidenceScore(c, { github: true, jobs: true, blog: false }, old, NOW2).reasons[2].points).toBe(10);
+  });
+  it("is weak with no data", () => expect(evidenceScore(baseComputed(), { github: false, jobs: false, blog: false }, null, NOW2).label).toBe("weak"));
+});
+
+describe("GitHub org proof", () => {
+  it("accepts an org whose website is on the company domain", () => {
+    expect(orgWebsiteMatches("https://stripe.com", "stripe.com")).toBe(true);
+    expect(orgWebsiteMatches("www.gitlab.com/about", "gitlab.com")).toBe(true);
+    expect(orgWebsiteMatches("https://engineering.linear.app", "linear.app")).toBe(true);
+  });
+  it("rejects other sites and look-alikes", () => {
+    expect(orgWebsiteMatches("https://notstripe.com", "stripe.com")).toBe(false);
+    expect(orgWebsiteMatches("", "stripe.com")).toBe(false);
+    expect(orgWebsiteMatches(null, "stripe.com")).toBe(false);
   });
 });

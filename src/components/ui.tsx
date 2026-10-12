@@ -207,3 +207,42 @@ export function FitScore({ score, reasons, align = "left", size = 56 }: { score:
     </details>
   );
 }
+
+/** Evidence score ring with its breakdown (each part shows points out of its maximum). */
+export function EvidenceRing({ score, label, reasons, align = "right", size = 60 }: { score: number; label: string; reasons: { reason: string; points: number; max: number }[]; align?: "left" | "right"; size?: number }) {
+  const color = label === "strong" ? "var(--accent)" : label === "moderate" ? "var(--muted)" : "var(--warn)";
+  return (
+    <details className="group relative inline-block">
+      <summary className="flex cursor-pointer list-none items-center rounded-full [&::-webkit-details-marker]:hidden" aria-label={`Evidence score ${score} out of 100, ${label}. Show breakdown`}>
+        <span className="relative inline-grid shrink-0 place-items-center rounded-full" style={{ width: size, height: size, background: `conic-gradient(${color} ${score * 3.6}deg, var(--surface-2) 0)` }} aria-hidden>
+          <span className="grid place-items-center rounded-full bg-surface font-display font-bold tabular-nums text-ink" style={{ width: size - 8, height: size - 8, fontSize: size * 0.32 }}>
+            {score}
+          </span>
+        </span>
+      </summary>
+      <div className={cx("absolute z-20 mt-2 w-80 max-w-[85vw] rounded-xl border border-line bg-surface p-4 text-left text-xs shadow-card", align === "right" ? "right-0" : "left-0")}>
+        <p className="mb-2 font-display text-sm font-semibold text-ink">
+          Evidence {score}/100 · <span className="capitalize">{label}</span>
+        </p>
+        <ul className="space-y-2 text-muted">
+          {reasons.map((r) => (
+            <li key={r.reason}>
+              <div className="mb-0.5 flex justify-between gap-2">
+                <span>{r.reason}</span>
+                <span className="shrink-0 font-mono text-ink">
+                  {r.points}/{r.max}
+                </span>
+              </div>
+              <div className="h-1 rounded-full bg-surface-2">
+                <div className="h-1 rounded-full bg-accent" style={{ width: `${(r.points / r.max) * 100}%` }} />
+              </div>
+            </li>
+          ))}
+        </ul>
+        <a href="/how-it-works#scores" className="mt-3 inline-block text-[11px]">
+          How evidence is scored
+        </a>
+      </div>
+    </details>
+  );
+}

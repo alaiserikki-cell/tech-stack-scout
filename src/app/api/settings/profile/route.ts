@@ -13,6 +13,8 @@ const ProfileZ = z.object({
   target_patterns: z.array(z.string().max(60)).max(20),
   competitors_and_adjacent: z.array(z.object({ name: z.string().max(80), detection: z.array(z.string().max(120)).max(20), verify: z.boolean() })).max(20),
   proof_points: z.array(z.string().max(300)).max(10),
+  target_clouds: z.array(z.string().max(40)).max(20).optional(),
+  importance: z.record(z.enum(["languages", "ci", "tests", "services", "monorepo", "patterns", "activity", "cloud"]), z.union([z.literal(0), z.literal(1), z.literal(2)])).optional(),
 });
 
 export async function POST(req: Request) {
