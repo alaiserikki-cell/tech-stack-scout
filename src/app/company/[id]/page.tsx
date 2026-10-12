@@ -13,7 +13,7 @@ import { liveScores } from "@/lib/scores";
 import { outreachEmail } from "@/lib/outreach";
 import { AtAGlance, StackMap } from "@/components/brief-glance";
 import { AutoRunProgress, EmailDraftCard, OpenerActions, PrintButton, RefreshButton, RemoveButton, SourceControl } from "@/components/client";
-import { Badge, Card, Confidence, Empty, InfoRing, Ext, FitScore, H2, LevelPill, SOURCE_LABEL, Skeleton, ago, cx, fmtDate, isStale } from "@/components/ui";
+import { Badge, Card, Confidence, Empty, Ext, FitScore, H2, LevelPill, SOURCE_LABEL, Skeleton, ago, cx, fmtDate, isStale } from "@/components/ui";
 import { boardUrl } from "@/collectors/jobs";
 
 export const metadata: Metadata = { title: "Company brief" };
@@ -102,10 +102,6 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
                 <div className="flex flex-col items-center gap-1">
                   <FitScore score={live.fit.score} reasons={live.fit.reasons} align="right" size={60} product={productName} />
                   <span className="text-[11px] font-medium text-faint">Fit</span>
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <InfoRing score={live.info.score} label={live.info.label} reasons={live.info.reasons} size={60} />
-                  <span className="text-[11px] font-medium text-faint">Info</span>
                 </div>
               </div>
             )}

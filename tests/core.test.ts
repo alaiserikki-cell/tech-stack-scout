@@ -7,7 +7,7 @@ import { matchFiles, matchDependencies, pathMatches, matchText } from "../src/li
 import { atsFromHtml, detectInitiatives, isEngineeringRole, matchJobTech, workdayPostedDate } from "../src/collectors/jobs";
 import { htmlToLines } from "../src/lib/text";
 import { verifyMentions, parseFeed } from "../src/collectors/blog";
-import { changeEvents, computeFields, confidenceFor, infoScore, fitScore, signalHash, updateTechState, type Computed } from "../src/lib/compute";
+import { changeEvents, computeFields, confidenceFor, fitScore, signalHash, updateTechState, type Computed } from "../src/lib/compute";
 import { stripInlineIds, validateBrief, type BriefSignal } from "../src/lib/brief";
 import { rankAccounts } from "../src/lib/digest";
 import { ProfileZ } from "../src/lib/profile-schema";
@@ -392,35 +392,6 @@ describe("fit score follows the targeting profile", () => {
     expect(fitScore(c, { ...profile, target_clouds: ["AWS"] }).score).toBe(45); // (20 + 20 + 10) / 110
     expect(fitScore(c, { ...profile, target_clouds: ["Azure"] }).score).toBe(36); // 40 / 110
   });
-});
-
-describe("info score", () => {
-  const t = (name: string, sources: any[]) => ({ name, category: "infra" as const, confidence: "high" as const, sources, jobPosts: 0, requirementLevel: null, firstSeen: null, lastSeen: null, status: "active" as const, signalIds: [1], evidenceUrl: null });
-  const NOW2 = new Date("2026-10-11T00:00:00Z");
-  const c = baseComputed({
-    languages: [{ name: "Go", pct: 100, signalId: 1 }],
-    techs: [t("Docker", ["github", "jobs"]), t("Kubernetes", ["jobs"]), t("Terraform", ["github", "jobs"])],
-    activity: { label: "high", pushed30: 5, pushed90: 9, created90: 0, totalRepos: 9, engineeringJobs: 12 },
-    hosting: [{ name: "Cloudflare", evidence: "cf-ray", signalId: 2 }],
-  });
-  it("measures how much verified information there is", () => {
-    const e = infoScore(c, NOW2, NOW2);
-    // stack 4 items x3 = 12 · sources GitHub, job board, hosting x5 = 15 · cross-checks round(20 x 2/3) = 13 · depth ceil(12/5) = 3 · freshness 5 + 10
-    expect(e.reasons.map((r) => r.points)).toEqual([12, 15, 13, 3, 15]);
-    expect(e.score).toBe(58);
-    expect(e.label).toBe("partial");
-  });
-  it("caps every part at its maximum", () => {
-    const many = baseComputed({ ...c, techs: Array.from({ length: 15 }, (_, i) => t(`T${i}`, ["github", "jobs"])), initiatives: Array.from({ length: 5 }, () => ({ label: "x", sentence: "x", jobTitle: "x", evidenceUrl: null, signalId: 1, date: NOW2.toISOString() })) });
-    const e = infoScore(many, NOW2, NOW2);
-    for (const r of e.reasons) expect(r.points).toBeLessThanOrEqual(r.max);
-    expect(e.reasons[0].points).toBe(30);
-  });
-  it("loses freshness when stale", () => {
-    const old = new Date("2026-09-01T00:00:00Z");
-    expect(infoScore(c, old, NOW2).reasons[4].points).toBe(10);
-  });
-  it("is sparse with no data", () => expect(infoScore(baseComputed(), null, NOW2)).toMatchObject({ score: 0, label: "sparse" }));
 });
 
 describe("GitHub org proof", () => {

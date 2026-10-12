@@ -485,8 +485,6 @@ export interface WatchRow {
   domain: string;
   fit: number | null;
   fitReasons: { reason: string; points: number }[];
-  info: number | null;
-  infoLabel: string | null;
   techs: string[];
   activity: string;
   languages: string[];
@@ -500,14 +498,13 @@ export interface WatchRow {
   running: boolean;
 }
 
-type SortKey = "name" | "fit" | "info" | "activity" | "lastRefreshed" | "changes" | "coverage";
+type SortKey = "name" | "fit" | "activity" | "lastRefreshed" | "changes" | "coverage";
 const ACT_RANK: Record<string, number> = { high: 3, medium: 2, low: 1, unknown: 0 };
 const COV_RANK: Record<string, number> = { rich: 2, thin: 1, none: 0 };
 
 function sortValue(r: WatchRow, k: SortKey): string | number {
   if (k === "name") return r.name.toLowerCase();
   if (k === "fit") return r.fit ?? -1;
-  if (k === "info") return r.info ?? -1;
   if (k === "activity") return ACT_RANK[r.activity] ?? -1;
   if (k === "coverage") return COV_RANK[r.coverage] ?? -1;
   if (k === "changes") return r.changes;
@@ -516,10 +513,10 @@ function sortValue(r: WatchRow, k: SortKey): string | number {
 
 /** CSV of the visible rows: built in the browser, no server cost. */
 function downloadCsv(rows: WatchRow[]) {
-  const head = ["Company", "Domain", "Fit score", "Info score", "Info", "Activity", "Top languages", "Coverage", "Changes this week", "Last refreshed", "Technologies"];
+  const head = ["Company", "Domain", "Fit score", "Activity", "Top languages", "Coverage", "Changes this week", "Last refreshed", "Technologies"];
   const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
   const lines = rows.map((r) =>
-    [r.name, r.domain, r.fit, r.info, r.infoLabel, r.activity, r.languages.join("; "), r.coverage, r.changes, r.lastRefreshed, r.techs.join("; ")].map(esc).join(","),
+    [r.name, r.domain, r.fit, r.activity, r.languages.join("; "), r.coverage, r.changes, r.lastRefreshed, r.techs.join("; ")].map(esc).join(","),
   );
   const blob = new Blob([[head.map(esc).join(","), ...lines].join("\n")], { type: "text/csv" });
   const a = document.createElement("a");
@@ -527,17 +524,6 @@ function downloadCsv(rows: WatchRow[]) {
   a.download = `flakeguard-accounts-${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(a.href);
-}
-
-function InfoPill({ score, label }: { score: number | null; label: string | null }) {
-  if (score == null) return <span className="text-faint">–</span>;
-  const tone = label === "rich" ? "bg-accent-soft text-accent-ink" : label === "partial" ? "bg-surface-2 text-ink" : "bg-warn/10 text-warn";
-  return (
-    <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${tone}`} title={`Info score ${score}/100 (${label}): how much verified information we have`}>
-      <span className="font-mono tabular-nums">{score}</span>
-      <span className="font-medium capitalize opacity-80">{label}</span>
-    </span>
-  );
 }
 
 export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
@@ -596,7 +582,6 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
             <tr>
               {th("name", "Company", "pl-5")}
               {th("fit", "Fit")}
-              {th("info", "Info")}
               {th("activity", "Activity")}
               <th scope="col" className="px-3 py-2.5 font-medium">
                 Top languages
@@ -624,9 +609,6 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
                 </td>
                 <td className="px-3 py-3" title={r.fitReasons.slice(0, 3).map((x) => `+${x.points} ${x.reason}`).join("\n")}>
                   {r.fit != null ? <FitRing score={r.fit} size={38} /> : <span className="text-faint">–</span>}
-                </td>
-                <td className="px-3 py-3">
-                  <InfoPill score={r.info} label={r.infoLabel} />
                 </td>
                 <td className="px-3 py-3">
                   <LevelPill level={r.activity} kind="activity" />
@@ -684,7 +666,6 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
               className="rounded-lg border border-line bg-surface px-2 py-1.5 text-ink"
             >
               <option value="fit:-1">Fit score</option>
-            <option value="info:-1">Info score</option>
               <option value="changes:-1">Changes</option>
               <option value="activity:-1">Activity</option>
               <option value="lastRefreshed:1">Oldest refresh</option>
@@ -709,7 +690,6 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
                   {r.fit != null && <FitRing score={r.fit} size={42} />}
                 </div>
                 <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                  <InfoPill score={r.info} label={r.infoLabel} />
                   <LevelPill level={r.activity} kind="activity" />
                   <LevelPill level={r.coverage} kind="coverage" />
                   {r.languages.map((l) => (

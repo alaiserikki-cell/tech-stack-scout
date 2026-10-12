@@ -29,7 +29,6 @@ export interface ProductProfile {
   target_languages: string[];
   target_ci_systems: string[];
   target_patterns: string[];
-  proof_points: string[];
   /** optional: clouds Nikhil targets (adds a cloud factor to the fit score) */
   target_clouds?: string[];
   /** optional: importance per fit factor, 0 = ignore, 1 = normal, 2 = high */

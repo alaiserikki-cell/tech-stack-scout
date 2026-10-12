@@ -234,3 +234,51 @@ describe("outreach email draft", () => {
     expect(decodeURIComponent(mailtoUrl(d).split("&body=")[1])).toBe(d.body);
   });
 });
+
+describe("targeting validation", async () => {
+  const { addToList, cleanProfile, resolveKnown } = await import("../src/lib/profile-validate");
+  const known = { languages: ["Go", "Python", "Elixir"], ci: ["GitHub Actions", "Drone CI"], clouds: ["AWS"], themes: ["platform team"] };
+  it("resolves names case-insensitively to the detectable name", () => {
+    expect(resolveKnown("  elixir ", known.languages)).toBe("Elixir");
+    expect(resolveKnown("golang", known.languages)).toBeNull();
+  });
+  it("adds known names, rejects unknown, duplicate, over-limit and empty", () => {
+    expect(addToList(["Go"], "python", known.languages, 5)).toEqual({ list: ["Go", "Python"] });
+    expect(addToList(["Go"], "Cobol", known.languages, 5).error).toMatch(/can't detect "Cobol"/);
+    expect(addToList(["Go"], "GO", known.languages, 5).error).toMatch(/already in the list/);
+    expect(addToList(["Go"], "Python", known.languages, 1).error).toMatch(/up to 1/);
+    expect(addToList([], "   ", known.languages, 5).error).toMatch(/Type something/);
+  });
+  it("accepts free-text buying signals within limits", () => {
+    expect(addToList([], "hiring SREs to fix slow CI", null, 12).list).toEqual(["hiring SREs to fix slow CI"]);
+    expect(addToList([], "ab", null, 12).error).toMatch(/few words/);
+    expect(addToList([], "x".repeat(201), null, 12).error).toMatch(/under 200/);
+  });
+  const base = {
+    product_name: "  FlakeGuard ",
+    one_line_pitch: "Finds flaky tests in CI.",
+    problem_it_solves: "Flaky tests fail builds at random and nobody owns them.",
+    ideal_customer_signals: ["many services", "many services"],
+    target_languages: ["go", "Python"],
+    target_ci_systems: ["GitHub Actions"],
+    target_clouds: [],
+    target_patterns: ["platform team"],
+  } as never;
+  it("cleans a valid profile: trims, canonicalises, de-duplicates", () => {
+    const r = cleanProfile(base, known);
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.profile.product_name).toBe("FlakeGuard");
+      expect(r.profile.target_languages).toEqual(["Go", "Python"]);
+      expect(r.profile.ideal_customer_signals).toEqual(["many services"]);
+    }
+  });
+  it("reports field errors", () => {
+    const r = cleanProfile({ ...(base as object), product_name: "x", target_ci_systems: ["Bamboo"] } as never, known);
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.errors.product_name).toBeTruthy();
+      expect(r.errors.target_ci_systems).toMatch(/Bamboo/);
+    }
+  });
+});

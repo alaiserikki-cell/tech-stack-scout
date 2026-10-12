@@ -11,7 +11,6 @@ export const ProfileZ = z.object({
   target_languages: z.array(z.string().max(40)).max(30),
   target_ci_systems: z.array(z.string().max(40)).max(20),
   target_patterns: z.array(z.string().max(60)).max(20),
-  proof_points: z.array(z.string().max(300)).max(10),
   target_clouds: z.array(z.string().max(40)).max(20).optional(),
   importance: z
     .object(Object.fromEntries(["languages", "ci", "tests", "services", "monorepo", "patterns", "activity", "cloud"].map((k) => [k, Importance.optional()])))

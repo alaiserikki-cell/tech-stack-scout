@@ -85,7 +85,7 @@ export function StackMap({ c, productName }: { c: Computed; productName: string 
         <h2 id="stackmap" className="font-display text-[15px] font-semibold tracking-tight text-ink">
           Stack map
         </h2>
-        <span className="text-xs text-faint">tap a tool for its source</span>
+        <span className="text-xs text-faint">tap a tool for its source · <span className="font-medium text-ink">bold</span> = seen in 2+ sources · <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent align-middle" /> = new since last refresh</span>
       </div>
       <ol className="grid gap-2 md:grid-cols-4 md:gap-0">
         {lanes.map((l, i) => (
@@ -112,26 +112,36 @@ export function StackMap({ c, productName }: { c: Computed; productName: string 
 function Chips({ items }: { items: TechSummary[] }) {
   if (!items.length) return <p className="mt-2 text-xs text-faint">Nothing visible</p>;
   const shown = items.slice(0, 5);
+  const rest = items.slice(5);
   return (
-    <ul className="mt-2 flex flex-wrap gap-1">
-      {shown.map((t) => (
-        <li key={t.name}>
-          <a
-            href={t.evidenceUrl ?? undefined}
-            target="_blank"
-            rel="noopener noreferrer"
-            title={`${t.confidence} confidence`}
-            className={cx(
-              "inline-block rounded-md px-1.5 py-0.5 text-xs no-underline",
-              t.confidence === "high" ? "bg-surface font-medium text-ink shadow-sm" : "bg-surface/60 text-muted",
-            )}
-          >
-            {t.name}
-            {t.status === "new" && <span className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-accent align-middle" aria-label="new" />}
-          </a>
-        </li>
-      ))}
-      {items.length > shown.length && <li className="px-1 py-0.5 text-xs text-faint">+{items.length - shown.length}</li>}
-    </ul>
+    <div className="mt-2">
+      <ul className="flex flex-wrap gap-1">{shown.map((t) => <Chip key={t.name} t={t} />)}</ul>
+      {rest.length > 0 && (
+        <details className="group mt-1">
+          <summary className="inline-block cursor-pointer list-none rounded-md px-1.5 py-0.5 text-xs font-medium text-accent-ink hover:bg-surface [&::-webkit-details-marker]:hidden">
+            <span className="group-open:hidden">+{rest.length} more</span>
+            <span className="hidden group-open:inline">Show fewer</span>
+          </summary>
+          <ul className="mt-1 flex flex-wrap gap-1">{rest.map((t) => <Chip key={t.name} t={t} />)}</ul>
+        </details>
+      )}
+    </div>
+  );
+}
+
+function Chip({ t }: { t: TechSummary }) {
+  return (
+    <li>
+      <a
+        href={t.evidenceUrl ?? undefined}
+        target="_blank"
+        rel="noopener noreferrer"
+        title={`${t.confidence} confidence${t.status === "new" ? " · new since the last refresh" : ""} · open the source`}
+        className={cx("inline-block rounded-md px-1.5 py-0.5 text-xs no-underline", t.confidence === "high" ? "bg-surface font-medium text-ink shadow-sm" : "bg-surface/60 text-muted")}
+      >
+        {t.name}
+        {t.status === "new" && <span className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-accent align-middle" aria-label="new" />}
+      </a>
+    </li>
   );
 }

@@ -274,67 +274,6 @@ export function fitScore(c: Omit<Computed, "fit" | "hash" | "coverage" | "checke
 }
 
 // ---------------------------------------------------------------------------
-// INFO SCORE: "how much verified information do we have on this company?"
-// Only verified sources ever reach this point, so it measures depth, not trust. Independent of what you sell.
-// Weights (sum to 100):
-//   stack detail ...... 30  3 points per technology or language identified (10 or more = full marks)
-//   source coverage ... 25  5 points per source type with data: GitHub, job board, blog, talks, Hacker News, hosting
-//   corroboration ..... 20  share of technologies confirmed by 2+ independent sources (needs 3+ technologies)
-//   depth ............. 10  engineering roles (up to 4), hiring themes (up to 3), blog posts and talks (up to 3)
-//   freshness ......... 15  refreshed within 7 days (5) + company activity in the last 90 days (10)
-// ---------------------------------------------------------------------------
-export interface InfoScore {
-  score: number;
-  label: "rich" | "partial" | "sparse";
-  reasons: { reason: string; points: number; max: number }[];
-}
-
-export function infoScore(
-  c: Pick<Computed, "languages" | "techs" | "activity" | "blogPosts" | "hnStories" | "hosting" | "initiatives"> & { talks?: Computed["talks"] },
-  lastRefreshedAt: Date | string | null,
-  now = new Date(),
-): InfoScore {
-  const DAY90 = 90 * 86_400_000;
-  const reasons: InfoScore["reasons"] = [];
-  const talks = c.talks ?? [];
-
-  const techs = c.techs.filter((t) => t.category !== "pattern");
-  const known = new Set([...techs.map((t) => t.name), ...c.languages.map((l) => l.name)]);
-  reasons.push({ reason: known.size ? `${known.size} technologies and languages identified` : "No technologies identified yet", points: Math.min(30, known.size * 3), max: 30 });
-
-  const types = [
-    (c.languages.length > 0 || c.activity.pushed30 != null) && "GitHub",
-    (c.activity.engineeringJobs ?? 0) > 0 && "job board",
-    c.blogPosts.length > 0 && "blog",
-    talks.length > 0 && "talks",
-    c.hnStories.length > 0 && "Hacker News",
-    c.hosting.length > 0 && "hosting",
-  ].filter(Boolean) as string[];
-  reasons.push({ reason: types.length ? `Data from ${types.length} of 6 source types: ${types.join(", ")}` : "No source returned data", points: Math.min(25, types.length * 5), max: 25 });
-
-  const corroborated = techs.filter((t) => t.sources.length >= 2).length;
-  const corrPts = techs.length ? Math.round(20 * (corroborated / techs.length) * Math.min(1, techs.length / 3)) : 0;
-  reasons.push({ reason: techs.length ? `${corroborated} of ${techs.length} technologies confirmed by 2+ independent sources` : "Nothing to cross-check yet", points: corrPts, max: 20 });
-
-  const roles = c.activity.engineeringJobs ?? 0;
-  const writing = c.blogPosts.length + talks.length;
-  const depth = Math.min(4, Math.ceil(roles / 5)) + Math.min(3, c.initiatives.length) + Math.min(3, writing);
-  reasons.push({ reason: `${roles} engineering roles, ${c.initiatives.length} hiring themes, ${writing} blog posts and talks`, points: Math.min(10, depth), max: 10 });
-
-  const fresh = lastRefreshedAt ? now.getTime() - new Date(lastRefreshedAt).getTime() <= 7 * 86_400_000 : false;
-  const recentDates = [...c.blogPosts.map((b) => b.date), ...talks.map((t) => t.date), ...c.initiatives.map((i) => i.date), ...c.hnStories.map((h) => h.date)];
-  const recent = (c.activity.pushed30 ?? 0) > 0 || roles > 0 || recentDates.some((d) => now.getTime() - Date.parse(d) <= DAY90);
-  reasons.push({
-    reason: `${fresh ? "Refreshed this week" : "Not refreshed in the last 7 days"}; ${recent ? "company activity in the last 90 days" : "no activity found in the last 90 days"}`,
-    points: (fresh ? 5 : 0) + (recent ? 10 : 0),
-    max: 15,
-  });
-
-  const score = Math.min(100, reasons.reduce((a, r) => a + r.points, 0));
-  return { score, label: score >= 70 ? "rich" : score >= 40 ? "partial" : "sparse", reasons };
-}
-
-// ---------------------------------------------------------------------------
 // Activity label thresholds
 //   unknown: no GitHub activity and no job board
 //   high:    10+ repos pushed in 30 days, or 15+ engineering roles, or (5+ pushed in 30 days and 5+ roles)

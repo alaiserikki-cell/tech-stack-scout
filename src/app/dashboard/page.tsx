@@ -77,8 +77,6 @@ async function Accounts() {
       domain: c.domain,
       fit: live ? live.fit.score : null,
       fitReasons: live?.fit.reasons ?? [],
-      info: live ? live.info.score : null,
-      infoLabel: live?.info.label ?? null,
       techs: (comp?.techs ?? []).map((t) => t.name),
       activity: comp?.activity.label ?? "unknown",
       languages: (comp?.languages?.length ? comp.languages.map((l) => l.name) : (comp?.jobLanguages ?? []).map((l) => l.name)).slice(0, 3),
@@ -109,23 +107,19 @@ async function Accounts() {
         <Stat label="Accounts tracked" value={rows.length} hint="max 40 active" />
         <Stat label="Average fit" value={avgFit} hint="for what you sell" />
         <Stat label="Changed this week" value={changed} hint="new tech, posts, hiring" />
-        <Stat label="Rich info" value={rows.filter((r) => r.infoLabel === "rich").length} hint={`${stale} stale (> 7 days)`} />
+        <Stat label="Briefs ready" value={rows.filter((r) => r.briefStatus === "ok").length} hint={`${stale} stale (> 7 days)`} />
       </div>
       {rows.length ? (
         <WatchlistTable rows={rows} />
       ) : (
         <Empty title="No companies tracked yet.">Press + Add company at the top and type a company website.</Empty>
       )}
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div>
         <div className="rounded-2xl border border-line bg-surface p-4 text-sm shadow-card">
           <p className="font-display font-semibold text-ink">Fit: is this a good account for {profile.product_name}?</p>
           <p className="mt-1 text-muted">
-            How well the company&apos;s verified stack matches what {profile.product_name} needs ({profile.one_line_pitch.replace(/\.$/, "").toLowerCase()}). <a href="/settings">Change the targeting</a> and every score updates instantly.
+            How well the company&apos;s verified stack matches what {profile.product_name} needs ({profile.one_line_pitch.replace(/\.$/, "").toLowerCase()}). Only verified sources count, so a low fit can also mean little is public; the Coverage column shows how much was found. <a href="/settings">Change the targeting</a> and every score updates instantly.
           </p>
-        </div>
-        <div className="rounded-2xl border border-line bg-surface p-4 text-sm shadow-card">
-          <p className="font-display font-semibold text-ink">Info: how much do we know?</p>
-          <p className="mt-1 text-muted">How much verified information we found: technologies, source types, cross-checks, hiring and writing, freshness. Unverified sources never count. <a href="/#scores">How both scores work</a></p>
         </div>
       </div>
     </div>

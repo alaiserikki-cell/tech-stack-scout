@@ -11,10 +11,12 @@ import { latestSnapshotsByCompany } from "@/lib/queries";
 import { liveScores } from "@/lib/scores";
 import { PasscodeForm, VerifyButton } from "@/components/client";
 import { TargetingForm } from "@/components/targeting-form";
+import { knownFromDictionary } from "@/lib/profile-validate";
 import { Card, FitRing, H2, Mint, PageTitle, SkeletonPage } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Targeting" };
 
+const POPULAR_CI = ["GitHub Actions", "GitLab CI", "Jenkins", "CircleCI", "Buildkite", "Azure Pipelines", "Travis CI", "Bitbucket Pipelines"];
 const COMMON_LANGS = ["Go", "Java", "Kotlin", "Python", "TypeScript", "JavaScript", "Ruby", "C#", "Rust", "Scala", "PHP", "Swift", "C++", "Elixir"];
 
 export default function SettingsPage() {
@@ -47,13 +49,14 @@ async function SettingsData() {
     db.select().from(schema.watchlist).where(eq(schema.watchlist.active, true)),
     latestSnapshotsByCompany(),
   ]);
-  const names = (cat: string) => dict.filter((d) => d.category === cat && !d.verify).map((d) => d.canonical_name);
-  const langs = names("language");
+  const known = knownFromDictionary(dict);
+  // popular choices as chips; everything detectable can be added with the "Add" box
   const options = {
-    languages: [...COMMON_LANGS.filter((l) => langs.includes(l)), ...profile.target_languages.filter((l) => !COMMON_LANGS.includes(l))],
-    ci: names("ci").filter((n) => !["Renovate", "Dependabot", "pre-commit", "Codecov", "SonarQube"].includes(n)),
-    clouds: names("cloud").filter((n) => !["AWS Lambda", "Amazon ECS", "Amazon EKS", "Google Kubernetes Engine"].includes(n)),
-    themes: names("pattern"),
+    languages: COMMON_LANGS.filter((l) => known.languages.includes(l)),
+    ci: POPULAR_CI.filter((c) => known.ci.includes(c)),
+    clouds: known.clouds,
+    themes: known.themes,
+    known,
     components: FIT_COMPONENTS,
   };
   const now = new Date();
@@ -88,11 +91,10 @@ async function SettingsData() {
                   <Link href={`/company/${c.id}`} className="min-w-0 flex-1 truncate text-sm font-medium text-ink no-underline hover:underline">
                     {c.companyName}
                   </Link>
-                  <span className="text-[11px] text-faint">info {live.info.score}</span>
                 </li>
               ))}
             </ol>
-            <p className="mt-3 text-xs text-faint">Fit with the targeting above · info = how much verified information we have. Save to re-rank.</p>
+            <p className="mt-3 text-xs text-faint">Fit with the targeting above. Save to re-rank.</p>
           </Card>
           <Card>
             <H2>Entries waiting for verification</H2>

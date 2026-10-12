@@ -114,7 +114,7 @@ export default function Landing() {
           {[
             { n: 1, icon: I.plus, tone: "mint" as const, title: "Add a company", text: "Type a domain, or add a row in the database. That's the only manual step." },
             { n: 2, icon: I.search, tone: "butter" as const, title: "We collect public signals", text: "GitHub, job boards, engineering blog, conference talks, Hacker News and DNS, with every fact saved alongside its link." },
-            { n: 3, icon: I.shield, tone: "peach" as const, title: "We verify and score", text: "Code proves each source belongs to the company and drops the rest, then computes a fit score and an info score." },
+            { n: 3, icon: I.shield, tone: "peach" as const, title: "We verify and score", text: "Code proves each source belongs to the company and drops the rest, then computes the fit score." },
             { n: 4, icon: I.doc, tone: "sky" as const, title: "You get a brief", text: "An opener, key points, a stack map and questions to ask, each linked to its source. Mondays bring a ranked digest." },
           ].map((s) => (
             <li key={s.n} className="relative rounded-2xl bg-surface p-6 text-center shadow-card">
@@ -131,8 +131,8 @@ export default function Landing() {
 
       {/* scores */}
       <Band tone="plain" id="scores">
-        <Heading title={<>Two scores, <span className="text-accent-ink">two questions.</span></>} sub="One tells you whether the account fits what you sell. The other tells you how much verified information we have. Both use verified sources only." />
-        <div className="grid gap-5 md:grid-cols-2">
+        <Heading title={<>One score: <span className="text-accent-ink">fit.</span></>} sub="Is this a good account for what you sell? Built from verified sources only, so it also reflects how much is publicly known." />
+        <div className="mx-auto max-w-2xl">
           <div className="rounded-2xl border border-accent/40 bg-surface p-6 shadow-card">
             <div className="flex items-center gap-3">
               <Icon d={I.target} />
@@ -166,41 +166,6 @@ export default function Landing() {
             </table>
             <p className="mt-3 text-xs text-faint">Computed from verified sources only. Importance off / normal / high multiplies a factor by 0, 1 or 2; the total is scaled back to 0-100.</p>
           </div>
-
-          <div className="rounded-2xl border border-line bg-surface p-6 shadow-card">
-            <div className="flex items-center gap-3">
-              <Icon d={I.shield} tone="peach" />
-              <div>
-                <h3 className="font-display text-xl font-bold text-ink">Info score</h3>
-                <p className="text-sm text-muted">How much do we know about this company?</p>
-              </div>
-            </div>
-            <p className="mt-4 text-sm text-muted">The same for every user: it measures the data, not your product. Unverified sources are never used, so a low score means &ldquo;little public information&rdquo;, not &ldquo;untrusted&rdquo;.</p>
-            <ul className="mt-4 space-y-3 text-sm">
-              {[
-                ["Stack detail", 30, "3 points per technology or language identified; 10 or more is full marks."],
-                ["Source coverage", 25, "5 points per source type with data: GitHub, job board, blog, talks, Hacker News, hosting."],
-                ["Cross-checks", 20, "Share of technologies confirmed by two or more independent sources."],
-                ["Depth", 10, "Engineering roles open, hiring themes, blog posts and talks."],
-                ["Freshness", 15, "Refreshed in the last 7 days (5) and company activity in the last 90 days (10)."],
-              ].map(([t, p, d]) => (
-                <li key={t as string} className="border-t border-line pt-3">
-                  <div className="flex justify-between gap-3">
-                    <span className="font-medium text-ink">{t}</span>
-                    <span className="font-mono tabular-nums text-ink">{p}</span>
-                  </div>
-                  <p className="text-xs text-faint">{d}</p>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-3 text-xs text-faint">70+ rich · 40-69 partial · below 40 sparse.</p>
-          </div>
-        </div>
-        <div className="mx-auto mt-6 max-w-3xl rounded-2xl bg-band-mint p-5 text-sm text-ink">
-          <p className="font-display font-semibold">Reading them together</p>
-          <p className="mt-1 text-muted">
-            High fit + rich info: call this week, you have plenty to talk about. High fit + sparse info: promising but little is public, so ask discovery questions. Low fit + rich info: we know them well, and they are not a match today.
-          </p>
         </div>
       </Band>
 
@@ -323,12 +288,11 @@ async function RightNow() {
     .filter((x): x is NonNullable<typeof x> => Boolean(x))
     .sort((a, b) => b.live.fit.score - a.live.fit.score);
   if (!ranked.length) return null;
-  const rich = ranked.filter((r) => r.live.info.label === "rich").length;
   return (
     <section aria-labelledby="now" className="mx-auto -mt-4 mb-10 max-w-5xl rounded-2xl border border-line bg-surface p-5 shadow-card sm:p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="now" className="font-display text-lg font-semibold tracking-tight text-ink">
-          Right now: {ranked.length} accounts tracked · {rich} with rich info
+          Right now: {ranked.length} accounts tracked
         </h2>
         <Link href="/dashboard" className="text-sm font-semibold">
           See all accounts →
@@ -342,7 +306,7 @@ async function RightNow() {
               <FitRing score={live.fit.score} size={40} />
               <span className="min-w-0">
                 <span className="block truncate font-semibold">{c.companyName}</span>
-                <span className="block text-xs text-faint">info {live.info.score} · {live.info.label}</span>
+                <span className="block text-xs text-faint">{c.domain}</span>
               </span>
             </Link>
           </li>

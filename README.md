@@ -17,17 +17,14 @@ FlakeGuard is a tech-stack intelligence app for Nikhil, an enterprise account ex
   3. **Send an outreach email.** On any company page open *Outreach email draft*: the subject and email are editable; **Open in Gmail** or **Open in email app** starts a new email with them filled in (add the recipient), **Copy email** copies both. The first line is the Gemini opener; every other fact comes from verified sources.
   4. **See who to call.** **This week** ranks every account by fit; changes from the last 7 days add up to 10 points, so they break near-ties without pushing a better-fitting account down.
 
-Pages, in order of priority: **Landing** `/` (how it works, both scores, sources, and a live "Right now" strip with the top accounts) · **Dashboard** `/dashboard` (`/watchlist` redirects) · **This week** `/digests` (Monday ranking with a priority map) · **Targeting** `/settings` (what you sell, who you target, what matters most) · **Activity** `/activity` (every add, remove, refresh, review, digest and daily run). `npm run linkcheck <url>` crawls every page and checks every link.
+Pages, in order of priority: **Landing** `/` (how it works, the fit score, sources, and a live "Right now" strip with the top accounts) · **Dashboard** `/dashboard` (`/watchlist` redirects) · **This week** `/digests` (Monday ranking with a priority map) · **Targeting** `/settings` (what you sell, who you target, what matters most) · **Activity** `/activity` (every add, remove, refresh, review, digest and daily run). `npm run linkcheck <url>` crawls every page and checks every link.
 
 
-## Two scores
+## One score: fit
 
-| | Fit score | Info score |
-|---|---|---|
-| Question | Is this a good account for what I sell (FlakeGuard)? | How much verified information do we have on this company? |
-| Depends on | Your targeting (Targeting page): target languages, CI systems, clouds, hiring themes, and the importance of each factor | The data only: same for every user |
-| Made of | languages 20 · CI in code 20 · test suites 15 · many services 10 · monorepo 10 · hiring themes 15 · momentum 10 · target clouds 10 (only if set). Importance off/normal/high = ×0/×1/×2, rescaled to 0-100 | stack detail 30 (3 per technology/language) · source coverage 25 (5 per source type with data) · cross-checks 20 (techs seen in 2+ sources) · depth 10 (roles, hiring themes, posts and talks) · freshness 15. 70+ rich, 40-69 partial, below 40 sparse |
-| Updates | Instantly when you change your targeting (computed at read time, no AI) | On every refresh, and when you confirm a source |
+**Is this a good account for what I sell?** Built from the Targeting page: target languages, CI systems, clouds, hiring themes, and how much each factor matters (off / normal / high). Made of: languages 20 · CI in code 20 · test suites 15 · many services 10 · monorepo 10 · hiring themes 15 · momentum 10 · target clouds 10 (only if set). Importance off/normal/high = ×0/×1/×2, rescaled to 0-100. Computed in code at read time, so a change on the Targeting page re-ranks every account instantly. Only verified sources count, so a low fit can also mean little is public; the Coverage column (rich / thin / none) shows how much was found.
+
+**Targeting:** popular choices are shown as chips; **Add** accepts any technology the collectors can detect (suggestions as you type, case-insensitive). Names it cannot detect are rejected with a reason, because they could never change a score. Buying signals are free text (3-200 characters, up to 12) and are given to Gemini for openers and summaries. The same rules (`src/lib/profile-validate.ts`) run in the form and on the server.
 
 **Verified sources only, everywhere.** One ownership rule (`src/lib/ownership.ts`) decides whether a GitHub org, blog feed or careers site belongs to the company. It must be (1) on the company's domain, (2) reached by a redirect from it (`tech.flipkart.com` → `blog.flipkart.tech`), (3) linked from the company's own pages (`flipkart.com` → `flipkartcareers.com`), or (4) on a domain carrying the brand that links back (`zerodha.tech` → `zerodha.com`). A source matched by name only is stored for audit but **nothing from it is shown, scored or sent to Gemini**. Confirm it on the company page and the brief is rebuilt with it immediately.
 
