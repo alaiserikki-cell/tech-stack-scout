@@ -76,3 +76,32 @@ describe("outreach email draft (not sdk_heavy)", () => {
     expect(decodeURIComponent(mailtoUrl(d).split("&body=")[1])).toBe(d.body);
   });
 });
+
+describe("job filtering", async () => {
+  const { isNonEngineeringTitle, computeFields } = await import("../src/lib/compute");
+  const dict = (await import("../data/tech-dictionary.json")).default as never;
+  it.each([
+    ["Data Analyst", true],
+    ["Software Engineering Intern", true],
+    ["Business Systems Engineer", true],
+    ["Tax Technology Lead", true],
+    ["Finance Systems Developer", true],
+    ["Data Excellence Manager", true],
+    ["Senior Software Engineer, Internal Tools", false],
+    ["International Payments Backend Engineer", false],
+    ["Platform Engineer", false],
+  ])("%s -> %s", (title, excluded) => expect(isNonEngineeringTitle(title as string)).toBe(excluded));
+
+  it("leaves excluded roles out of language counts and contradictions", () => {
+    const sig = (id: number, title: string, lang: string) => ({ id, source: "jobs", kind: "tech", name: lang, detail: { category: "language", job_title: title }, evidenceUrl: `https://j/${id}`, observedAt: "2026-10-10T00:00:00Z" });
+    const signals = [
+      { id: 1, source: "github", kind: "language", name: "Go", detail: { pct: 80 }, evidenceUrl: null, observedAt: "2026-10-10T00:00:00Z" },
+      sig(2, "Data Analyst", "Python"),
+      sig(3, "Finance Analyst", "Python"),
+      sig(4, "Backend Engineer", "Go"),
+    ];
+    const c = computeFields({ signals: signals as never, dict, profile, techState: [], newTechs: new Set(), hasPreviousRun: false, checked: {}, now: new Date("2026-10-12T00:00:00Z") });
+    expect(c.jobLanguages).toEqual([{ name: "Go", posts: 1 }]);
+    expect(c.contradictions).toEqual([]); // without the filter: "GitHub says Go, jobs say Python"
+  });
+});

@@ -315,6 +315,12 @@ export function signalHash(signals: Signal[]): string {
 // ---------------------------------------------------------------------------
 // Main computation
 // ---------------------------------------------------------------------------
+/** Roles whose language requirements say nothing about the engineering stack. */
+const NON_ENGINEERING_TITLE = /\b(analysts?|interns?|internship|business systems|tax|finance|financial|data excellence)\b/i;
+export function isNonEngineeringTitle(title: string): boolean {
+  return NON_ENGINEERING_TITLE.test(title);
+}
+
 export function computeFields(args: {
   signals: Signal[];
   dict: DictEntry[];
@@ -366,10 +372,16 @@ export function computeFields(args: {
   const confRank = { high: 0, medium: 1, low: 2 };
   techs.sort((a, b) => confRank[a.confidence] - confRank[b.confidence] || b.signalIds.length - a.signalIds.length);
 
-  const jobLanguages = techs
-    .filter((t) => t.category === "language" && t.jobPosts > 0)
-    .map((t) => ({ name: t.name, posts: t.jobPosts }))
-    .sort((a, b) => b.posts - a.posts);
+  // languages asked for in engineering job posts; analyst, intern, finance-type roles are listed but not counted
+  const langPosts = new Map<string, Set<string>>();
+  for (const s of signals) {
+    if (s.source !== "jobs" || s.kind !== "tech" || dictByName.get(s.name)?.category !== "language") continue;
+    if (isNonEngineeringTitle(String(s.detail.job_title ?? ""))) continue;
+    const set = langPosts.get(s.name) ?? new Set<string>();
+    set.add(s.evidenceUrl ?? String(s.detail.job_title));
+    langPosts.set(s.name, set);
+  }
+  const jobLanguages = [...langPosts.entries()].map(([name, posts]) => ({ name, posts: posts.size })).sort((a, b) => b.posts - a.posts);
 
   const act = signals.find((s) => s.kind === "activity");
   const jc = signals.find((s) => s.kind === "job_count");

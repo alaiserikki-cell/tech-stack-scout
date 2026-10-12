@@ -17,6 +17,9 @@ export const STEPS = ["Finding sources", "Reading GitHub", "Reading job posts", 
  * A run cut off mid-way (the platform's 300 s limit, a deploy) would stay "running" forever and block that company.
  * Anything queued/running for over 15 minutes is marked failed; the previous brief stays in place.
  */
+/** Bump when computed fields change meaning (3: non-engineering job titles excluded from language counts). */
+export const COMPUTE_VERSION = 3;
+
 export async function sweepStuckRuns(): Promise<number> {
   const db = getDb();
   const rows = await db
@@ -190,7 +193,8 @@ export async function executeRun(runId: number): Promise<void> {
       .filter(([src, ok]) => !ok && signals.some((x) => x.source === src))
       .map(([src]) => src as VerifiableSource);
     const isUsable = (s: Signal) => !unconfirmed.includes(s.source as VerifiableSource);
-    const hash = signalHash(signals.filter(isUsable));
+    // COMPUTE_VERSION is part of the hash so a change in how fields are computed re-runs every company
+    const hash = `${signalHash(signals.filter(isUsable))}:${COMPUTE_VERSION}`;
     const prevSnap = await latestSnapshot(company.id);
     let prevHash: string | null = null;
     if (prevSnap?.runId) {
