@@ -109,6 +109,8 @@ export function confidenceFor(sigs: Pick<Signal, "source" | "observedAt" | "evid
  * Missing runs are only counted when the run's collectors succeeded (countMissing), so an outage
  * never marks technologies as dropped.
  */
+export const DROP_AFTER_DAYS = 14;
+
 export function updateTechState(
   prev: TechStateRow[],
   seen: Map<string, string>, // tech -> latest observedAt
@@ -135,7 +137,8 @@ export function updateTechState(
     for (const r of byTech.values()) {
       if (seen.has(r.tech) || r.status !== "active") continue;
       r.missingRuns += 1;
-      if (r.missingRuns >= 2) {
+      // dropped = missing from 2+ successful refreshes AND unseen for 14+ days (two refreshes on one day prove nothing)
+      if (r.missingRuns >= 2 && now.getTime() - Date.parse(r.lastSeen) >= DROP_AFTER_DAYS * 86_400_000) {
         r.status = "dropped";
         dropped.push(r.tech);
       }

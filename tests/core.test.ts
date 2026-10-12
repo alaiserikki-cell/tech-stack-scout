@@ -130,14 +130,16 @@ describe("confidence", () => {
 describe("adopted / dropped", () => {
   const prev = [
     { tech: "Go", status: "active" as const, firstSeen: daysAgo(30), lastSeen: daysAgo(7), missingRuns: 0 },
-    { tech: "Jenkins", status: "active" as const, firstSeen: daysAgo(30), lastSeen: daysAgo(7), missingRuns: 1 },
+    { tech: "Jenkins", status: "active" as const, firstSeen: daysAgo(30), lastSeen: daysAgo(20), missingRuns: 1 },
+    { tech: "Maven", status: "active" as const, firstSeen: daysAgo(30), lastSeen: daysAgo(1), missingRuns: 1 },
     { tech: "Ruby", status: "active" as const, firstSeen: daysAgo(30), lastSeen: daysAgo(7), missingRuns: 0 },
   ];
-  it("marks new techs and drops after two consecutive missing successful runs", () => {
+  it("marks new techs and drops after two missing runs and 14+ days unseen", () => {
     const r = updateTechState(prev, new Map([["Go", NOW.toISOString()], ["Kotlin", NOW.toISOString()]]), NOW, true);
     expect(r.newTechs).toEqual(["Kotlin"]);
     expect(r.dropped).toEqual(["Jenkins"]);
     expect(r.next.find((x) => x.tech === "Ruby")?.missingRuns).toBe(1);
+    expect(r.next.find((x) => x.tech === "Maven")?.status).toBe("active"); // missing twice, but seen yesterday
   });
   it("does not count missing runs when collectors failed", () => {
     const r = updateTechState(prev, new Map(), NOW, false);
