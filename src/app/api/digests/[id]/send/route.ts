@@ -1,25 +1,27 @@
 import { isAuthed, unauthorized } from "@/lib/auth";
-import { hashRecipient, sendDigest } from "@/lib/digest";
+import { sendDigest } from "@/lib/digest";
 import { emailConfigured, isEmail } from "@/lib/email";
-import { LIMITS, dayMs, hit } from "@/lib/ratelimit";
 import { logActivity } from "@/lib/activity";
+import { eq } from "drizzle-orm";
+import { getDb, schema } from "@/db/client";
 
 /** Email this digest (only the digest template can be sent). Recipient addresses are never stored or shown in clear. */
 export async function POST(req: Request, ctx: RouteContext<"/api/digests/[id]/send">) {
   if (!(await isAuthed())) return unauthorized();
-  if (!emailConfigured()) return Response.json({ error: "Email is not configured on this deployment yet." }, { status: 503 });
   const id = Number((await ctx.params).id);
+  if (!Number.isInteger(id) || id <= 0) return Response.json({ error: "Unknown digest." }, { status: 404 });
   const b = await req.json().catch(() => ({}));
   const email = String(b.email ?? "").trim();
-  if (!isEmail(email)) return Response.json({ error: "Enter a valid email address." }, { status: 400 });
-  if (!(await hit(`digest_to:${hashRecipient(email)}`, dayMs, LIMITS.digestPerRecipientPerDay)))
-    return Response.json({ error: `That address already received ${LIMITS.digestPerRecipientPerDay} digests today.` }, { status: 429 });
-  if (!(await hit("digest_total", dayMs, LIMITS.digestTotalPerDay))) return Response.json({ error: "Daily email limit for the demo reached. Try tomorrow." }, { status: 429 });
+  if (!email) return Response.json({ error: "Enter an email address." }, { status: 400 });
+  if (!isEmail(email)) return Response.json({ error: "That isn't a valid email address. Check it and try again, e.g. name@company.com." }, { status: 400 });
+  const [d] = await getDb().select({ id: schema.digests.id }).from(schema.digests).where(eq(schema.digests.id, id));
+  if (!d) return Response.json({ error: "Unknown digest." }, { status: 404 });
+  if (!emailConfigured()) return Response.json({ error: "Email is not configured on this deployment yet." }, { status: 503 });
   const status = await sendDigest(id, email);
-  await logActivity("digest_sent", status === "sent" ? "Emailed the digest (address hidden)" : `Digest email not delivered (${status === "restricted" ? "demo sender restriction" : "send failed"})`, { detail: { digestId: id, status } });
+  await logActivity("digest_sent", status === "sent" ? "Emailed the digest (address hidden)" : `Digest email not delivered (${status === "restricted" ? "sender can only reach the owner's inbox" : "send failed"})`, { detail: { digestId: id, status } });
   if (status === "restricted")
     return Response.json(
-      { error: "This demo sends through a Resend account without a verified domain, so it can only deliver to the project owner's inbox. The preview above shows exactly the email the Monday digest sends." },
+      { error: "Not sent: this deployment's email account (Resend, free tier, no verified domain) can only deliver to the project owner's inbox. The preview above is exactly what the email contains." },
       { status: 422 },
     );
   if (status !== "sent") return Response.json({ error: "Sending failed. Please try again later." }, { status: 502 });

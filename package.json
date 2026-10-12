@@ -17,7 +17,8 @@
     "dictionary": "node scripts/build-dictionary.mjs",
     "smoke": "tsx scripts/smoke.ts",
     "linkcheck": "tsx scripts/linkcheck.ts",
-    "cleanup": "tsx scripts/cleanup.ts"
+    "cleanup": "tsx scripts/cleanup.ts",
+    "check-domains": "tsx scripts/check-domains.ts"
   },
   "dependencies": {
     "@google/genai": "^2.28.0",

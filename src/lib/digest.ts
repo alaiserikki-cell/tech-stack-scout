@@ -4,6 +4,7 @@ import { getDb, schema } from "@/db/client";
 import type { ChangeEvent, Computed } from "./compute";
 import { RecipientRestrictedError, sendMail } from "./email";
 import { fitScore } from "./compute";
+import { scoringBasis } from "./scores";
 import { loadProfile } from "./repo";
 
 export interface RankedAccount {
@@ -100,7 +101,7 @@ export async function buildDigest(weekOf = weekOfIST()): Promise<typeof schema.d
   for (const c of companies) {
     const [s] = await db.select().from(schema.snapshots).where(eq(schema.snapshots.companyId, c.id)).orderBy(desc(schema.snapshots.generatedAt)).limit(1);
     if (!s) continue;
-    rows.push({ companyId: c.id, name: c.companyName, domain: c.domain, fitScore: fitScore(s.computed as Computed, profile).score, events: (s.changeEvents as ChangeEvent[]) ?? [], computed: s.computed as Computed, generatedAt: s.generatedAt });
+    rows.push({ companyId: c.id, name: c.companyName, domain: c.domain, fitScore: fitScore(scoringBasis(s.computed as Computed, c), profile).score, events: (s.changeEvents as ChangeEvent[]) ?? [], computed: s.computed as Computed, generatedAt: s.generatedAt });
   }
   const ranked = rankAccounts(rows);
   const appUrl = (process.env.APP_URL ?? "").replace(/\/$/, "");

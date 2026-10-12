@@ -209,6 +209,14 @@ export function RefreshButton({ companyId, activeRunId }: { companyId: number; a
 // ---------------------------------------------------------------------------
 // Add / remove company
 // ---------------------------------------------------------------------------
+function companyUrl(d: { id: number; runId?: number; redirectedFrom?: string | null }): string {
+  const q = new URLSearchParams();
+  if (d.runId) q.set("run", String(d.runId));
+  if (d.redirectedFrom) q.set("from", d.redirectedFrom);
+  const qs = q.toString();
+  return `/company/${d.id}${qs ? `?${qs}` : ""}`;
+}
+
 export function AddCompanyForm({ hero, autoFocus, onAdded }: { hero?: boolean; autoFocus?: boolean; onAdded?: () => void }) {
   const [domain, setDomain] = useState("");
   const [name, setName] = useState("");
@@ -222,7 +230,7 @@ export function AddCompanyForm({ hero, autoFocus, onAdded }: { hero?: boolean; a
       () => postJson("/api/companies", { domain, name }),
       (d) => {
         setDomain("");
-        router.push(`/company/${d.id}${d.runId ? `?run=${d.runId}` : ""}`);
+        router.push(companyUrl(d));
         onAdded?.(); // close after navigation has been scheduled
       },
     );
@@ -262,7 +270,7 @@ export function AddCompanyForm({ hero, autoFocus, onAdded }: { hero?: boolean; a
           setBusy(true);
           await run(
             () => postJson("/api/companies", { domain, name }),
-            (d) => router.push(`/company/${d.id}${d.runId ? `?run=${d.runId}` : ""}`),
+            (d) => router.push(companyUrl(d)),
           );
           setBusy(false);
         }}
@@ -794,12 +802,15 @@ export function EmailDigestForm({ digestId }: { digestId: number }) {
     <div>
       <form
         className="flex flex-wrap items-end gap-2"
+        noValidate
         onSubmit={async (e) => {
           e.preventDefault();
-          setBusy(true);
           setOk(false);
           await run(
-            () => postJson(`/api/digests/${digestId}/send`, { email }),
+            () => {
+              setBusy(true);
+              return postJson(`/api/digests/${digestId}/send`, { email });
+            },
             () => {
               setOk(true);
               setEmail("");
@@ -817,7 +828,7 @@ export function EmailDigestForm({ digestId }: { digestId: number }) {
         </button>
       </form>
       <p className="mt-2 text-xs text-muted" aria-live="polite">
-        {ok ? "Sent. Check your inbox (and spam folder)." : "Max 3 per address per day. The address is not stored or shown. The demo sender can only deliver to the project owner's inbox; the preview above shows the exact email."}
+        {ok ? "Sent. Check your inbox (and spam folder)." : "The address is checked, used once to send, and never stored or shown. Delivery goes through a free Resend account, which only delivers to the project owner's inbox until a sending domain is verified."}
       </p>
       {gate}
       {err}
@@ -1006,7 +1017,7 @@ export function BulkAddForm({ onDone }: { onDone?: () => void }) {
         const out: { domain: string; ok: boolean; note: string }[] = [];
         for (const d of domains) {
           const r = await postJson("/api/companies", { domain: d });
-          out.push({ domain: d, ok: r.status === 200, note: r.status === 200 ? (r.data.existing ? "already on the watchlist" : "added, brief building") : (r.data.error ?? "failed") });
+          out.push({ domain: d, ok: r.status === 200, note: r.status === 200 ? (r.data.existing ? (r.data.note ? `${r.data.note} Already on the watchlist.` : "already on the watchlist") : r.data.note ? `${r.data.note} Added, brief building.` : "added, brief building") : (r.data.error ?? "failed") });
           setResults([...out]);
         }
         setBusy(false);

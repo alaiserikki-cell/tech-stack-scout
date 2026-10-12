@@ -164,7 +164,7 @@ export default function Landing() {
                 ))}
               </tbody>
             </table>
-            <p className="mt-3 text-xs text-faint">Importance off / normal / high multiplies a factor by 0, 1 or 2; the total is scaled back to 0-100.</p>
+            <p className="mt-3 text-xs text-faint">Computed from verified sources only. Importance off / normal / high multiplies a factor by 0, 1 or 2; the total is scaled back to 0-100.</p>
           </div>
 
           <div className="rounded-2xl border border-line bg-surface p-6 shadow-card">
@@ -179,9 +179,9 @@ export default function Landing() {
             <ul className="mt-4 space-y-3 text-sm">
               {[
                 ["Verified sources", 40, "Data from a GitHub org, job board and blog that are proven to belong to the company (15 + 15 + 10). Auto-matched sources count zero until there is proof or you confirm them."],
-                ["Corroboration", 25, "Share of technologies confirmed by two or more independent sources."],
+                ["Corroboration", 25, "Share of technologies, from verified sources, confirmed by two or more independent sources."],
                 ["Freshness", 20, "Refreshed in the last 7 days (10) and recent activity in the last 90 days (10)."],
-                ["Breadth", 15, "3 points per source type with data: GitHub, jobs, blog, talks, Hacker News, hosting."],
+                ["Breadth", 15, "3 points per verified source type with data: GitHub, jobs, blog, talks, Hacker News, hosting."],
               ].map(([t, p, d]) => (
                 <li key={t as string} className="border-t border-line pt-3">
                   <div className="flex justify-between gap-3">

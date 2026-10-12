@@ -3,10 +3,7 @@ import { getDb, schema } from "@/db/client";
 
 export const LIMITS = {
   refreshWindowMs: 10 * 60_000, // one refresh per company per 10 minutes (else cached)
-  demoAddsPerDay: 10,
-  maxActiveCompanies: 40,
-  digestPerRecipientPerDay: 3,
-  digestTotalPerDay: 20,
+  maxActiveCompanies: 40, // keeps the daily refresh inside Vercel Hobby's 300 s budget
 } as const;
 
 const DAY = 86_400_000;

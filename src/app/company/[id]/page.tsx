@@ -66,6 +66,7 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
   const live = computed ? liveScores(computed, profile, company, now) : null;
   const activeRun = runs.find((r) => ["queued", "running"].includes(r.status) && now.getTime() - r.startedAt.getTime() < 10 * 60_000);
   const runParam = Number(sp.run);
+  const typedAs = typeof sp.from === "string" && /^[a-z0-9.-]{3,80}$/.test(sp.from) && sp.from !== company.domain ? sp.from : null;
   const progressRunId = activeRun?.id ?? (Number.isInteger(runParam) && runs.some((r) => r.id === runParam && ["queued", "running"].includes(r.status)) ? runParam : null);
 
   const cite = (ids: number[] | undefined) => <Citations ids={ids ?? []} byId={byId} />;
@@ -114,6 +115,11 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
             </span>
           </div>
         </div>
+        {typedAs && (
+          <p className="rounded-xl border border-line bg-surface-2 px-4 py-3 text-sm text-muted">
+            <span className="font-medium text-ink">{typedAs}</span> redirects to <span className="font-medium text-ink">{company.domain}</span>, so it is the same company and is tracked once, under {company.domain}.
+          </p>
+        )}
         {progressRunId != null && <AutoRunProgress runId={progressRunId} />}
       </header>
 

@@ -427,6 +427,13 @@ describe("evidence score", () => {
     expect(e.reasons[0].reason).toMatch(/not|No verified/);
     expect(e.score).toBe(46);
   });
+  it("counts corroboration, recency and breadth from verified sources only", () => {
+    // GitHub and jobs found but unverified: the verified-only basis has just the hosting signal
+    const basis = baseComputed({ hosting: c.hosting });
+    const e = evidenceScore(c, { github: false, jobs: false, blog: false }, NOW2, NOW2, basis);
+    expect(e.reasons.map((r) => r.points)).toEqual([0, 0, 10, 3]);
+    expect(e.reasons[0].reason).toMatch(/unconfirmed: GitHub, job board/);
+  });
   it("loses freshness when stale", () => {
     const old = new Date("2026-09-01T00:00:00Z");
     expect(evidenceScore(c, { github: true, jobs: true, blog: false }, old, NOW2).reasons[2].points).toBe(10);

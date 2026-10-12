@@ -2,7 +2,7 @@ import { and, desc, eq, inArray, gte } from "drizzle-orm";
 import { getDb, schema } from "@/db/client";
 import { COLLECTORS, runCollector } from "@/collectors";
 import type { BlogExtraction, CollectorContext, CompanyInput, Signal, Source } from "./types";
-import { changeEvents, computeFields, signalHash, updateTechState, type Computed, type TechStateRow } from "./compute";
+import { changeEvents, computeFields, signalHash, updateTechState, type Computed, type TechStateRow, type VerifiableSource } from "./compute";
 import { BLOG_JSON_SCHEMA, BLOG_SYSTEM, NO_SIGNAL_TEXT, generateBrief, selectBriefSignals } from "./brief";
 import { callGemini, geminiConfigured, geminiModel, GeminiQuotaError } from "./gemini";
 import { dbCache, latestSnapshot, loadDictionary, loadProfile, logLlmCall } from "./repo";
@@ -45,7 +45,7 @@ function toCompanyInput(c: typeof schema.watchlist.$inferSelect): CompanyInput {
   };
 }
 
-function rowToSignal(r: typeof schema.signals.$inferSelect): Signal {
+export function rowToSignal(r: typeof schema.signals.$inferSelect): Signal {
   return {
     id: r.id,
     source: r.source as Source,
@@ -216,6 +216,26 @@ export async function executeRun(runId: number): Promise<void> {
       for (let i = 0; i < ids.length; i += 500) await db.update(schema.signals).set({ confidence: conf }).where(inArray(schema.signals.id, ids.slice(i, i + 500)));
     }
 
+    // scores and the brief use verified sources only: an auto-matched, unproven source could be the wrong company
+    const excludedSources = (
+      [
+        ["github", ctx.company.githubOrgVerified],
+        ["jobs", ctx.company.atsVerified],
+        ["blog", ctx.company.blogVerified],
+      ] as const
+    )
+      .filter(([src, ok]) => !ok && inserted.some((x) => x.source === src))
+      .map(([src]) => src as VerifiableSource);
+    const fromVerified = inserted.filter((x) => !excludedSources.includes(x.source as VerifiableSource));
+    const briefComputed = excludedSources.length
+      ? computeFields({ signals: fromVerified, dict, profile, techState: ts.next, newTechs: new Set(ts.newTechs), hasPreviousRun: Boolean(prevSnap), checked, now })
+      : computed;
+    if (excludedSources.length) {
+      computed.excludedSources = excludedSources;
+      computed.verifiedOnly = briefComputed;
+      computed.fit = briefComputed.fit;
+    }
+
     // brief
     await setRun({ step: "Writing brief" });
     let brief: unknown = null;
@@ -234,14 +254,6 @@ export async function executeRun(runId: number): Promise<void> {
       briefStatus = "pending";
       briefError = "GEMINI_API_KEY not configured";
     } else {
-      // only facts from verified sources go to Gemini: an auto-matched, unproven source could be the wrong company
-      const fromVerified = inserted.filter(
-        (x) => !(x.source === "github" && !ctx.company.githubOrgVerified) && !(x.source === "jobs" && !ctx.company.atsVerified) && !(x.source === "blog" && !ctx.company.blogVerified),
-      );
-      const briefComputed =
-        fromVerified.length === inserted.length
-          ? computed
-          : computeFields({ signals: fromVerified, dict, profile, techState: ts.next, newTechs: new Set(ts.newTechs), hasPreviousRun: Boolean(prevSnap), checked, now });
       const sigs = selectBriefSignals(fromVerified, briefComputed);
       const outcome = await generateBrief({
         gemini: callGemini,

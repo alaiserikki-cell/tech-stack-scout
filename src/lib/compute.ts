@@ -70,7 +70,12 @@ export interface Computed {
   jobBoard: string | null;
   checked: Record<string, string[]>;
   hash: string;
+  /** Sources left out of scoring because they were not verified at refresh time, and the fields computed without them. */
+  excludedSources?: VerifiableSource[];
+  verifiedOnly?: Omit<Computed, "verifiedOnly" | "excludedSources">;
 }
+
+export type VerifiableSource = "github" | "jobs" | "blog";
 
 export interface TechStateRow {
   tech: string;
@@ -290,11 +295,16 @@ export function evidenceScore(
   v: { github: boolean; jobs: boolean; blog: boolean },
   lastRefreshedAt: Date | string | null,
   now = new Date(),
+  /** Fields computed from verified sources only; corroboration, recency and breadth count only these. */
+  basis: Pick<Computed, "languages" | "techs" | "activity" | "blogPosts" | "hnStories" | "hosting" | "initiatives"> & { talks?: Computed["talks"] } = c,
 ): EvidenceScore {
   const DAY90 = 90 * 86_400_000;
   const hasGithub = c.languages.length > 0 || c.activity.pushed30 != null;
   const hasJobs = (c.activity.engineeringJobs ?? 0) > 0;
   const hasBlog = c.blogPosts.length > 0;
+  const bGithub = basis.languages.length > 0 || basis.activity.pushed30 != null;
+  const bJobs = (basis.activity.engineeringJobs ?? 0) > 0;
+  const bBlog = basis.blogPosts.length > 0;
   const reasons: EvidenceScore["reasons"] = [];
 
   const verified: string[] = [];
@@ -320,14 +330,14 @@ export function evidenceScore(
     max: 40,
   });
 
-  const techs = c.techs.filter((t) => t.category !== "pattern");
+  const techs = basis.techs.filter((t) => t.category !== "pattern");
   const corroborated = techs.filter((t) => t.sources.length >= 2).length;
   const corrPts = techs.length ? Math.round(25 * (corroborated / techs.length) * Math.min(1, techs.length / 3)) : 0;
-  reasons.push({ reason: techs.length ? `${corroborated} of ${techs.length} technologies confirmed by 2+ independent sources` : "No technologies found", points: corrPts, max: 25 });
+  reasons.push({ reason: techs.length ? `${corroborated} of ${techs.length} technologies (from verified sources) confirmed by 2+ independent sources` : "No technologies found", points: corrPts, max: 25 });
 
   const fresh = lastRefreshedAt ? now.getTime() - new Date(lastRefreshedAt).getTime() <= 7 * 86_400_000 : false;
-  const recentDates = [...c.blogPosts.map((b) => b.date), ...(c.talks ?? []).map((t) => t.date), ...c.initiatives.map((i) => i.date)];
-  const recent = (c.activity.pushed30 ?? 0) > 0 || hasJobs || recentDates.some((d) => now.getTime() - Date.parse(d) <= DAY90);
+  const recentDates = [...basis.blogPosts.map((b) => b.date), ...(basis.talks ?? []).map((t) => t.date), ...basis.initiatives.map((i) => i.date)];
+  const recent = (basis.activity.pushed30 ?? 0) > 0 || bJobs || recentDates.some((d) => now.getTime() - Date.parse(d) <= DAY90);
   reasons.push({
     reason: `${fresh ? "Refreshed this week" : "Not refreshed in the last 7 days"}; ${recent ? "recent activity in the last 90 days" : "no recent activity found"}`,
     points: (fresh ? 10 : 0) + (recent ? 10 : 0),
@@ -335,14 +345,14 @@ export function evidenceScore(
   });
 
   const types = [
-    hasGithub && "GitHub",
-    hasJobs && "jobs",
-    hasBlog && "blog",
-    (c.talks ?? []).length > 0 && "talks",
-    c.hnStories.length > 0 && "Hacker News",
-    c.hosting.length > 0 && "hosting",
+    bGithub && "GitHub",
+    bJobs && "jobs",
+    bBlog && "blog",
+    (basis.talks ?? []).length > 0 && "talks",
+    basis.hnStories.length > 0 && "Hacker News",
+    basis.hosting.length > 0 && "hosting",
   ].filter(Boolean) as string[];
-  reasons.push({ reason: types.length ? `Data from ${types.length} source type${types.length > 1 ? "s" : ""}: ${types.join(", ")}` : "No sources with data", points: Math.min(15, types.length * 3), max: 15 });
+  reasons.push({ reason: types.length ? `Verified data from ${types.length} source type${types.length > 1 ? "s" : ""}: ${types.join(", ")}` : "No verified sources with data", points: Math.min(15, types.length * 3), max: 15 });
 
   const score = Math.min(100, reasons.reduce((a, r) => a + r.points, 0));
   return { score, label: score >= 70 ? "strong" : score >= 40 ? "moderate" : "weak", reasons };

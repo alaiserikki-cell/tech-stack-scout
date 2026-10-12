@@ -44,5 +44,13 @@ export async function sendMail(to: string, subject: string, html: string): Promi
 }
 
 export function isEmail(s: string): boolean {
-  return /^[^\s@<>"]+@[^\s@<>"]+\.[a-z]{2,}$/i.test(s.trim()) && s.length < 200;
+  const t = s.trim();
+  if (t.length > 254) return false;
+  const m = /^([A-Za-z0-9!#$%&'*+/=?^_`{|}~.-]{1,64})@([A-Za-z0-9.-]+)$/.exec(t);
+  if (!m) return false;
+  const [, local, domain] = m;
+  if (local.startsWith(".") || local.endsWith(".") || local.includes("..")) return false;
+  const labels = domain.split(".");
+  if (labels.length < 2 || !/^[A-Za-z]{2,}$/.test(labels[labels.length - 1])) return false;
+  return labels.every((l) => l.length > 0 && l.length <= 63 && !l.startsWith("-") && !l.endsWith("-"));
 }
