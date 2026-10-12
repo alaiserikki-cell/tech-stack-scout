@@ -219,6 +219,10 @@ describe("outreach email draft", () => {
     expect(d.body.endsWith("Best,\nNikhil")).toBe(true);
     expect(d.subject).toBe("Acme's GitHub Actions pipeline and FlakeGuard");
   });
+  it("does not repeat the company name in the subject", () => {
+    const g = outreachEmail({ company: "GitLab", opener: "Hi.", computed: { languages: [], techs: [{ name: "GitLab CI", category: "ci" }] } as never, profile: profileJson as never });
+    expect(g.subject).toBe("GitLab's CI pipeline and FlakeGuard");
+  });
   it("leaves out the facts line when nothing is known", () => {
     const e = outreachEmail({ company: "Acme", opener: "Hello.", computed: { languages: [], techs: [] } as never, profile: profileJson as never });
     expect(e.body).not.toContain("From what your team shares");

@@ -26,7 +26,9 @@ export function outreachEmail(args: { company: string; opener: string; computed:
   if (tests.length) facts.push(`tests with ${list(tests)}`);
   const factLine = facts.length ? `From what your team shares publicly, ${company} ${list(facts)}, which is exactly where ${profile.product_name} works.` : "";
 
-  const topic = ci.length ? `${ci[0]} pipeline` : tests.length ? "test suite" : "engineering team";
+  // "GitLab's GitLab CI pipeline" reads badly: drop the tool name when it repeats the company's
+  const ciName = ci[0] && !ci[0].toLowerCase().includes(company.toLowerCase()) ? `${ci[0]} ` : "CI ";
+  const topic = ci.length ? `${ciName}pipeline` : tests.length ? "test suite" : "engineering team";
   const subject = `${company}'s ${topic} and ${profile.product_name}`;
   const pitch = `${profile.product_name} ${lowerFirst(profile.one_line_pitch.trim())}`;
   const body = [

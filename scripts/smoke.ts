@@ -53,6 +53,8 @@ async function main() {
   check("invalid domain rejected (400) or guarded (401)", probe === 400 || probe === 401, `HTTP ${probe}`);
   const typo = await post("/api/companies", { domain: "ritzy.com.com" });
   check("doubled ending rejected as a typo", typo.status === 400 && /typo/.test(typo.text), typo.text.slice(0, 90));
+  const twin = await post("/api/companies", { domain: "amazon.in" });
+  check("same company on another domain asks first (409)", twin.status === 409 && /same_brand/.test(twin.text), twin.text.slice(0, 90));
   check("digest send endpoint is gone", (await post("/api/digests/1/send", { email: "a@b.co" })).status === 404);
   check("wrong passcode is rejected", (await post("/api/auth", { passcode: "not-the-passcode" })).status === 401);
 
