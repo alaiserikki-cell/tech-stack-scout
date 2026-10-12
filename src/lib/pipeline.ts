@@ -1,7 +1,7 @@
 import { and, desc, eq, inArray, gte, lt } from "drizzle-orm";
 import { getDb, schema } from "@/db/client";
 import { COLLECTORS, runCollector } from "@/collectors";
-import { BLOG_WINDOW_DAYS } from "@/collectors/blog";
+import { BLOG_WINDOW_DAYS, isEngineeringPost } from "@/collectors/blog";
 import type { BlogExtraction, CollectorContext, CompanyInput, Signal, Source } from "./types";
 import { changeEvents, computeFields, signalHash, updateTechState, type Computed, type TechStateRow, type VerifiableSource } from "./compute";
 import { BLOG_JSON_SCHEMA, BLOG_SYSTEM, NO_SIGNAL_TEXT, generateBrief, selectBriefSignals } from "./brief";
@@ -95,7 +95,10 @@ export async function executeRun(runId: number): Promise<void> {
       .where(and(eq(schema.signals.companyId, company.id), eq(schema.signals.source, "blog"), gte(schema.signals.observedAt, new Date(now.getTime() - BLOG_WINDOW_DAYS * DAY))));
     // posts whose Gemini extraction did not succeed are fetched again so they get extracted
     const seenBlogUrls = new Set(
-      prevBlogRows.filter((r) => r.kind === "blog_post" && r.evidenceUrl && (r.detail as Record<string, unknown>).extraction === "ok").map((r) => r.evidenceUrl!),
+      // a post counts as read only once it was classified (engineering or not); older rows are read again
+      prevBlogRows
+        .filter((r) => r.kind === "blog_post" && r.evidenceUrl && (r.detail as Record<string, unknown>).extraction === "ok" && typeof (r.detail as Record<string, unknown>).about_engineering === "boolean")
+        .map((r) => r.evidenceUrl!),
     );
 
     const extractBlog = geminiConfigured()
@@ -159,8 +162,13 @@ export async function executeRun(runId: number): Promise<void> {
 
     // carry forward blog evidence from earlier runs (posts are only fetched once)
     const newBlogUrls = new Set(collected.filter((s) => s.source === "blog").map((s) => s.evidenceUrl));
+    // only classified engineering posts (and their verified tech mentions) are carried forward
+    const keptPosts = new Set(
+      prevBlogRows.filter((r) => r.kind === "blog_post" && (r.detail as Record<string, unknown>).about_engineering === true).map((r) => r.evidenceUrl),
+    );
     for (const r of prevBlogRows) {
       if (newBlogUrls.has(r.evidenceUrl)) continue;
+      if (!keptPosts.has(r.evidenceUrl)) continue;
       const s = rowToSignal(r);
       delete s.id;
       collected.push(s);

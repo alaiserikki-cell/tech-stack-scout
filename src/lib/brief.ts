@@ -273,15 +273,17 @@ export const BLOG_JSON_SCHEMA = {
   type: "object",
   properties: {
     topic: { type: "string" },
+    about_engineering: { type: "boolean" },
     tech_mentions: {
       type: "array",
       items: { type: "object", properties: { name: { type: "string" }, quote: { type: "string" } }, required: ["name", "quote"] },
     },
   },
-  required: ["topic", "tech_mentions"],
+  required: ["topic", "about_engineering", "tech_mentions"],
 } as const;
 
 export const BLOG_SYSTEM = `Extract technology mentions from an engineering blog post.
 Return the post topic in under 12 words, and every programming language, framework, cloud, infrastructure, CI, test framework, database or observability tool the company itself uses or evaluates.
 For each mention, "quote" must be copied EXACTLY, character for character, from the text (one sentence or clause, under 200 characters) and must contain the technology name.
-Do not include technologies only mentioned as examples of what others use. Do not invent quotes.`;
+Do not include technologies only mentioned as examples of what others use. Do not invent quotes.
+Set "about_engineering" to true only if the post is about how the company builds or runs software (engineering, infrastructure, data, security, developer tooling, technical product releases). Set it to false for corporate news, entertainment, marketing, finance, customer stories without technical detail, hiring or culture posts.`;

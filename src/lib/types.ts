@@ -70,6 +70,8 @@ export type CompanyUpdates = Partial<
 
 export interface BlogExtraction {
   topic: string;
+  /** Gemini's judgement; a post is kept if this is true or it names a technology verified in its text */
+  about_engineering?: boolean;
   tech_mentions: { name: string; quote: string }[];
 }
 

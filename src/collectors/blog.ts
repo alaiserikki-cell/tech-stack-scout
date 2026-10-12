@@ -8,6 +8,16 @@ const DAY = 86_400_000;
 /** Engineering blogs post a few times a year, so a year of posts is read (the newest 5); recency is scored separately. */
 export const BLOG_WINDOW_DAYS = 365;
 
+const ENGINEERING = /\b(engineer\w*|infrastructure|architecture|scal(e|ed|es|ing|ability)|platform|migrat\w*|deploy\w*|ci|ci\/cd|builds?|pipelines?|tooling|continuous (integration|delivery)|testing|tests?|microservices?|monorepo|observability|reliability|incidents?|outages?|latency|performance|databases?|kubernetes|cloud|apis?|sdks?|open[- ]source|machine learning|ml|llms?|ai models?|data (pipeline|platform|warehouse)|security|compilers?|frameworks?|developers?|devops|sre|backend|frontend|rewrit\w*|refactor\w*|build (system|times?)|code|software|programming|algorithms?|serverless|caching|queues?|stream processing)\b/i;
+
+/**
+ * Company feeds often mix engineering posts with corporate news ("Watch the trailer for ..."). A post counts only
+ * when it is about engineering: it names a technology we verified in its text, or its title / topic is technical.
+ */
+export function isEngineeringPost(title: string, topic: string, verifiedTechs: number): boolean {
+  return verifiedTechs > 0 || ENGINEERING.test(`${title} ${topic}`);
+}
+
 export interface FeedItem {
   title: string;
   url: string;
@@ -203,31 +213,46 @@ export const blogCollector: Collector = {
       checked.push(`Feed returned HTTP ${r.status}`);
       return { signals, checked, updates };
     }
-    const items = parseFeed(r.text)
+    const candidates = parseFeed(r.text)
       .filter((i) => i.publishedAt && ctx.now.getTime() - Date.parse(i.publishedAt) <= BLOG_WINDOW_DAYS * DAY)
       .sort((a, b) => Date.parse(b.publishedAt!) - Date.parse(a.publishedAt!))
-      .filter((i) => !ctx.seenBlogUrls.has(i.url))
-      .slice(0, 5);
+      .filter((i) => !ctx.seenBlogUrls.has(i.url));
+    // posts already judged "not engineering" are remembered, so they are not fetched and sent to Gemini again
+    const items: typeof candidates = [];
+    for (const i of candidates) {
+      if (items.length >= 5) break;
+      if (!(await ctx.cache.get(`blog-skip:${i.url}`).catch(() => null))) items.push(i);
+    }
     checked.push(`${items.length} new posts from the last 12 months`);
+    let skipped = 0;
     for (const item of items) {
       const page = await fetchText(item.url, { fetchImpl: ctx.fetch, timeoutMs: 15000, retries: 1 }).catch(() => null);
       const text = page?.text ? articleText(page.text).slice(0, 40_000) : "";
       let topic = "";
       let mentions: VerifiedMention[] = [];
       let extraction: "ok" | "skipped" | "failed" = "skipped";
+      let aboutEngineering: boolean | null = null;
       if (text && ctx.extractBlog) {
         const ex = await ctx.extractBlog(item.title, text.slice(0, 15_000)).catch(() => null);
         if (ex) {
           topic = String(ex.topic ?? "").slice(0, 200);
+          aboutEngineering = typeof ex.about_engineering === "boolean" ? ex.about_engineering : null;
           mentions = verifyMentions(ex, text, ctx.dict).kept;
           extraction = "ok";
         } else extraction = "failed";
+      }
+      // Gemini's judgement when available; the title rule only when extraction did not run
+      const engineering = mentions.length > 0 || (aboutEngineering ?? isEngineeringPost(item.title, topic, 0));
+      if (!engineering) {
+        skipped++;
+        if (extraction === "ok") await ctx.cache.set(`blog-skip:${item.url}`, null, { title: item.title, topic }).catch(() => {});
+        continue;
       }
       signals.push({
         source: "blog",
         kind: "blog_post",
         name: item.title,
-        detail: { topic, host: hostnameOf(item.url), extraction },
+        detail: { topic, host: hostnameOf(item.url), extraction, about_engineering: true },
         evidenceUrl: item.url,
         observedAt: item.publishedAt!,
       });
@@ -242,6 +267,7 @@ export const blogCollector: Collector = {
         });
       }
     }
+    if (skipped) checked.push(`${skipped} post${skipped > 1 ? "s" : ""} skipped: not about engineering`);
     return { signals, checked, updates };
   },
 };

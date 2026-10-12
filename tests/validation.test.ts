@@ -282,3 +282,14 @@ describe("targeting validation", async () => {
     }
   });
 });
+
+describe("engineering posts only", async () => {
+  const { isEngineeringPost } = await import("../src/collectors/blog");
+  it.each([
+    ["Watch the teaser trailer for 'Bloodaxe', the epic Viking drama coming to Prime Video", "", 0, false],
+    ["Amazon announces new holiday deals", "retail promotions", 0, false],
+    ["How we cut CI time in half with Bazel", "", 0, true],
+    ["Scaling ML model inference at CRED", "", 0, true],
+    ["Our year in review", "company culture", 2, true], // names verified technologies
+  ])("%s -> %s", (title, topic, techs, expected) => expect(isEngineeringPost(title as string, topic as string, techs as number)).toBe(expected));
+});
