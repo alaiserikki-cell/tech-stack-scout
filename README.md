@@ -16,7 +16,7 @@ FlakeGuard is a tech-stack intelligence app for Nikhil, an enterprise account ex
   2. **Add a company by domain.** On the watchlist, type a domain (e.g. `posthog.com`) and press **Add company**. You land on its page while the brief builds (about a minute). Auto-discovered sources show as *Unverified* with Confirm / Edit.
   3. **Email yourself the digest.** Open **Digests**, pick the current week (or build it), enter your email under *Email me this digest*. Max 3 per address per day; the address is never stored or shown. Note: the demo sends through a Resend account without a verified domain, so delivery only succeeds to the project owner's inbox. The digest page shows the exact email, and other addresses get an explanation (see BLOCKED.md).
 
-Other pages: **Digests** (weekly ranking with a fit-vs-momentum priority map), **Activity** (one timeline of every add, remove, refresh, review, digest and daily run), **How it works** (steps, both scores, sources, what the AI does), **Targeting** (what you sell, who you target, what matters most).
+Pages, in order of priority: **Landing** `/` (how it works, both scores, sources, and a live "Right now" strip with the top accounts) · **Watchlist** `/watchlist` · **This week** `/digests` (Monday ranking with a priority map) · **Targeting** `/settings` (what you sell, who you target, what matters most) · **Activity** `/activity` (every add, remove, refresh, review, digest and daily run). `npm run linkcheck <url>` crawls every page and checks every link.
 
 
 ## Two scores
