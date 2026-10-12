@@ -135,3 +135,42 @@ describe("fit with sdk_heavy", async () => {
     expect(sdk.score).toBeLessThan(normal.score);
   });
 });
+
+describe("activity edge cases", async () => {
+  const { classifyEdgeCases } = await import("../src/lib/edge-cases");
+  const at = (h: number) => new Date(Date.UTC(2026, 9, 12, h));
+  const c = (companyId: number, domain: string, removal: string | null, h: number, added: string | null = null, active = false) => ({
+    companyId,
+    domain,
+    active,
+    removedAt: at(h),
+    removalSummaries: removal ? [removal] : [],
+    addedSummary: added,
+  });
+  const r = classifyEdgeCases([
+    c(22, "gmail.com", "Removed Gmail (gmail.com): a shared email service, not a company", 7),
+    c(24, "radhikaapte-wishes.com", "Removed X (radhikaapte-wishes.com): the domain has no website (no DNS records)", 7),
+    c(25, "hackedhere.something", "Removed X (hackedhere.something): the domain has no website (no DNS records)", 8),
+    c(23, "randommail.com", "Removed X (randommail.com): the domain exists but no website responds there", 8),
+    c(19, "apple.in", "Removed Apple (apple.in): it redirects to apple.com, already tracked as Apple", 6),
+    c(39, "amazon.in", "Removed Amazon (amazon.in): same company as Amazon (amazon.com), already tracked", 12),
+    c(29, "gen.xyz", null, 11, "Added Gen (gen.xyz), typed as com.com"),
+    c(14, "resend.com", null, 5), // removed by the user: not an edge case
+    c(7, "stripe.com", null, 5, null, true), // active
+  ]);
+  it("hides every company that failed validation, and nothing else", () => {
+    expect([...r.hidden].sort((a, b) => a - b)).toEqual([19, 22, 23, 24, 25, 29, 39]);
+  });
+  it("keeps one plain-words example per reason", () => {
+    expect(r.examples.map((e) => e.text).sort()).toEqual(
+      [
+        "amazon.in merged: same company as Amazon (amazon.com), already tracked",
+        "apple.in merged: redirects to apple.com, already tracked",
+        "com.com rejected: it redirects to gen.xyz, a domain registrar, not a company",
+        "gmail.com rejected: a shared email service, not a company",
+        "radhikaapte-wishes.com rejected: the domain does not exist (no DNS records)",
+        "randommail.com rejected: the domain exists but no website responds there",
+      ].sort(),
+    );
+  });
+});

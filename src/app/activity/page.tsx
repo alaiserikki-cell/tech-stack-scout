@@ -1,10 +1,11 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { connection } from "next/server";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/db/client";
 import { ActivityFeed, type FeedItem } from "@/components/activity-feed";
 import { RETENTION, nextCleanup } from "@/lib/cleanup";
+import { classifyEdgeCases } from "@/lib/edge-cases";
 import { Mint, PageTitle, SkeletonPage, fmtDateTime } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Activity" };
@@ -31,13 +32,33 @@ export default function ActivityPage() {
 async function ActivityData() {
   await connection();
   const db = getDb();
-  const [rows, [lastCron], running] = await Promise.all([
+  const [rows, [lastCron], running, inactive, lifecycle] = await Promise.all([
     db.select().from(schema.activityLog).orderBy(desc(schema.activityLog.at)).limit(300),
     db.select().from(schema.activityLog).where(eq(schema.activityLog.type, "cron_run")).orderBy(desc(schema.activityLog.at)).limit(1),
     db.select({ n: schema.refreshRuns.id }).from(schema.refreshRuns).where(eq(schema.refreshRuns.status, "running")),
+    db.select({ id: schema.watchlist.id, domain: schema.watchlist.domain }).from(schema.watchlist).where(eq(schema.watchlist.active, false)),
+    db
+      .select({ companyId: schema.activityLog.companyId, type: schema.activityLog.type, actor: schema.activityLog.actor, summary: schema.activityLog.summary, at: schema.activityLog.at })
+      .from(schema.activityLog)
+      .where(and(inArray(schema.activityLog.type, ["company_added", "company_removed"]))),
   ]);
+  // companies that only existed because a domain failed validation: one plain-words example per reason (display only)
+  const edge = classifyEdgeCases(
+    inactive.map((c) => {
+      const mine = lifecycle.filter((l) => l.companyId === c.id);
+      const removals = mine.filter((l) => l.type === "company_removed");
+      return {
+        companyId: c.id,
+        domain: c.domain,
+        active: false,
+        removedAt: removals.length ? removals.map((r) => r.at).sort((a, b) => b.getTime() - a.getTime())[0] : null,
+        removalSummaries: removals.filter((r) => r.actor === "system").map((r) => r.summary),
+        addedSummary: mine.find((l) => l.type === "company_added")?.summary ?? null,
+      };
+    }),
+  );
   // past "email not delivered" entries are no longer relevant (the app no longer sends email); hidden, not deleted
-  const shown = rows.filter((r) => !(r.type === "digest_sent" && /not delivered/i.test(r.summary)));
+  const shown = rows.filter((r) => !(r.type === "digest_sent" && /not delivered/i.test(r.summary)) && !(r.companyId != null && edge.hidden.has(r.companyId)));
   const items: FeedItem[] = shown.map((r) => ({
     id: r.id,
     at: r.at.toISOString(),
@@ -47,6 +68,8 @@ async function ActivityData() {
     summary: r.summary,
     status: typeof r.detail?.status === "string" ? (r.detail.status as string) : undefined,
   }));
+  items.push(...edge.examples.map((e, i) => ({ id: -(i + 1), at: e.at.toISOString(), type: "edge_case", actor: "system", companyId: null, summary: e.text })));
+  items.sort((a, b) => b.at.localeCompare(a.at));
   const now = new Date();
   return (
     <div className="space-y-6">

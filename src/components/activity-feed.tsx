@@ -20,7 +20,10 @@ const GROUPS: { key: string; label: string; types: string[] }[] = [
   { key: "review", label: "Reviews", types: ["source_confirmed", "source_edited", "opener_feedback", "entry_verified", "profile_saved"] },
   { key: "digest", label: "Digests", types: ["digest_built", "digest_sent"] },
   { key: "system", label: "Daily job & cleanup", types: ["cron_run", "cleanup_run"] },
+  { key: "edge", label: "Edge cases handled", types: ["edge_case"] },
 ];
+/** Edge cases appear only under their own chip, not in "All". */
+const ONLY_IN_OWN_CHIP = new Set(["edge_case"]);
 
 const META: Record<string, { icon: string; tone: string }> = {
   company_added: { icon: "+", tone: "bg-accent text-accent-fg" },
@@ -37,6 +40,7 @@ const META: Record<string, { icon: string; tone: string }> = {
   profile_saved: { icon: "✎", tone: "bg-surface-2 text-ink" },
   digest_built: { icon: "✉", tone: "bg-surface-2 text-ink" },
   digest_sent: { icon: "✉", tone: "bg-accent-soft text-accent-ink" },
+  edge_case: { icon: "⚑", tone: "bg-warn/10 text-warn" },
 };
 
 const ACTOR: Record<string, string> = { visitor: "You", system: "System", cron: "Daily job" };
@@ -54,11 +58,12 @@ function dayLabel(iso: string): string {
 
 export function ActivityFeed({ items }: { items: FeedItem[] }) {
   const [group, setGroup] = useState("all");
-  const counts = useMemo(() => Object.fromEntries(GROUPS.map((g) => [g.key, g.types.length ? items.filter((i) => g.types.includes(i.type)).length : items.length])), [items]);
-  const shown = useMemo(() => {
-    const g = GROUPS.find((x) => x.key === group)!;
-    return g.types.length ? items.filter((i) => g.types.includes(i.type)) : items;
-  }, [items, group]);
+  const pick = (key: string) => {
+    const g = GROUPS.find((x) => x.key === key)!;
+    return g.types.length ? items.filter((i) => g.types.includes(i.type)) : items.filter((i) => !ONLY_IN_OWN_CHIP.has(i.type));
+  };
+  const counts = useMemo(() => Object.fromEntries(GROUPS.map((g) => [g.key, pick(g.key).length])), [items]); // eslint-disable-line react-hooks/exhaustive-deps
+  const shown = useMemo(() => pick(group), [items, group]); // eslint-disable-line react-hooks/exhaustive-deps
   const days = useMemo(() => {
     const m = new Map<string, FeedItem[]>();
     for (const i of shown) {
