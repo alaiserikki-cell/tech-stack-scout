@@ -10,6 +10,7 @@ import { verifyMentions, parseFeed } from "../src/collectors/blog";
 import { changeEvents, computeFields, confidenceFor, evidenceScore, fitScore, signalHash, updateTechState, type Computed } from "../src/lib/compute";
 import { stripInlineIds, validateBrief, type BriefSignal } from "../src/lib/brief";
 import { rankAccounts } from "../src/lib/digest";
+import { ProfileZ } from "../src/lib/profile-schema";
 import { isTalkUrl, selectTalks, talkTechMatches } from "../src/collectors/talks";
 
 const dict = dictJson as DictEntry[];
@@ -443,4 +444,13 @@ describe("GitHub org proof", () => {
     expect(orgWebsiteMatches("", "stripe.com")).toBe(false);
     expect(orgWebsiteMatches(null, "stripe.com")).toBe(false);
   });
+});
+
+describe("targeting profile validation", () => {
+  it("accepts a profile that sets importance for only some factors", () => {
+    const r = ProfileZ.safeParse({ ...profile, target_clouds: ["AWS"], importance: { activity: 2, ci: 0 } });
+    expect(r.success).toBe(true);
+  });
+  it("accepts a profile with no importance at all", () => expect(ProfileZ.safeParse(profile).success).toBe(true));
+  it("rejects an invalid importance level", () => expect(ProfileZ.safeParse({ ...profile, importance: { ci: 5 } }).success).toBe(false));
 });

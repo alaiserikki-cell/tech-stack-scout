@@ -20,6 +20,17 @@ async function status(url: string, method: "HEAD" | "GET" = "HEAD"): Promise<num
   }
 }
 
+/** Hacker News throttles bursts of page requests (HTTP 419), so HN items are checked through HN's official API. */
+async function checkExternal(url: string): Promise<number> {
+  const hn = url.match(/^https:\/\/news\.ycombinator\.com\/item\?id=(\d+)$/);
+  if (hn) {
+    const r = await fetch(`https://hacker-news.firebaseio.com/v0/item/${hn[1]}.json`).catch(() => null);
+    const j = r?.ok ? await r.json().catch(() => null) : null;
+    return j && !j.deleted && !j.dead ? 200 : 404;
+  }
+  return status(url);
+}
+
 function links(html: string): string[] {
   return [...html.matchAll(/<a\b[^>]*\bhref="([^"#][^"]*)"/g)].map((m) => m[1].replace(/&amp;/g, "&"));
 }
@@ -64,10 +75,10 @@ async function main() {
   const ext = [...external.keys()];
   for (let i = 0; i < ext.length; i += 8) {
     const batch = ext.slice(i, i + 8);
-    const res = await Promise.all(batch.map((u) => status(u)));
+    const res = await Promise.all(batch.map((u) => checkExternal(u)));
     batch.forEach((u, j) => {
       const s = res[j];
-      if ([401, 403, 429, 999].includes(s)) blocked.push(`${s} ${u}`);
+      if ([401, 403, 419, 429, 999].includes(s)) blocked.push(`${s} ${u}`);
       else if (s === 0 || s >= 400) {
         broken++;
         console.log(`BROKEN external ${u} -> ${s} (on ${[...external.get(u)!].slice(0, 2).join(", ")})`);

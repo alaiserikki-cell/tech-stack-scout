@@ -37,7 +37,9 @@ export async function GET(req: Request) {
       const d = existing ?? (await buildDigest(weekOf));
       const to = process.env.DIGEST_TO;
       if (to && emailConfigured()) {
+        if (!existing) await logActivity("digest_built", `Built the digest for the week of ${weekOf}`, { actor: "cron", detail: { digestId: d.id } });
         const status = await sendDigest(d.id, to);
+        await logActivity("digest_sent", status === "sent" ? "Emailed this week's digest to the digest inbox" : `Weekly digest email not delivered (${status})`, { actor: "cron", detail: { digestId: d.id, status } });
         await db.update(schema.digests).set({ emailStatus: status }).where(eq(schema.digests.id, d.id));
         digest = `built and ${status}`;
       } else {
