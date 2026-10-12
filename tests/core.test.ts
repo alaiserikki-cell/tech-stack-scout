@@ -3,7 +3,7 @@ import dictJson from "../data/tech-dictionary.json";
 import profileJson from "../data/product-profile.json";
 import type { DictEntry, ProductProfile, Signal } from "../src/lib/types";
 import { aggregateLanguages, isSdkHeavy, orgWebsiteMatches, parseManifest } from "../src/collectors/github";
-import { matchFiles, matchDependencies, detectCompetitors, pathMatches, matchText } from "../src/lib/dictionary";
+import { matchFiles, matchDependencies, pathMatches, matchText } from "../src/lib/dictionary";
 import { atsFromHtml, detectInitiatives, isEngineeringRole, matchJobTech, workdayPostedDate } from "../src/collectors/jobs";
 import { htmlToLines } from "../src/lib/text";
 import { verifyMentions, parseFeed } from "../src/collectors/blog";
@@ -145,25 +145,12 @@ describe("adopted / dropped", () => {
   });
 });
 
-describe("competitor detection", () => {
-  const comps = profile.competitors_and_adjacent;
-  it("matches action names in workflow text and exact dependency names", () => {
-    const r = detectCompetitors(comps, [{ name: "buildkite-test-collector", where: "pkg" }], [{ text: "- uses: trunk-io/analytics-uploader@v1", where: "wf" }]);
-    expect(r.map((x) => x.competitor).sort()).toEqual(["Buildkite Test Engine", "Trunk Flaky Tests"]);
-  });
-  it("ignores verify:true competitors and bare words in prose", () => {
-    const r = detectCompetitors(comps, [], [{ text: "uses: buildpulse/buildpulse-action@v5\n# this is launchable", where: "wf" }]);
-    expect(r).toEqual([]);
-  });
-});
-
 function baseComputed(over: Partial<Computed> = {}): Computed {
   return {
     languages: [],
     jobLanguages: [],
     techs: [],
     hosting: [],
-    competitors: [],
     activity: { label: "unknown", pushed30: null, pushed90: null, created90: null, totalRepos: null, engineeringJobs: null },
     sdkHeavy: false,
     initiatives: [],
@@ -197,17 +184,16 @@ describe("fit score", () => {
 });
 
 describe("change events", () => {
-  const prev = baseComputed({ initiatives: [], competitors: [], blogPosts: [{ title: "a", url: "u1", date: daysAgo(10), topic: "", signalId: 1 }], activity: { ...baseComputed().activity, engineeringJobs: 10 } });
+  const prev = baseComputed({ initiatives: [], blogPosts: [{ title: "a", url: "u1", date: daysAgo(10), topic: "", signalId: 1 }], activity: { ...baseComputed().activity, engineeringJobs: 10 } });
   const curr = baseComputed({
     initiatives: [{ label: "Migration", sentence: "Migrating from Jenkins to GitHub Actions.", jobTitle: "SRE", evidenceUrl: "j", signalId: 2, date: daysAgo(1) }],
-    competitors: [{ name: "Trunk Flaky Tests", match: "trunk-io/analytics-uploader", evidenceUrl: "w", signalId: 3 }],
     blogPosts: [{ title: "a", url: "u1", date: daysAgo(10), topic: "", signalId: 1 }, { title: "b", url: "u2", date: daysAgo(2), topic: "", signalId: 4 }],
     activity: { ...baseComputed().activity, engineeringJobs: 16 },
   });
-  it("emits initiative, competitor, hiring spike, new tech, dropped tech and new post", () => {
+  it("emits initiative, hiring spike, new tech, dropped tech and new post", () => {
     const ev = changeEvents(curr, prev, ["Kotlin"], ["Ruby"], NOW).map((e) => e.type);
-    expect(ev.slice(0, 4)).toEqual(["competitor_appeared", "new_initiative", "hiring_spike", "new_tech"]);
-    expect(ev.slice(4).sort()).toEqual(["dropped_tech", "new_blog_post"]); // equal weight, ordered by date
+    expect(ev.slice(0, 3)).toEqual(["new_initiative", "hiring_spike", "new_tech"]);
+    expect(ev.slice(3).sort()).toEqual(["dropped_tech", "new_blog_post"]); // equal weight, ordered by date
   });
   it("emits nothing on the first run", () => expect(changeEvents(curr, null, ["Kotlin"], [], NOW)).toEqual([]));
   it("no hiring spike below +50%", () => {

@@ -113,7 +113,6 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
           <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
             {computed && <LevelPill level={computed.activity.label} kind="activity" />}
             {computed && <LevelPill level={computed.coverage} kind="coverage" />}
-            {computed?.competitors.length ? <Badge tone="warn">Uses a rival tool: {computed.competitors[0].name}</Badge> : null}
             <span className={isStale(company.lastRefreshedAt, now) ? "font-medium text-bad" : "text-faint"}>Refreshed {ago(company.lastRefreshedAt, now)}</span>
             {!company.active && <span className="text-warn">· Removed from the dashboard</span>}
             <span className="ml-auto">
@@ -325,7 +324,7 @@ function WhatChanged({ history, dropped }: { history: { events: ChangeEvent[]; a
               <p className="text-xs text-faint">{fmtDate(e.type === "new_blog_post" || e.type === "new_hn_story" || e.type === "new_initiative" ? e.date : e.at)}</p>
               <p>
                 {e.type === "new_tech" && <Badge tone="good">new</Badge>} {e.type === "dropped_tech" && <Badge tone="bad">dropped</Badge>}{" "}
-                {e.type === "competitor_appeared" && <Badge tone="warn">competitor</Badge>} {e.evidenceUrl ? <Ext href={e.evidenceUrl}>{e.title}</Ext> : e.title}
+                {e.evidenceUrl ? <Ext href={e.evidenceUrl}>{e.title}</Ext> : e.title}
               </p>
             </li>
           ))}
@@ -525,7 +524,7 @@ function Evidence({ c, company }: { c: Computed; company: typeof schema.watchlis
         )}
       </Card>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div>
         <Card>
           <H2>Public-facing hosting</H2>
           {c.hosting.length ? (
@@ -540,23 +539,6 @@ function Evidence({ c, company }: { c: Computed; company: typeof schema.watchlis
             <p className="text-sm text-muted">No known CDN or host pattern in DNS or response headers.</p>
           )}
           <p className="mt-2 text-[11px] text-faint">Describes the public website only, not where the backend runs.</p>
-        </Card>
-        <Card>
-          <H2>Rival tools in use (yours, not theirs)</H2>
-          {c.competitors.length ? (
-            <ul className="space-y-1 text-sm">
-              {c.competitors.map((x) => (
-                <li key={x.name}>
-                  <span className="text-warn">{x.name}</span> <span className="text-xs text-faint">matched </span>
-                  <Ext href={x.evidenceUrl} className="font-mono text-xs">
-                    {x.match}
-                  </Ext>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-muted">None detected in recent repos' manifests and workflows.</p>
-          )}
         </Card>
       </div>
     </section>
@@ -677,7 +659,6 @@ function sourceLabel(s: SigRow): string {
     if (s.kind === "org") return `github.com/${s.name}`;
     if (s.kind === "activity") return "Recently pushed repositories";
     if (s.kind === "language") return `${s.name}: ${d.pct}% of recent code`;
-    if (s.kind === "competitor") return `${s.name} config (${d.match})`;
     const path = d.path ?? d.dependency;
     return `${s.name}${d.repo ? ` in ${d.repo}` : ""}${path ? ` (${path})` : ""}`;
   }

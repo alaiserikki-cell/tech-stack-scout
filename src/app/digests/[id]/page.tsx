@@ -11,7 +11,6 @@ import { Ext, FitRing, Mint, SkeletonPage, cx, fmtDate } from "@/components/ui";
 export const metadata: Metadata = { title: "Digest" };
 
 const WHY_LABEL: Record<string, string> = {
-  competitor_appeared: "Competitor spotted",
   new_initiative: "New initiative",
   hiring_spike: "Hiring spike",
   new_tech: "New tech",

@@ -491,7 +491,6 @@ export interface WatchRow {
   activity: string;
   languages: string[];
   languagesFrom: "code" | "jobs" | null;
-  competitor: string | null;
   lastRefreshed: string | null;
   lastRefreshedLabel: string;
   stale: boolean;
@@ -517,10 +516,10 @@ function sortValue(r: WatchRow, k: SortKey): string | number {
 
 /** CSV of the visible rows: built in the browser, no server cost. */
 function downloadCsv(rows: WatchRow[]) {
-  const head = ["Company", "Domain", "Fit score", "Info score", "Info", "Activity", "Top languages", "Rival tool in use", "Coverage", "Changes this week", "Last refreshed", "Technologies"];
+  const head = ["Company", "Domain", "Fit score", "Info score", "Info", "Activity", "Top languages", "Coverage", "Changes this week", "Last refreshed", "Technologies"];
   const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
   const lines = rows.map((r) =>
-    [r.name, r.domain, r.fit, r.info, r.infoLabel, r.activity, r.languages.join("; "), r.competitor, r.coverage, r.changes, r.lastRefreshed, r.techs.join("; ")].map(esc).join(","),
+    [r.name, r.domain, r.fit, r.info, r.infoLabel, r.activity, r.languages.join("; "), r.coverage, r.changes, r.lastRefreshed, r.techs.join("; ")].map(esc).join(","),
   );
   const blob = new Blob([[head.map(esc).join(","), ...lines].join("\n")], { type: "text/csv" });
   const a = document.createElement("a");
@@ -602,9 +601,6 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
               <th scope="col" className="px-3 py-2.5 font-medium">
                 Top languages
               </th>
-              <th scope="col" className="px-3 py-2.5 font-medium">
-                <span title="A product that overlaps with what you sell, found in their code (e.g. Develocity). A rival of yours, not of theirs.">Rival tool in use</span>
-              </th>
               {th("lastRefreshed", "Freshness")}
               {th("coverage", "Coverage")}
               {th("changes", "Changes")}
@@ -649,7 +645,6 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
                     )}
                   </span>
                 </td>
-                <td className="px-3 py-3 text-xs">{r.competitor ? <span className="rounded-full bg-warn/10 px-2 py-0.5 font-medium text-warn" title={`${r.competitor} overlaps with what you sell and was found in their code`}>{r.competitor}</span> : <span className="text-faint">None seen</span>}</td>
                 <td className="px-3 py-3 text-xs">
                   <span className={r.stale ? "font-medium text-bad" : "text-muted"}>{r.running ? "Refreshing…" : r.lastRefreshedLabel}</span>
                 </td>
@@ -725,7 +720,6 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
                 </div>
                 <p className="mt-2 text-xs">
                   <span className={r.stale ? "font-medium text-bad" : "text-faint"}>{r.running ? "Refreshing…" : `Refreshed ${r.lastRefreshedLabel}`}</span>
-                  {r.competitor && <span className="text-warn"> · uses rival {r.competitor}</span>}
                 </p>
               </Link>
               <div className="-mt-1 flex justify-end px-2 pt-2">
@@ -821,7 +815,7 @@ export function BuildDigestButton() {
 // ---------------------------------------------------------------------------
 // Settings
 // ---------------------------------------------------------------------------
-export function VerifyButton({ type, name }: { type: "dictionary" | "competitor"; name: string }) {
+export function VerifyButton({ type, name }: { type: "dictionary"; name: string }) {
   const [done, setDone] = useState(false);
   const router = useRouter();
   const { run, gate, err } = useGuarded();

@@ -1,4 +1,4 @@
-import type { Category, Competitor, DictEntry } from "./types";
+import type { Category, DictEntry } from "./types";
 import { boundaryRegex } from "./text";
 
 /** Entries with verify:true are excluded from matching until marked verified in /settings. */
@@ -107,45 +107,6 @@ export function matchDependencies(deps: string[], dict: DictEntry[]): DepMatch[]
     if (!e.dependency_names.length) continue;
     const hit = deps.find((d) => e.dependency_names.some((p) => depMatches(d, p)));
     if (hit) out.push({ entry: e, dep: hit });
-  }
-  return out;
-}
-
-export interface CompetitorMatch {
-  competitor: string;
-  match: string;
-  where: string;
-}
-
-/**
- * Competitor detection. Strings with "/", "." or a space (action names, plugin ids, CLI phrases)
- * are matched as substrings of fetched config text; bare words only as exact dependency names.
- */
-export function detectCompetitors(
-  competitors: Competitor[],
-  deps: { name: string; where: string }[],
-  texts: { text: string; where: string }[],
-): CompetitorMatch[] {
-  const out: CompetitorMatch[] = [];
-  for (const c of competitors) {
-    if (c.verify) continue;
-    let found: CompetitorMatch | null = null;
-    for (const s of c.detection) {
-      const needle = s.toLowerCase();
-      const d = deps.find((x) => x.name.toLowerCase() === needle);
-      if (d) {
-        found = { competitor: c.name, match: s, where: d.where };
-        break;
-      }
-      if (/[/. ]/.test(needle)) {
-        const t = texts.find((x) => x.text.toLowerCase().includes(needle));
-        if (t) {
-          found = { competitor: c.name, match: s, where: t.where };
-          break;
-        }
-      }
-    }
-    if (found) out.push(found);
   }
   return out;
 }

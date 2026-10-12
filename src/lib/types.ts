@@ -21,12 +21,6 @@ export interface DictEntry {
   verify: boolean;
 }
 
-export interface Competitor {
-  name: string;
-  detection: string[];
-  verify: boolean;
-}
-
 export interface ProductProfile {
   product_name: string;
   one_line_pitch: string;
@@ -35,7 +29,6 @@ export interface ProductProfile {
   target_languages: string[];
   target_ci_systems: string[];
   target_patterns: string[];
-  competitors_and_adjacent: Competitor[];
   proof_points: string[];
   /** optional: clouds Nikhil targets (adds a cloud factor to the fit score) */
   target_clouds?: string[];

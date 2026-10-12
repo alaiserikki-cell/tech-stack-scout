@@ -28,7 +28,7 @@ export interface FitReason {
 }
 
 export interface ChangeEvent {
-  type: "new_initiative" | "new_tech" | "dropped_tech" | "competitor_appeared" | "hiring_spike" | "new_blog_post" | "new_hn_story" | "new_talk";
+  type: "new_initiative" | "new_tech" | "dropped_tech" | "hiring_spike" | "new_blog_post" | "new_hn_story" | "new_talk";
   title: string;
   date: string;
   evidenceUrl: string | null;
@@ -49,7 +49,6 @@ export interface Computed {
   jobLanguages: { name: string; posts: number }[];
   techs: TechSummary[];
   hosting: { name: string; evidence: string; signalId: number | null }[];
-  competitors: { name: string; match: string; evidenceUrl: string | null; signalId: number | null }[];
   activity: {
     label: "high" | "medium" | "low" | "unknown";
     pushed30: number | null;
@@ -461,7 +460,6 @@ export function computeFields(args: {
     .map((s) => ({ title: s.name, url: s.evidenceUrl, host: String(s.detail.host ?? ""), date: s.observedAt, signalId: sid(s) }))
     .sort((a, b) => b.date.localeCompare(a.date));
   const hosting = signals.filter((s) => s.kind === "hosting").map((s) => ({ name: s.name, evidence: String(s.detail.evidence), signalId: sid(s) }));
-  const competitors = signals.filter((s) => s.kind === "competitor").map((s) => ({ name: s.name, match: String(s.detail.match), evidenceUrl: s.evidenceUrl, signalId: sid(s) }));
 
   // contradictions: dominant GitHub language vs dominant job-post language
   const contradictions: Contradiction[] = [];
@@ -483,7 +481,6 @@ export function computeFields(args: {
     jobLanguages,
     techs,
     hosting,
-    competitors,
     activity,
     sdkHeavy,
     initiatives,
@@ -510,7 +507,6 @@ export function computeFields(args: {
 // Change events vs previous snapshot
 // ---------------------------------------------------------------------------
 export const EVENT_WEIGHTS: Record<ChangeEvent["type"], number> = {
-  competitor_appeared: 30,
   new_initiative: 25,
   hiring_spike: 20,
   new_tech: 10,
@@ -538,9 +534,6 @@ export function changeEvents(curr: Computed, prev: Computed | null, newTechs: st
   }
   for (const t of dropped) push({ type: "dropped_tech", title: `${t} no longer seen in two consecutive refreshes`, date: nowIso, evidenceUrl: null, signalIds: [] });
 
-  const prevComp = new Set(prev.competitors.map((c) => c.name));
-  for (const c of curr.competitors)
-    if (!prevComp.has(c.name)) push({ type: "competitor_appeared", title: `${c.name} detected (${c.match})`, date: nowIso, evidenceUrl: c.evidenceUrl, signalIds: c.signalId != null ? [c.signalId] : [] });
 
   const pj = prev.activity.engineeringJobs ?? 0;
   const cj = curr.activity.engineeringJobs ?? 0;

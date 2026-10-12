@@ -1,7 +1,7 @@
 import { onDomain, proveOwnership } from "@/lib/ownership";
 import type { Collector, CollectorContext, CollectorResult, Signal, CompanyUpdates } from "@/lib/types";
 import { fetchRetry, HttpError } from "@/lib/http";
-import { matchFiles, matchDependencies, detectCompetitors } from "@/lib/dictionary";
+import { matchFiles, matchDependencies } from "@/lib/dictionary";
 
 const API = "https://api.github.com";
 const DAY = 86_400_000;
@@ -367,16 +367,6 @@ async function collectGithub(ctx: CollectorContext, checked: string[], updates: 
     }
     signals.push(...techSeen.values());
 
-    for (const c of detectCompetitors(ctx.profile.competitors_and_adjacent, depList, texts)) {
-      signals.push({
-        source: "github",
-        kind: "competitor",
-        name: c.competitor,
-        detail: { match: c.match },
-        evidenceUrl: c.where,
-        observedAt: nowIso,
-      });
-    }
     checked.push(`${top10.length} most recently pushed repos (languages), ${top5.length} file trees, ${texts.length} config files`);
     return { signals, checked, updates };
 }

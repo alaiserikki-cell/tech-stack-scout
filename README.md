@@ -29,8 +29,6 @@ Pages, in order of priority: **Landing** `/` (how it works, both scores, sources
 | Made of | languages 20 · CI in code 20 · test suites 15 · many services 10 · monorepo 10 · hiring themes 15 · momentum 10 · target clouds 10 (only if set). Importance off/normal/high = ×0/×1/×2, rescaled to 0-100 | stack detail 30 (3 per technology/language) · source coverage 25 (5 per source type with data) · cross-checks 20 (techs seen in 2+ sources) · depth 10 (roles, hiring themes, posts and talks) · freshness 15. 70+ rich, 40-69 partial, below 40 sparse |
 | Updates | Instantly when you change your targeting (computed at read time, no AI) | On every refresh, and when you confirm a source |
 
-"FlakeGuard plugs in here" on a brief's stack map marks the layer the product works on (CI and tests).
-
 **Verified sources only, everywhere.** One ownership rule (`src/lib/ownership.ts`) decides whether a GitHub org, blog feed or careers site belongs to the company. It must be (1) on the company's domain, (2) reached by a redirect from it (`tech.flipkart.com` → `blog.flipkart.tech`), (3) linked from the company's own pages (`flipkart.com` → `flipkartcareers.com`), or (4) on a domain carrying the brand that links back (`zerodha.tech` → `zerodha.com`). A source matched by name only is stored for audit but **nothing from it is shown, scored or sent to Gemini**. Confirm it on the company page and the brief is rebuilt with it immediately.
 
 **Input validation (`src/lib/domain.ts`), two layers, each rejection with a code and a plain message.**
@@ -68,14 +66,14 @@ trigger → discover sources → collectors (GitHub · Greenhouse/Lever/Ashby ·
 
 | Collector | What it reads |
 |---|---|
-| `github` | Org repos by push date (no forks/archived). Language bytes of the 10 most recent; file trees (example apps, fixtures, vendored and docs folders ignored) + manifests (`package.json`, `requirements.txt`, `pyproject.toml`, `go.mod`, `pom.xml`, `build.gradle`, …) and workflows of the 5 most recent. Activity, `sdk_heavy`, competitor detection. ETags + rate-limit headers. |
+| `github` | Org repos by push date (no forks/archived). Language bytes of the 10 most recent; file trees (example apps, fixtures, vendored and docs folders ignored) + manifests (`package.json`, `requirements.txt`, `pyproject.toml`, `go.mod`, `pom.xml`, `build.gradle`, …) and workflows of the 5 most recent. Activity, `sdk_heavy`. ETags + rate-limit headers. |
 | `jobs` | Greenhouse, Lever, Ashby, SmartRecruiters and Workday public JSON; the board is found on the company's careers pages, following careers links one level deep (including careers sites on another domain the company links to), or by probing slugs (then unverified). Engineering roles only; technologies tagged *requirement* / *nice to have* from section headings; initiative sentences (migrations, monolith breakup, platform team, CI reliability, build times, test infra, developer productivity). |
 | `blog` | RSS/Atom feed discovered on engineering/tech/blog subdomains and paths, blog links on the homepage (Medium included), and the GitHub org's website; falls back to common feed paths when a page hides its feed tag. The 5 newest posts from the last 12 months, Gemini extraction with verbatim-quote verification. |
 | `hn` | Algolia HN stories from the last 12 months linking to the company or blog domain. |
 | `talks` | Developer conference talks (YouTube, Vimeo, InfoQ, SpeakerDeck…) from the last 3 years, found key-free via Hacker News, kept only when the company owns the talk ("at Stripe", "Vercel's…") or it pairs the company with a technology and an engineering topic. |
 | `hosting` | DNS-over-HTTPS (CNAME/A) + one HEAD request → *public-facing hosting* only (CDNs, Vercel, Netlify, Heroku, Shopify, …). |
 
-Computed in code (`src/lib/compute.ts`, weights and thresholds documented inline): language share, CI/infra/cloud/test lists, confidence (high: 2+ sources or 3+ recent job posts), adopted/dropped (`tech_state`), competitor presence, fit score 0–100 with reasons, activity label, contradictions (GitHub vs job-post language), change events, coverage, and a hash of the normalised signal set (unchanged ⇒ `skipped_unchanged`, no Gemini call).
+Computed in code (`src/lib/compute.ts`, weights and thresholds documented inline): language share, CI/infra/cloud/test lists, confidence (high: 2+ sources or 3+ recent job posts), adopted/dropped (`tech_state`), fit score 0–100 with reasons, activity label, contradictions (GitHub vs job-post language), change events, coverage, and a hash of the normalised signal set (unchanged ⇒ `skipped_unchanged`, no Gemini call).
 
 ## Stack
 
@@ -126,7 +124,7 @@ Remove a company with the link at the bottom of its page (or `update watchlist s
 
 | Command | What it does |
 |---|---|
-| `npm test` | Unit tests (Vitest): aggregation, detection, sdk_heavy, job matching, initiatives, confidence, adopted/dropped, competitors, fit, change events, hash skip, blog quotes, brief validator |
+| `npm test` | Unit tests (Vitest): aggregation, detection, sdk_heavy, job matching, initiatives, confidence, adopted/dropped, fit, change events, hash skip, blog quotes, brief validator |
 | `npm run replay` | Replays recorded fixtures through the real collectors and validators: rich company, sdk_heavy, no GitHub, no job board, invented blog mention, invalid Gemini JSON, GitHub 403, Gemini 429. Prints expected vs actual; exits 1 on any failure |
 | `npm run smoke [url] [--writes]` | End-to-end smoke test of a deployed instance (pages, API, auth guards; `--writes` also logs in) |
 | `npm run verify-seed` | Checks seed candidates against live GitHub / job boards / feeds and writes `data/seed-companies.json` |

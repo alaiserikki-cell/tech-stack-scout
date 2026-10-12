@@ -83,7 +83,6 @@ async function Accounts() {
       activity: comp?.activity.label ?? "unknown",
       languages: (comp?.languages?.length ? comp.languages.map((l) => l.name) : (comp?.jobLanguages ?? []).map((l) => l.name)).slice(0, 3),
       languagesFrom: comp?.languages?.length ? "code" : comp?.jobLanguages?.length ? "jobs" : null,
-      competitor: comp?.competitors[0]?.name ?? null,
       lastRefreshed: c.lastRefreshedAt?.toISOString() ?? null,
       lastRefreshedLabel: ago(c.lastRefreshedAt, now),
       stale: isStale(c.lastRefreshedAt, now),

@@ -98,7 +98,7 @@ export function selectBriefSignals(signals: Signal[], computed: Computed): Brief
     });
   };
   const byRecent = (a: Signal, b: Signal) => b.observedAt.localeCompare(a.observedAt);
-  for (const s of signals.filter((s) => ["org", "activity", "job_count", "language", "competitor", "hosting"].includes(s.kind))) add(s);
+  for (const s of signals.filter((s) => ["org", "activity", "job_count", "language", "hosting"].includes(s.kind))) add(s);
   const techGroups = new Map<string, Signal[]>();
   for (const s of signals.filter((s) => s.kind === "tech")) {
     const k = `${s.source}|${s.name}`;
@@ -140,7 +140,6 @@ export function buildBriefPrompt(profile: ProductProfile, sigs: BriefSignal[], c
     fit_score: computed.fit.score,
     fit_reasons: computed.fit.reasons.map((r) => r.reason),
     coverage: computed.coverage,
-    competitors_present: computed.competitors.map((x) => x.name),
     technologies: computed.techs.slice(0, 40).map((t) => ({ name: t.name, category: t.category, confidence: t.confidence, sources: t.sources, job_posts: t.jobPosts })),
   };
   return [

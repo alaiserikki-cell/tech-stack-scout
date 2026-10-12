@@ -11,7 +11,6 @@ export const ProfileZ = z.object({
   target_languages: z.array(z.string().max(40)).max(30),
   target_ci_systems: z.array(z.string().max(40)).max(20),
   target_patterns: z.array(z.string().max(60)).max(20),
-  competitors_and_adjacent: z.array(z.object({ name: z.string().max(80), detection: z.array(z.string().max(120)).max(20), verify: z.boolean() })).max(20),
   proof_points: z.array(z.string().max(300)).max(10),
   target_clouds: z.array(z.string().max(40)).max(20).optional(),
   importance: z

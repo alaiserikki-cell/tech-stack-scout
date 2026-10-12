@@ -65,7 +65,6 @@ async function main() {
     check("rich", "CI systems", ["Buildkite", "CircleCI", "GitHub Actions", "Jenkins"], names("ci"));
     check("rich", "infra includes Bazel, Docker, Helm, Nx, Terraform", true, ["Bazel", "Docker", "Helm", "Nx", "Terraform"].every((n) => names("infra").includes(n)));
     check("rich", "test frameworks", ["Jest", "Playwright", "testify"], names("test_framework"));
-    check("rich", "competitor", ["Trunk Flaky Tests"], r.computed.competitors.map((c) => c.name));
     check("rich", "engineering jobs (sales role excluded)", 3, r.computed.activity.engineeringJobs);
     check("rich", "initiatives", ["Migration", "Test infrastructure"], r.computed.initiatives.map((i) => i.label).sort());
     check("rich", "Terraform tagged nice_to_have", "nice_to_have", r.signals.find((s) => s.source === "jobs" && s.name === "Terraform")?.requirementLevel);

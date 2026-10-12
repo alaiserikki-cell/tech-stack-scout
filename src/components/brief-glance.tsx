@@ -40,7 +40,6 @@ export function glancePoints(c: Computed): GlancePoint[] {
   if (latest) pts.push({ label: "Latest signal", value: latest.text, href: latest.href });
 
   const watch = [
-    c.competitors[0] ? `Already uses a rival tool: ${c.competitors[0].name}` : null,
     c.contradictions[0] ? `GitHub says ${c.contradictions[0].github}, jobs say ${c.contradictions[0].jobs}` : null,
     c.sdkHeavy ? "Public repos are mostly SDKs" : null,
   ].filter(Boolean);
@@ -69,9 +68,9 @@ export function AtAGlance({ c }: { c: Computed }) {
   );
 }
 
-const LANES: { key: string; title: string; cats: string[]; fit?: boolean }[] = [
+const LANES: { key: string; title: string; cats: string[] }[] = [
   { key: "code", title: "Code", cats: ["language", "framework"] },
-  { key: "build", title: "Build & test", cats: ["ci", "test_framework"], fit: true },
+  { key: "build", title: "Build & test", cats: ["ci", "test_framework"] },
   { key: "ship", title: "Ship & run", cats: ["infra", "cloud"] },
   { key: "data", title: "Data & observe", cats: ["data", "observability"] },
 ];
@@ -91,14 +90,9 @@ export function StackMap({ c, productName }: { c: Computed; productName: string 
       <ol className="grid gap-2 md:grid-cols-4 md:gap-0">
         {lanes.map((l, i) => (
           <li key={l.key} className="flex flex-col md:flex-row md:items-stretch">
-            <div className={cx("flex-1 rounded-xl border p-3", l.fit ? "border-accent/50 bg-accent-soft/40" : "border-line bg-surface-2/50")}>
+            <div className="flex-1 rounded-xl border border-line bg-surface-2/50 p-3">
               <p className="flex items-center justify-between gap-2 text-xs font-semibold text-ink">
                 {l.title}
-                {l.fit && (
-                  <span className="rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-bold text-accent-fg" title={`${productName} (what you sell) works on this layer: the CI and test tools`}>
-                    {productName} plugs in here
-                  </span>
-                )}
               </p>
               <Chips items={l.items} />
             </div>
