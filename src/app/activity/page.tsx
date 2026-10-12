@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { desc, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db/client";
 import { ActivityFeed, type FeedItem } from "@/components/activity-feed";
+import { RETENTION, nextCleanup } from "@/lib/cleanup";
 import { Mint, PageTitle, SkeletonPage, fmtDateTime } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Activity" };
@@ -47,10 +48,11 @@ async function ActivityData() {
   const now = new Date();
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Tile label="Daily job" value="08:00 IST" hint="refreshes anything older than 7 days" />
         <Tile label="Last daily run" value={lastCron ? fmtDateTime(lastCron.at) : "Not yet"} hint={lastCron ? lastCron.summary.replace(/^Daily job: /, "") : "runs once a day on Vercel"} />
         <Tile label="Next daily run" value={fmtDateTime(nextCron(now))} hint={running.length ? `${running.length} refresh running now` : "Monday runs also send the digest"} />
+        <Tile label="Next database cleanup" value={fmtDateTime(nextCleanup(now))} hint={`every 2 months; keeps ${RETENTION.days} days of history`} />
       </div>
       <ActivityFeed items={items} />
     </div>

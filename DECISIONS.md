@@ -44,6 +44,8 @@ Each entry: decision, alternatives considered, why.
 | How it works page restored, rebuilt after stackscout.ca (colour bands, numbered steps, audience cards) | Keep it removed | Your request after reviewing StackScout. |
 | Free features added: bulk add, tech search, CSV export, print to PDF | Paid enrichment APIs | Zero cost: all run in the browser or on existing endpoints. |
 
+| Cleanup every 2 months with 60-day retention, protecting everything the site still shows | Delete all data older than N days | Your request. Verified on a throwaway Neon branch with retention forced to 0 days: 8,209 old facts removed, every company kept its brief and every brief kept its sources. Postgres reuses freed space rather than shrinking the file immediately; Neon autovacuum handles that. |
+
 ## Data and matching
 
 | Decision | Alternatives | Why |

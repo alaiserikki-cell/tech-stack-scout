@@ -30,6 +30,21 @@ Pages, in order of priority: **Landing** `/` (how it works, both scores, sources
 
 **Verified sources only.** A source is verified automatically only with proof: the GitHub org's own website is the company's domain; the job board is linked from the company's careers page; the blog feed is hosted on the company's domain. Anything matched by name only stays *unverified*, earns no evidence points, and is **not sent to Gemini**, so it can never appear in an opener or summary until you confirm it.
 
+## Database cleanup (every 2 months)
+
+A second Vercel cron (`30 3 1 */2 *`: 09:00 IST on the 1st of Jan, Mar, May, Jul, Sep, Nov) calls `/api/cron/cleanup` with `CRON_SECRET`. It deletes only what nothing uses any more, keeping 60 days of history:
+
+| Data | Rule |
+|---|---|
+| Facts (signals) | from runs older than 60 days, **except** the run behind each company's current brief, so every brief keeps all its source links |
+| Snapshots | older than 60 days, always keeping each company's latest 6 ("What changed") and any with opener feedback |
+| Refresh runs | older than 60 days and no longer referenced |
+| GitHub cache / Gemini usage log | older than 60 days |
+| Rate-limit counters | older than 2 days |
+| Activity log | older than 6 months |
+
+Never deleted: companies, digests, opener feedback, tech history, dictionary, profile. Each run is logged on the Activity page. Run it by hand with `npm run cleanup` (or `npm run cleanup -- --dry` to see what would go).
+
 ## Free-of-cost features
 
 Everything runs on free tiers. Built in: bulk add (up to 10 domains at once), search the watchlist by technology (e.g. "Kubernetes"), CSV export of the watchlist, print / save a brief as PDF, conference-talk discovery, Workday and SmartRecruiters job boards, Activity log, weekly digest with a priority map.

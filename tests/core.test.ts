@@ -11,6 +11,7 @@ import { changeEvents, computeFields, confidenceFor, evidenceScore, fitScore, si
 import { stripInlineIds, validateBrief, type BriefSignal } from "../src/lib/brief";
 import { rankAccounts } from "../src/lib/digest";
 import { ProfileZ } from "../src/lib/profile-schema";
+import { nextCleanup } from "../src/lib/cleanup";
 import { isTalkUrl, selectTalks, talkTechMatches } from "../src/collectors/talks";
 
 const dict = dictJson as DictEntry[];
@@ -453,4 +454,12 @@ describe("targeting profile validation", () => {
   });
   it("accepts a profile with no importance at all", () => expect(ProfileZ.safeParse(profile).success).toBe(true));
   it("rejects an invalid importance level", () => expect(ProfileZ.safeParse({ ...profile, importance: { ci: 5 } }).success).toBe(false));
+});
+
+describe("cleanup schedule", () => {
+  it("runs on the 1st of every other month at 09:00 IST", () => {
+    expect(nextCleanup(new Date("2026-10-12T00:00:00Z")).toISOString()).toBe("2026-11-01T03:30:00.000Z");
+    expect(nextCleanup(new Date("2026-11-01T04:00:00Z")).toISOString()).toBe("2027-01-01T03:30:00.000Z");
+    expect(nextCleanup(new Date("2026-12-31T00:00:00Z")).toISOString()).toBe("2027-01-01T03:30:00.000Z");
+  });
 });

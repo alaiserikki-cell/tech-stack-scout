@@ -16,9 +16,10 @@ export interface FeedItem {
 const GROUPS: { key: string; label: string; types: string[] }[] = [
   { key: "all", label: "All", types: [] },
   { key: "companies", label: "Added & removed", types: ["company_added", "company_reactivated", "company_removed"] },
-  { key: "refresh", label: "Refreshes", types: ["refresh_requested", "refresh_finished", "cron_run"] },
+  { key: "refresh", label: "Refreshes", types: ["refresh_requested", "refresh_finished"] },
   { key: "review", label: "Reviews", types: ["source_confirmed", "source_edited", "opener_feedback", "entry_verified", "profile_saved"] },
   { key: "digest", label: "Digests", types: ["digest_built", "digest_sent"] },
+  { key: "system", label: "Daily job & cleanup", types: ["cron_run", "cleanup_run"] },
 ];
 
 const META: Record<string, { icon: string; tone: string }> = {
@@ -28,6 +29,7 @@ const META: Record<string, { icon: string; tone: string }> = {
   refresh_requested: { icon: "↻", tone: "bg-surface-2 text-ink" },
   refresh_finished: { icon: "✓", tone: "bg-accent-soft text-accent-ink" },
   cron_run: { icon: "⏱", tone: "bg-surface-2 text-ink" },
+  cleanup_run: { icon: "⌫", tone: "bg-surface-2 text-ink" },
   source_confirmed: { icon: "✓", tone: "bg-accent-soft text-accent-ink" },
   source_edited: { icon: "✎", tone: "bg-surface-2 text-ink" },
   opener_feedback: { icon: "★", tone: "bg-surface-2 text-ink" },

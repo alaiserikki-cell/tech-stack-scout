@@ -13,7 +13,8 @@ export type ActivityType =
   | "entry_verified"
   | "digest_built"
   | "digest_sent"
-  | "cron_run";
+  | "cron_run"
+  | "cleanup_run";
 
 /** Record an action in the activity log. Never throws: logging must not break the action itself. */
 export async function logActivity(
