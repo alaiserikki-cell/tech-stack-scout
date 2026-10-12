@@ -23,16 +23,18 @@ async function main() {
   console.log(`Smoke testing ${base}\n`);
 
   // pages
-  for (const p of ["/", "/watchlist", "/digests", "/activity", "/settings"]) {
+  for (const p of ["/", "/dashboard", "/digests", "/activity", "/settings"]) {
     const r = await get(p);
     check(`GET ${p}`, r.status === 200 && !/Application error|Internal Server Error/.test(r.text), `HTTP ${r.status}`);
   }
-  const home = await get("/watchlist");
+  const home = await get("/dashboard");
   const ids = [...new Set([...home.text.matchAll(/\/company\/(\d+)/g)].map((m) => Number(m[1])))];
-  check("watchlist lists companies", ids.length > 0, `${ids.length} companies`);
+  check("dashboard lists companies", ids.length > 0, `${ids.length} companies`);
+  const old = await fetch(base + "/watchlist", { redirect: "manual" });
+  check("/watchlist redirects to /dashboard", [307, 308].includes(old.status) && (old.headers.get("location") ?? "").endsWith("/dashboard"), `HTTP ${old.status}`);
   for (const id of ids.slice(0, 3)) {
     const r = await get(`/company/${id}`);
-    check(`GET /company/${id}`, r.status === 200 && /Evidence/.test(r.text), `HTTP ${r.status}`);
+    check(`GET /company/${id}`, r.status === 200 && /Info/.test(r.text) && /Fit/.test(r.text), `HTTP ${r.status}`);
   }
 
   // api
@@ -47,6 +49,11 @@ async function main() {
   const open = probe !== 401;
   console.log(`      mode: ${open ? "open (no passcode)" : "passcode required"}`);
   check("invalid domain rejected (400) or guarded (401)", probe === 400 || probe === 401, `HTTP ${probe}`);
+  const typo = await post("/api/companies", { domain: "ritzy.com.com" });
+  check("doubled ending rejected as a typo", typo.status === 400 && /typo/.test(typo.text), typo.text.slice(0, 90));
+  const dl = await get("/api/digests/1/download?format=eml");
+  check("digest downloads as an .eml draft", dl.status === 200 && /^X-Unsent: 1/.test(dl.text), `HTTP ${dl.status}`);
+  check("digest send endpoint is gone", (await post("/api/digests/1/send", { email: "a@b.co" })).status === 404);
   check("wrong passcode is rejected", (await post("/api/auth", { passcode: "not-the-passcode" })).status === 401);
 
   if (writes) {
@@ -60,8 +67,6 @@ async function main() {
     check("refresh returns a run (or the cached one within 10 min)", rf.status === 200 && /runId/.test(rf.text), rf.text.slice(0, 80));
     const bad = await post("/api/companies", { domain: "not a domain" }, cookie);
     check("invalid domain rejected", bad.status === 400);
-    const em = await post("/api/digests/1/send", { email: "nope" }, cookie);
-    check("invalid email rejected", em.status === 400);
   }
 
   console.log(`\n${failures ? `FAILED: ${failures} of ${passes + failures}` : `ALL ${passes} SMOKE CHECKS PASSED`}`);

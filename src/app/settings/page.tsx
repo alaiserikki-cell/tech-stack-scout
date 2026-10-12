@@ -9,7 +9,7 @@ import { isAuthed } from "@/lib/auth";
 import { FIT_COMPONENTS } from "@/lib/compute";
 import { latestSnapshotsByCompany } from "@/lib/queries";
 import { liveScores } from "@/lib/scores";
-import { PasscodeForm, ProfileEditor, VerifyButton } from "@/components/client";
+import { PasscodeForm, VerifyButton } from "@/components/client";
 import { TargetingForm } from "@/components/targeting-form";
 import { Card, FitRing, H2, Mint, PageTitle, SkeletonPage } from "@/components/ui";
 
@@ -27,7 +27,7 @@ export default function SettingsPage() {
             Tell us what you sell. <Mint>We rank who fits.</Mint>
           </>
         }
-        sub="Your answers drive the fit score on every account, the Monday ranking, and the angle of every opener. Change anything and the watchlist re-ranks instantly."
+        sub="Your answers drive the fit score on every account, the Monday ranking, and the angle of every opener. Change anything and the dashboard re-ranks instantly."
       />
       <Suspense fallback={<SkeletonPage rows={6} />}>
         <SettingsData />
@@ -89,11 +89,11 @@ async function SettingsData() {
                   <Link href={`/company/${c.id}`} className="min-w-0 flex-1 truncate text-sm font-medium text-ink no-underline hover:underline">
                     {c.companyName}
                   </Link>
-                  <span className="text-[11px] text-faint">ev {live.evidence.score}</span>
+                  <span className="text-[11px] text-faint">info {live.info.score}</span>
                 </li>
               ))}
             </ol>
-            <p className="mt-3 text-xs text-faint">Fit for your settings · ev = evidence score. Save to re-rank.</p>
+            <p className="mt-3 text-xs text-faint">Fit with the targeting above · info = how much verified information we have. Save to re-rank.</p>
           </Card>
           <Card>
             <H2>Entries waiting for verification</H2>
@@ -125,12 +125,6 @@ async function SettingsData() {
           </Card>
         </aside>
       </div>
-      <details className="rounded-2xl border border-line bg-surface p-5 shadow-card">
-        <summary className="cursor-pointer font-display text-[15px] font-semibold text-ink">Advanced: edit the raw profile (competitors, ideal-customer signals, proof points)</summary>
-        <div className="mt-4">
-          <ProfileEditor initial={JSON.stringify(profile, null, 2)} />
-        </div>
-      </details>
     </div>
   );
 }

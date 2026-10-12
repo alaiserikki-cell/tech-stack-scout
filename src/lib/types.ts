@@ -96,6 +96,8 @@ export interface CollectorContext {
   seenBlogUrls: Set<string>;
   extractBlog?: (title: string, text: string) => Promise<BlogExtraction | null>;
   now: Date;
+  /** Facts one collector passes to the next (the GitHub org's proven website is a place to look for the blog). */
+  hints?: { orgWebsite?: string | null };
 }
 
 export interface CollectorResult {

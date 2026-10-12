@@ -1,6 +1,7 @@
 import { and, desc, eq, inArray, gte } from "drizzle-orm";
 import { getDb, schema } from "@/db/client";
 import { COLLECTORS, runCollector } from "@/collectors";
+import { BLOG_WINDOW_DAYS } from "@/collectors/blog";
 import type { BlogExtraction, CollectorContext, CompanyInput, Signal, Source } from "./types";
 import { changeEvents, computeFields, signalHash, updateTechState, type Computed, type TechStateRow, type VerifiableSource } from "./compute";
 import { BLOG_JSON_SCHEMA, BLOG_SYSTEM, NO_SIGNAL_TEXT, generateBrief, selectBriefSignals } from "./brief";
@@ -76,7 +77,7 @@ export async function executeRun(runId: number): Promise<void> {
     const prevBlogRows = await db
       .select()
       .from(schema.signals)
-      .where(and(eq(schema.signals.companyId, company.id), eq(schema.signals.source, "blog"), gte(schema.signals.observedAt, new Date(now.getTime() - 90 * DAY))));
+      .where(and(eq(schema.signals.companyId, company.id), eq(schema.signals.source, "blog"), gte(schema.signals.observedAt, new Date(now.getTime() - BLOG_WINDOW_DAYS * DAY))));
     // posts whose Gemini extraction did not succeed are fetched again so they get extracted
     const seenBlogUrls = new Set(
       prevBlogRows.filter((r) => r.kind === "blog_post" && r.evidenceUrl && (r.detail as Record<string, unknown>).extraction === "ok").map((r) => r.evidenceUrl!),
@@ -140,7 +141,19 @@ export async function executeRun(runId: number): Promise<void> {
     for (const s of collected) uniq.set(`${s.source}|${s.kind}|${s.name}|${s.evidenceUrl}|${s.requirementLevel ?? ""}`, s);
     const signals = [...uniq.values()];
 
-    const hash = signalHash(signals);
+    // only verified sources are used: an auto-matched, unproven source could be another company's.
+    // Its signals are stored for audit, but nothing is computed, scored or shown from them until confirmed.
+    const unconfirmed = (
+      [
+        ["github", ctx.company.githubOrgVerified],
+        ["jobs", ctx.company.atsVerified],
+        ["blog", ctx.company.blogVerified],
+      ] as const
+    )
+      .filter(([src, ok]) => !ok && signals.some((x) => x.source === src))
+      .map(([src]) => src as VerifiableSource);
+    const isUsable = (s: Signal) => !unconfirmed.includes(s.source as VerifiableSource);
+    const hash = signalHash(signals.filter(isUsable));
     const prevSnap = await latestSnapshot(company.id);
     let prevHash: string | null = null;
     if (prevSnap?.runId) {
@@ -185,7 +198,8 @@ export async function executeRun(runId: number): Promise<void> {
     // tech_state: adopted / dropped
     const dictNames = new Set(dict.map((d) => d.canonical_name));
     const seen = new Map<string, string>();
-    for (const s of inserted) if (s.kind === "tech" || (s.kind === "language" && dictNames.has(s.name))) seen.set(s.name, s.observedAt);
+    const fromVerified = inserted.filter(isUsable);
+    for (const s of fromVerified) if (s.kind === "tech" || (s.kind === "language" && dictNames.has(s.name))) seen.set(s.name, s.observedAt);
     const prevState: TechStateRow[] = techStateRows.map((r) => ({
       tech: r.tech,
       status: r.status as TechStateRow["status"],
@@ -193,7 +207,8 @@ export async function executeRun(runId: number): Promise<void> {
       lastSeen: r.lastSeen.toISOString(),
       missingRuns: r.missingRuns,
     }));
-    const countMissing = !errors.github && !errors.jobs;
+    // a source that failed or is unconfirmed this run says nothing about technologies being dropped
+    const countMissing = !errors.github && !errors.jobs && !unconfirmed.includes("github") && !unconfirmed.includes("jobs");
     const ts = updateTechState(prevState, seen, now, countMissing);
     for (const r of ts.next) {
       await db
@@ -206,35 +221,17 @@ export async function executeRun(runId: number): Promise<void> {
     }
 
     // update per-signal confidence after computing
-    const computed = computeFields({ signals: inserted, dict, profile, techState: ts.next, newTechs: new Set(ts.newTechs), hasPreviousRun: Boolean(prevSnap), checked, now });
+    const computed = computeFields({ signals: fromVerified, dict, profile, techState: ts.next, newTechs: new Set(ts.newTechs), hasPreviousRun: Boolean(prevSnap), checked, now });
     computed.hash = hash;
     const events = changeEvents(computed, (prevSnap?.computed as Computed) ?? null, prevSnap ? ts.newTechs : [], ts.dropped, now);
 
     const confByTech = new Map(computed.techs.map((t) => [t.name, t.confidence]));
     for (const conf of ["high", "medium", "low"] as const) {
-      const ids = inserted.filter((s) => (s.kind === "tech" || s.kind === "language") && confByTech.get(s.name) === conf).map((s) => s.id!);
+      const ids = fromVerified.filter((s) => (s.kind === "tech" || s.kind === "language") && confByTech.get(s.name) === conf).map((s) => s.id!);
       for (let i = 0; i < ids.length; i += 500) await db.update(schema.signals).set({ confidence: conf }).where(inArray(schema.signals.id, ids.slice(i, i + 500)));
     }
 
-    // scores and the brief use verified sources only: an auto-matched, unproven source could be the wrong company
-    const excludedSources = (
-      [
-        ["github", ctx.company.githubOrgVerified],
-        ["jobs", ctx.company.atsVerified],
-        ["blog", ctx.company.blogVerified],
-      ] as const
-    )
-      .filter(([src, ok]) => !ok && inserted.some((x) => x.source === src))
-      .map(([src]) => src as VerifiableSource);
-    const fromVerified = inserted.filter((x) => !excludedSources.includes(x.source as VerifiableSource));
-    const briefComputed = excludedSources.length
-      ? computeFields({ signals: fromVerified, dict, profile, techState: ts.next, newTechs: new Set(ts.newTechs), hasPreviousRun: Boolean(prevSnap), checked, now })
-      : computed;
-    if (excludedSources.length) {
-      computed.excludedSources = excludedSources;
-      computed.verifiedOnly = briefComputed;
-      computed.fit = briefComputed.fit;
-    }
+    if (unconfirmed.length) computed.unconfirmed = unconfirmed;
 
     // brief
     await setRun({ step: "Writing brief" });
@@ -254,13 +251,13 @@ export async function executeRun(runId: number): Promise<void> {
       briefStatus = "pending";
       briefError = "GEMINI_API_KEY not configured";
     } else {
-      const sigs = selectBriefSignals(fromVerified, briefComputed);
+      const sigs = selectBriefSignals(fromVerified, computed);
       const outcome = await generateBrief({
         gemini: callGemini,
         profile,
         dict,
         sigs,
-        computed: briefComputed,
+        computed,
         events,
         unverified,
         onCall: (r) => logLlmCall({ task: "brief", model: r.model || geminiModel(), inputTokens: r.inputTokens, outputTokens: r.outputTokens, status: r.status, companyId: company.id }),

@@ -1,5 +1,6 @@
 import type { Collector, CollectorContext, CollectorResult, CompanyUpdates, DictEntry, RequirementLevel, Signal } from "@/lib/types";
 import { fetchJson, fetchText } from "@/lib/http";
+import { carriesBrand, extractLinks, onDomain } from "@/lib/ownership";
 import { htmlToLines, splitSentences, type TextLine } from "@/lib/text";
 import { matchText } from "@/lib/dictionary";
 
@@ -165,13 +166,39 @@ export function atsFromHtml(html: string): { provider: Provider; slug: string } 
   return null;
 }
 
+const CAREERS_LINK = /career|\/jobs?\b|\bjobs\.|opening|position|join[-_]?us|hiring|work[-_]with[-_]us|vacanc/i;
+
+/**
+ * Find a job board linked from the company's own careers pages (works for any supported provider).
+ * Looks at the usual careers URLs, then follows careers-looking links one level deep, including careers sites on
+ * another domain that the company links to (flipkart.com -> flipkartcareers.com) or that carry its brand.
+ */
 async function discoverFromCareersPages(ctx: CollectorContext, checked: string[]): Promise<{ provider: Provider; slug: string } | null> {
   const d = ctx.company.domain;
-  for (const u of [`https://careers.${d}`, `https://${d}/careers`, `https://www.${d}/careers`, `https://jobs.${d}`, `https://${d}/jobs`, `https://${d}/company/careers`, `https://${d}`]) {
+  const seen = new Set<string>();
+  const deeper: string[] = [];
+  const visit = async (u: string) => {
+    if (seen.has(u)) return null;
+    seen.add(u);
     checked.push(u);
     const r = await fetchText(u, { fetchImpl: ctx.fetch, timeoutMs: 8000, retries: 0 }).catch(() => null);
-    if (!r?.text) continue;
+    if (!r?.text) return null;
     const hit = atsFromHtml(r.text);
+    if (hit) return hit;
+    const fromCompany = onDomain(r.finalUrl || u, d);
+    for (const l of extractLinks(r.text, r.finalUrl || u)) {
+      if (!CAREERS_LINK.test(l) || seen.has(l)) continue;
+      // follow links on the company's domain, links the company itself publishes, and brand-named careers sites
+      if (onDomain(l, d) || fromCompany || carriesBrand(new URL(l).hostname, d)) deeper.push(l);
+    }
+    return null;
+  };
+  for (const u of [`https://careers.${d}`, `https://${d}/careers`, `https://www.${d}/careers`, `https://jobs.${d}`, `https://${d}/jobs`, `https://${d}/company/careers`, `https://${d}`]) {
+    const hit = await visit(u);
+    if (hit) return hit;
+  }
+  for (const u of [...new Set(deeper)].slice(0, 6)) {
+    const hit = await visit(u);
     if (hit) return hit;
   }
   return null;

@@ -70,7 +70,7 @@ async function main() {
     check("rich", "initiatives", ["Migration", "Test infrastructure"], r.computed.initiatives.map((i) => i.label).sort());
     check("rich", "Terraform tagged nice_to_have", "nice_to_have", r.signals.find((s) => s.source === "jobs" && s.name === "Terraform")?.requirementLevel);
     check("rich", "Bazel confidence high (GitHub + blog)", "high", r.computed.techs.find((t) => t.name === "Bazel")?.confidence);
-    check("rich", "blog posts within 90 days", ["How we cut CI time in half with Bazel"], r.computed.blogPosts.map((b) => b.title));
+    check("rich", "blog posts within 12 months (a 400-day-old post is dropped)", ["How we cut CI time in half with Bazel"], r.computed.blogPosts.map((b) => b.title));
     check("rich", "HN stories on own domain only", 1, r.computed.hnStories.length);
     check("rich", "hosting", ["Amazon CloudFront", "Vercel"], r.computed.hosting.map((h) => h.name).sort());
     check("rich", "coverage", "rich", r.computed.coverage);

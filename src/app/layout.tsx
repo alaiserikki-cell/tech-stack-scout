@@ -22,7 +22,7 @@ export const viewport: Viewport = {
 
 // ordered by how often Nikhil needs them: accounts first, then this week's ranking, then setup and history
 const NAV = [
-  { href: "/watchlist", label: "Watchlist" },
+  { href: "/dashboard", label: "Dashboard" },
   { href: "/digests", label: "This week" },
   { href: "/settings", label: "Targeting" },
   { href: "/activity", label: "Activity" },

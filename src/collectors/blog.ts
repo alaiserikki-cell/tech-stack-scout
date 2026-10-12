@@ -2,8 +2,11 @@ import type { BlogExtraction, Collector, CollectorContext, CollectorResult, Comp
 import { fetchText } from "@/lib/http";
 import { articleText, decodeEntities, normalizeText, hostnameOf, sameSite } from "@/lib/text";
 import { resolveName, textMentions } from "@/lib/dictionary";
+import { extractLinks, proveOwnership, type Proof } from "@/lib/ownership";
 
 const DAY = 86_400_000;
+/** Engineering blogs post a few times a year, so a year of posts is read (the newest 5); recency is scored separately. */
+export const BLOG_WINDOW_DAYS = 365;
 
 export interface FeedItem {
   title: string;
@@ -11,13 +14,14 @@ export interface FeedItem {
   publishedAt: string | null;
 }
 
-/** Find <link rel="alternate" type="application/rss+xml|atom+xml"> in an HTML page. */
+/** Find <link rel="alternate" type="application/rss+xml|atom+xml"> in an HTML page (quoted or unquoted attributes). */
 export function findFeedLinks(html: string, pageUrl: string): string[] {
   const out: string[] = [];
   for (const m of html.matchAll(/<link\b[^>]*>/gi)) {
     const tag = m[0];
-    if (!/rel=["']?alternate/i.test(tag) || !/type=["']?application\/(rss|atom)\+xml/i.test(tag)) continue;
-    const href = tag.match(/href=["']([^"']+)["']/i)?.[1];
+    if (!/\brel\s*=\s*["']?alternate/i.test(tag) || !/\btype\s*=\s*["']?application\/(rss|atom)\+xml/i.test(tag)) continue;
+    const hm = tag.match(/\bhref\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s"'>]+))/i);
+    const href = hm?.[1] ?? hm?.[2] ?? hm?.[3];
     if (!href) continue;
     try {
       const u = new URL(decodeEntities(href), pageUrl).toString();
@@ -27,6 +31,12 @@ export function findFeedLinks(html: string, pageUrl: string): string[] {
     }
   }
   return out;
+}
+
+/** medium.com/<publication> (or /@user) -> its RSS feed; Medium custom domains serve /feed themselves. */
+export function mediumFeed(url: string): string | null {
+  const m = url.match(/^https?:\/\/(?:www\.)?medium\.com\/(@?[A-Za-z0-9_.-]+)/i);
+  return m && !["feed", "m", "tag", "search", "about", "plans", "membership"].includes(m[1].toLowerCase()) ? `https://medium.com/feed/${m[1]}` : null;
 }
 
 function tag(block: string, name: string): string | null {
@@ -95,17 +105,66 @@ export function verifyMentions(extraction: BlogExtraction, text: string, dict: D
   return { kept, rejected };
 }
 
-export async function discoverFeed(ctx: CollectorContext, checked: string[]): Promise<string | null> {
+const FEED_PATHS = ["/feed", "/rss", "/rss.xml", "/feed.xml", "/index.xml", "/atom.xml"];
+const BLOG_LINK = /blog|engineering|\btech\b|tech\.|bytes|developers?\b|medium\.com\//i;
+
+async function validFeed(ctx: CollectorContext, url: string): Promise<boolean> {
+  const r = await fetchText(url, { fetchImpl: ctx.fetch, timeoutMs: 8000, retries: 0 }).catch(() => null);
+  return Boolean(r?.text && /<(rss|feed|rdf:RDF)\b/i.test(r.text.slice(0, 3000)) && parseFeed(r.text).length > 0);
+}
+
+/**
+ * Find the company's engineering blog feed. Candidates, in order: engineering/tech/blog subdomains and paths,
+ * blog-looking links on the homepage (Medium publications included) and the GitHub org's proven website.
+ * Each page is checked for an advertised feed, then for the usual feed paths (Medium custom domains hide the
+ * <link> tag behind bot protection but serve /feed). A feed is kept only when the ownership rule proves it.
+ */
+export async function discoverFeed(ctx: CollectorContext, checked: string[]): Promise<{ feed: string; proof: Proof } | null> {
   const d = ctx.company.domain;
-  const pages = [`https://${d}`, `https://${d}/blog`, `https://${d}/engineering`, `https://${d}/tech`, `https://engineering.${d}`, `https://blog.${d}`];
-  for (const p of pages) {
-    checked.push(p);
-    const r = await fetchText(p, { fetchImpl: ctx.fetch, timeoutMs: 8000, retries: 0 }).catch(() => null);
-    if (!r?.text) continue;
-    const links = findFeedLinks(r.text, r.finalUrl);
-    if (links.length) return links[0];
+  const home = `https://${d}`;
+  const candidates: { page: string; linkedFrom?: string }[] = [`https://engineering.${d}`, `https://tech.${d}`, `https://blog.${d}`, `https://eng.${d}`, `${home}/blog`, `${home}/engineering`, `${home}/tech`, home].map((page) => ({ page }));
+  const homeRes = await fetchText(home, { fetchImpl: ctx.fetch, timeoutMs: 8000, retries: 0 }).catch(() => null);
+  if (homeRes?.text)
+    for (const l of extractLinks(homeRes.text, homeRes.finalUrl).filter((l) => BLOG_LINK.test(l)).slice(0, 8)) candidates.push({ page: l, linkedFrom: homeRes.finalUrl });
+  if (ctx.hints?.orgWebsite) {
+    const site = /^https?:/i.test(ctx.hints.orgWebsite) ? ctx.hints.orgWebsite : `https://${ctx.hints.orgWebsite}`;
+    candidates.push({ page: site });
+    try {
+      const origin = new URL(site).origin;
+      candidates.push({ page: origin }, { page: `${origin}/blog` });
+    } catch {
+      /* not a URL */
+    }
   }
-  return null;
+
+  const seen = new Set<string>();
+  const unique = candidates.filter((c) => !seen.has(c.page) && seen.add(c.page));
+  // fetch every candidate page in parallel, then judge them in priority order
+  const pages = await Promise.all(unique.map((c) => (c.page === home ? Promise.resolve(homeRes) : fetchText(c.page, { fetchImpl: ctx.fetch, timeoutMs: 8000, retries: 0 }).catch(() => null))));
+  let fallback: { feed: string; proof: Proof } | null = null;
+  for (let i = 0; i < unique.length; i++) {
+    const { page, linkedFrom } = unique[i];
+    const r = pages[i];
+    checked.push(page);
+    if (!r) continue; // no such host
+    const finalUrl = r.finalUrl || page;
+    const feeds = r.text ? findFeedLinks(r.text, finalUrl) : [];
+    const mf = mediumFeed(finalUrl);
+    if (mf) feeds.unshift(mf);
+    if (!feeds.length && finalUrl !== homeRes?.finalUrl) {
+      const base = finalUrl.replace(/[?#].*$/, "").replace(/\/$/, "");
+      const probes = await Promise.all(FEED_PATHS.map(async (p) => ((await validFeed(ctx, base + p)) ? base + p : null)));
+      const hit = probes.find(Boolean);
+      if (hit) feeds.push(hit);
+    }
+    for (const feed of feeds.slice(0, 2)) {
+      const proof = await proveOwnership(feed, { domain: d }, { fetchImpl: ctx.fetch, linkedFrom, redirectedFrom: !sameSite(hostnameOf(finalUrl) ?? "", hostnameOf(page) ?? "") ? page : null });
+      if (proof.owned) {
+        if (await validFeed(ctx, feed)) return { feed, proof };
+      } else if (!fallback && (await validFeed(ctx, feed))) fallback = { feed, proof };
+    }
+  }
+  return fallback;
 }
 
 export const blogCollector: Collector = {
@@ -122,19 +181,21 @@ export const blogCollector: Collector = {
       return { signals, checked };
     }
     if (!feed) {
-      feed = await discoverFeed(ctx, checked);
-      if (!feed) {
+      const found = await discoverFeed(ctx, checked);
+      if (!found) {
         checked.push("No RSS or Atom feed found");
         return { signals, checked };
       }
+      feed = found.feed;
       updates.blogFeedUrl = feed;
-      // the feed was advertised on the company's own pages; it is proof when it is also hosted there
-      const fh = hostnameOf(feed);
-      updates.blogVerified = Boolean(fh && sameSite(fh, ctx.company.domain));
-    }
-    if (!ctx.company.blogVerified && !updates.blogFeedUrl && feed !== "none") {
-      const fh = hostnameOf(feed);
-      if (fh && sameSite(fh, ctx.company.domain)) updates.blogVerified = true;
+      updates.blogVerified = found.proof.owned;
+      checked.push(`Feed ${found.proof.owned ? "verified" : "not verified"}: ${found.proof.how}`);
+    } else if (!ctx.company.blogVerified) {
+      const proof = await proveOwnership(feed, { domain: ctx.company.domain }, { fetchImpl: ctx.fetch });
+      if (proof.owned) {
+        updates.blogVerified = true;
+        checked.push(`Feed verified: ${proof.how}`);
+      }
     }
     checked.push(`Feed ${feed}`);
     const r = await fetchText(feed, { fetchImpl: ctx.fetch, timeoutMs: 15000 });
@@ -143,10 +204,11 @@ export const blogCollector: Collector = {
       return { signals, checked, updates };
     }
     const items = parseFeed(r.text)
-      .filter((i) => i.publishedAt && ctx.now.getTime() - Date.parse(i.publishedAt) <= 90 * DAY)
+      .filter((i) => i.publishedAt && ctx.now.getTime() - Date.parse(i.publishedAt) <= BLOG_WINDOW_DAYS * DAY)
+      .sort((a, b) => Date.parse(b.publishedAt!) - Date.parse(a.publishedAt!))
       .filter((i) => !ctx.seenBlogUrls.has(i.url))
       .slice(0, 5);
-    checked.push(`${items.length} new posts from the last 90 days`);
+    checked.push(`${items.length} new posts from the last 12 months`);
     for (const item of items) {
       const page = await fetchText(item.url, { fetchImpl: ctx.fetch, timeoutMs: 15000, retries: 1 }).catch(() => null);
       const text = page?.text ? articleText(page.text).slice(0, 40_000) : "";

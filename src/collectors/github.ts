@@ -1,4 +1,4 @@
-import { registrableDomain } from "@/lib/domain";
+import { onDomain, proveOwnership } from "@/lib/ownership";
 import type { Collector, CollectorContext, CollectorResult, Signal, CompanyUpdates } from "@/lib/types";
 import { fetchRetry, HttpError } from "@/lib/http";
 import { matchFiles, matchDependencies, detectCompetitors } from "@/lib/dictionary";
@@ -154,21 +154,28 @@ export function orgWebsiteMatches(blog: string | null | undefined, domain: strin
   }
 }
 
+/** Example apps, fixtures, vendored and third-party code show what a repo demonstrates, not what the company runs. */
+const SAMPLE_DIR = /(^|\/)(examples?|samples?|demos?|fixtures?|test[-_]?data|testdata|__fixtures__|vendor|third[-_]party|node_modules|docs?|playground|templates?|starters?|boilerplates?)\//i;
+export function isSampleCode(path: string): boolean {
+  return SAMPLE_DIR.test(path);
+}
+
 /**
- * Org website proves ownership when it is on the company's domain, or when it redirects there
- * (Goldman Sachs' org lists gs.com, which redirects to goldmansachs.com).
+ * The org's website proves the org belongs to the company, using the shared ownership rule: same domain, a redirect
+ * (Goldman Sachs' org lists gs.com, which redirects to goldmansachs.com), or a brand domain that links back
+ * (Zerodha's org lists zerodha.tech, which links to zerodha.com).
  */
 export async function orgWebsiteProves(blog: string | null | undefined, domain: string, fetchImpl: typeof fetch = fetch): Promise<boolean> {
-  if (orgWebsiteMatches(blog, domain)) return true;
   if (!blog) return false;
   const url = /^https?:\/\//i.test(blog) ? blog : `https://${blog}`;
+  if (orgWebsiteMatches(url, domain)) return true;
   try {
     const r = await fetchImpl(url, { redirect: "follow", headers: { "user-agent": "Mozilla/5.0 (FlakeGuard org check)" }, signal: AbortSignal.timeout(8000) });
-    const host = new URL(r.url || url).hostname.toLowerCase().replace(/^www\./, "");
-    return registrableDomain(host) === registrableDomain(domain);
+    if (onDomain(r.url || url, domain)) return true;
   } catch {
-    return false;
+    /* fall through to the brand rule */
   }
+  return (await proveOwnership(url, { domain }, { fetchImpl })).owned;
 }
 
 async function guessOrg(ctx: CollectorContext, checked: string[]): Promise<{ login: string; proven: boolean } | null> {
@@ -231,12 +238,13 @@ async function collectGithub(ctx: CollectorContext, checked: string[], updates: 
       }
       updates.githubOrg = org;
       updates.githubOrgVerified = Boolean(guess?.proven);
-      checked.push(guess?.proven ? `GitHub org ${org}: verified (its website is ${ctx.company.domain})` : `GitHub org ${org}: unverified (name match only)`);
+      checked.push(guess?.proven ? `GitHub org ${org}: verified (its website belongs to ${ctx.company.domain})` : `GitHub org ${org}: unverified (name match only)`);
     }
     const orgUrl = `https://github.com/${org}`;
     const orgInfo = await gh<{ public_repos: number; login: string; blog?: string | null }>(ctx, `/orgs/${org}`);
     // an org set earlier but never verified gets verified once its website proves the link
     if (orgInfo && !ctx.company.githubOrgVerified && updates.githubOrgVerified !== true && (await orgWebsiteProves(orgInfo.blog, ctx.company.domain))) updates.githubOrgVerified = true;
+    if (orgInfo?.blog && (ctx.company.githubOrgVerified || updates.githubOrgVerified)) ctx.hints = { ...ctx.hints, orgWebsite: orgInfo.blog };
     const userInfo = orgInfo ? null : await gh<{ public_repos: number; login: string }>(ctx, `/users/${org}`);
     const owner = orgInfo ?? userInfo;
     checked.push(`GitHub ${orgUrl}`);
@@ -318,7 +326,7 @@ async function collectGithub(ctx: CollectorContext, checked: string[], updates: 
         `/repos/${r.full_name}/git/trees/${encodeURIComponent(r.default_branch)}?recursive=1`,
       );
       if (!tree) continue;
-      const paths = tree.tree.filter((t) => t.type === "blob").map((t) => t.path);
+      const paths = tree.tree.filter((t) => t.type === "blob" && !isSampleCode(t.path)).map((t) => t.path);
       for (const m of matchFiles(paths, ctx.dict)) {
         if (techSeen.has(m.entry.canonical_name)) continue;
         const s: Signal = {

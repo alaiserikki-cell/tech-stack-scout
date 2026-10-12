@@ -103,7 +103,7 @@ export const richRoutes: Route[] = [
       status: 200,
       text: `<rss><channel>
       <item><title>How we cut CI time in half with Bazel</title><link>https://acme.dev/blog/bazel</link><pubDate>${new Date(iso(6)).toUTCString()}</pubDate></item>
-      <item><title>Old post</title><link>https://acme.dev/blog/old</link><pubDate>${new Date(iso(200)).toUTCString()}</pubDate></item>
+      <item><title>Old post</title><link>https://acme.dev/blog/old</link><pubDate>${new Date(iso(400)).toUTCString()}</pubDate></item>
       </channel></rss>`,
     },
   ],

@@ -309,10 +309,10 @@ export function RemoveButton({ companyId }: { companyId: number }) {
     <div>
       {confirm ? (
         <span className="flex flex-wrap items-center gap-2 text-sm">
-          Remove from watchlist?
+          Remove from the dashboard?
           <button
             className="rounded-lg border border-bad/50 px-2 py-1 text-bad"
-            onClick={() => run(() => postJson(`/api/companies/${companyId}`, undefined, "DELETE"), () => router.push("/watchlist"))}
+            onClick={() => run(() => postJson(`/api/companies/${companyId}`, undefined, "DELETE"), () => router.push("/dashboard"))}
           >
             Remove
           </button>
@@ -322,7 +322,7 @@ export function RemoveButton({ companyId }: { companyId: number }) {
         </span>
       ) : (
         <button className="text-sm text-muted underline" onClick={() => setConfirm(true)}>
-          Remove from watchlist
+          Remove from the dashboard
         </button>
       )}
       {gate}
@@ -435,9 +435,10 @@ export function SourceControl({ companyId, field, label, value, hint }: { compan
   const submit = (action: "confirm" | "edit") =>
     run(
       () => postJson(`/api/companies/${companyId}/sources`, { field, action, value: v }),
-      () => {
-        setDone(action === "confirm" ? "Confirmed." : "Saved. Refresh to re-collect.");
+      (d) => {
+        setDone(action === "confirm" ? "Confirmed. Rebuilding the brief with it…" : "Saved. Re-collecting from the corrected source…");
         setEditing(false);
+        router.push(`/company/${companyId}${d?.runId ? `?run=${d.runId}` : ""}`);
         router.refresh();
       },
     );
@@ -478,7 +479,7 @@ export function SourceControl({ companyId, field, label, value, hint }: { compan
 }
 
 // ---------------------------------------------------------------------------
-// Watchlist table (sortable)
+// Accounts table on the dashboard (sortable)
 // ---------------------------------------------------------------------------
 export interface WatchRow {
   id: number;
@@ -486,8 +487,8 @@ export interface WatchRow {
   domain: string;
   fit: number | null;
   fitReasons: { reason: string; points: number }[];
-  evidence: number | null;
-  evidenceLabel: string | null;
+  info: number | null;
+  infoLabel: string | null;
   techs: string[];
   activity: string;
   languages: string[];
@@ -502,14 +503,14 @@ export interface WatchRow {
   running: boolean;
 }
 
-type SortKey = "name" | "fit" | "evidence" | "activity" | "lastRefreshed" | "changes" | "coverage";
+type SortKey = "name" | "fit" | "info" | "activity" | "lastRefreshed" | "changes" | "coverage";
 const ACT_RANK: Record<string, number> = { high: 3, medium: 2, low: 1, unknown: 0 };
 const COV_RANK: Record<string, number> = { rich: 2, thin: 1, none: 0 };
 
 function sortValue(r: WatchRow, k: SortKey): string | number {
   if (k === "name") return r.name.toLowerCase();
   if (k === "fit") return r.fit ?? -1;
-  if (k === "evidence") return r.evidence ?? -1;
+  if (k === "info") return r.info ?? -1;
   if (k === "activity") return ACT_RANK[r.activity] ?? -1;
   if (k === "coverage") return COV_RANK[r.coverage] ?? -1;
   if (k === "changes") return r.changes;
@@ -518,24 +519,24 @@ function sortValue(r: WatchRow, k: SortKey): string | number {
 
 /** CSV of the visible rows: built in the browser, no server cost. */
 function downloadCsv(rows: WatchRow[]) {
-  const head = ["Company", "Domain", "Fit score", "Evidence score", "Evidence", "Activity", "Top languages", "Competitor", "Coverage", "Changes this week", "Last refreshed", "Technologies"];
+  const head = ["Company", "Domain", "Fit score", "Info score", "Info", "Activity", "Top languages", "Competitor", "Coverage", "Changes this week", "Last refreshed", "Technologies"];
   const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
   const lines = rows.map((r) =>
-    [r.name, r.domain, r.fit, r.evidence, r.evidenceLabel, r.activity, r.languages.join("; "), r.competitor, r.coverage, r.changes, r.lastRefreshed, r.techs.join("; ")].map(esc).join(","),
+    [r.name, r.domain, r.fit, r.info, r.infoLabel, r.activity, r.languages.join("; "), r.competitor, r.coverage, r.changes, r.lastRefreshed, r.techs.join("; ")].map(esc).join(","),
   );
   const blob = new Blob([[head.map(esc).join(","), ...lines].join("\n")], { type: "text/csv" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `watchlist-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `flakeguard-accounts-${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(a.href);
 }
 
-function EvidencePill({ score, label }: { score: number | null; label: string | null }) {
+function InfoPill({ score, label }: { score: number | null; label: string | null }) {
   if (score == null) return <span className="text-faint">–</span>;
-  const tone = label === "strong" ? "bg-accent-soft text-accent-ink" : label === "moderate" ? "bg-surface-2 text-ink" : "bg-warn/10 text-warn";
+  const tone = label === "rich" ? "bg-accent-soft text-accent-ink" : label === "partial" ? "bg-surface-2 text-ink" : "bg-warn/10 text-warn";
   return (
-    <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${tone}`} title={`Evidence ${score}/100 (${label})`}>
+    <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${tone}`} title={`Info score ${score}/100 (${label}): how much verified information we have`}>
       <span className="font-mono tabular-nums">{score}</span>
       <span className="font-medium capitalize opacity-80">{label}</span>
     </span>
@@ -589,16 +590,16 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
       {/* desktop table */}
       <div className="hidden overflow-x-auto rounded-2xl border border-line bg-surface shadow-card lg:block">
         <div className="flex items-center justify-between border-b border-line px-5 py-4">
-          <h2 className="font-display text-base font-semibold tracking-tight text-ink">Watchlist</h2>
+          <h2 className="font-display text-base font-semibold tracking-tight text-ink">Accounts</h2>
           {toolbar}
         </div>
         <table className="w-full text-left text-sm">
-          <caption className="sr-only">Watchlist companies, sortable</caption>
+          <caption className="sr-only">Tracked companies, sortable</caption>
           <thead className="bg-surface-2/60 text-xs text-muted">
             <tr>
               {th("name", "Company", "pl-5")}
               {th("fit", "Fit")}
-              {th("evidence", "Evidence")}
+              {th("info", "Info")}
               {th("activity", "Activity")}
               <th scope="col" className="px-3 py-2.5 font-medium">
                 Top languages
@@ -631,7 +632,7 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
                   {r.fit != null ? <FitRing score={r.fit} size={38} /> : <span className="text-faint">–</span>}
                 </td>
                 <td className="px-3 py-3">
-                  <EvidencePill score={r.evidence} label={r.evidenceLabel} />
+                  <InfoPill score={r.info} label={r.infoLabel} />
                 </td>
                 <td className="px-3 py-3">
                   <LevelPill level={r.activity} kind="activity" />
@@ -678,7 +679,7 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
       {/* mobile cards */}
       <div className="lg:hidden">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-display text-base font-semibold tracking-tight text-ink">Watchlist</h2>
+          <h2 className="font-display text-base font-semibold tracking-tight text-ink">Accounts</h2>
           <label className="flex items-center gap-2 text-xs text-muted">
             Sort
             <select
@@ -690,7 +691,7 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
               className="rounded-lg border border-line bg-surface px-2 py-1.5 text-ink"
             >
               <option value="fit:-1">Fit score</option>
-            <option value="evidence:-1">Evidence score</option>
+            <option value="info:-1">Info score</option>
               <option value="changes:-1">Changes</option>
               <option value="activity:-1">Activity</option>
               <option value="lastRefreshed:1">Oldest refresh</option>
@@ -715,7 +716,7 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
                   {r.fit != null && <FitRing score={r.fit} size={42} />}
                 </div>
                 <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                  <EvidencePill score={r.evidence} label={r.evidenceLabel} />
+                  <InfoPill score={r.info} label={r.infoLabel} />
                   <LevelPill level={r.activity} kind="activity" />
                   <LevelPill level={r.coverage} kind="coverage" />
                   {r.languages.map((l) => (
@@ -740,7 +741,7 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
   );
 }
 
-/** Remove a company straight from the watchlist (two-step confirm; history is kept). */
+/** Remove a company straight from the dashboard (two-step confirm; history is kept). */
 function RowRemove({ id, name }: { id: number; name: string }) {
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -750,7 +751,7 @@ function RowRemove({ id, name }: { id: number; name: string }) {
     return (
       <button
         onClick={() => setConfirm(true)}
-        aria-label={`Remove ${name} from the watchlist`}
+        aria-label={`Remove ${name} from the dashboard`}
         className="rounded-lg px-2 py-1 text-xs font-medium text-faint transition-colors hover:bg-bad/10 hover:text-bad"
       >
         Remove
@@ -793,49 +794,6 @@ function Avatar({ name }: { name: string }) {
 // ---------------------------------------------------------------------------
 // Digest
 // ---------------------------------------------------------------------------
-export function EmailDigestForm({ digestId }: { digestId: number }) {
-  const [email, setEmail] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [ok, setOk] = useState(false);
-  const { run, gate, err } = useGuarded();
-  return (
-    <div>
-      <form
-        className="flex flex-wrap items-end gap-2"
-        noValidate
-        onSubmit={async (e) => {
-          e.preventDefault();
-          setOk(false);
-          await run(
-            () => {
-              setBusy(true);
-              return postJson(`/api/digests/${digestId}/send`, { email });
-            },
-            () => {
-              setOk(true);
-              setEmail("");
-            },
-          );
-          setBusy(false);
-        }}
-      >
-        <label className="flex min-w-0 flex-1 flex-col text-xs text-muted sm:flex-none">
-          <span className="mb-1">Email me this digest</span>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink sm:w-64" />
-        </label>
-        <button disabled={busy} className="rounded-lg bg-btn px-3 py-2 text-sm font-medium text-btn-fg disabled:opacity-60">
-          {busy ? "Sending" : "Send"}
-        </button>
-      </form>
-      <p className="mt-2 text-xs text-muted" aria-live="polite">
-        {ok ? "Sent. Check your inbox (and spam folder)." : "The address is checked, used once to send, and never stored or shown. Delivery goes through a free Resend account, which only delivers to the project owner's inbox until a sending domain is verified."}
-      </p>
-      {gate}
-      {err}
-    </div>
-  );
-}
-
 export function BuildDigestButton() {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -865,42 +823,6 @@ export function BuildDigestButton() {
 // ---------------------------------------------------------------------------
 // Settings
 // ---------------------------------------------------------------------------
-export function ProfileEditor({ initial }: { initial: string }) {
-  const [v, setV] = useState(initial);
-  const [msg, setMsg] = useState<string | null>(null);
-  const { run, gate, err } = useGuarded();
-  return (
-    <div>
-      <label htmlFor="profile-json" className="mb-1 block text-xs text-muted">
-        Product profile (JSON)
-      </label>
-      <textarea id="profile-json" value={v} onChange={(e) => setV(e.target.value)} rows={18} spellCheck={false} className="w-full rounded-lg border border-line bg-surface p-3 font-mono text-xs leading-relaxed" />
-      <button
-        className="mt-2 rounded-lg bg-btn px-3 py-2 text-sm font-medium text-btn-fg"
-        onClick={async () => {
-          setMsg(null);
-          let parsed: unknown;
-          try {
-            parsed = JSON.parse(v);
-          } catch {
-            setMsg("That is not valid JSON.");
-            return;
-          }
-          await run(
-            () => postJson("/api/settings/profile", parsed),
-            () => setMsg("Saved. New briefs will use this profile."),
-          );
-        }}
-      >
-        Save profile
-      </button>
-      {msg && <p className="mt-2 text-sm text-muted">{msg}</p>}
-      {gate}
-      {err}
-    </div>
-  );
-}
-
 export function VerifyButton({ type, name }: { type: "dictionary" | "competitor"; name: string }) {
   const [done, setDone] = useState(false);
   const router = useRouter();
@@ -993,7 +915,7 @@ export function AddCompanyDialog() {
             {mode === "one" ? <AddCompanyForm hero autoFocus onAdded={() => setOpen(false)} /> : <BulkAddForm onDone={() => setOpen(false)} />}
             <ul className="mt-4 space-y-1 text-xs text-faint">
               <li>We look for its public GitHub, job board, engineering blog, talks and hosting.</li>
-              <li>To remove a company later, use Remove on its row in the watchlist.</li>
+              <li>To remove a company later, use Remove on its row on the dashboard.</li>
             </ul>
           </div>
       </dialog>
@@ -1017,7 +939,7 @@ export function BulkAddForm({ onDone }: { onDone?: () => void }) {
         const out: { domain: string; ok: boolean; note: string }[] = [];
         for (const d of domains) {
           const r = await postJson("/api/companies", { domain: d });
-          out.push({ domain: d, ok: r.status === 200, note: r.status === 200 ? (r.data.existing ? (r.data.note ? `${r.data.note} Already on the watchlist.` : "already on the watchlist") : r.data.note ? `${r.data.note} Added, brief building.` : "added, brief building") : (r.data.error ?? "failed") });
+          out.push({ domain: d, ok: r.status === 200, note: r.status === 200 ? (r.data.existing ? (r.data.note ? `${r.data.note} Already on the dashboard.` : "already on the dashboard") : r.data.note ? `${r.data.note} Added, brief building.` : "added, brief building") : (r.data.error ?? "failed") });
           setResults([...out]);
         }
         setBusy(false);

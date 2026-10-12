@@ -95,7 +95,7 @@ async function main() {
     let posts = 0;
     const feedCandidates = c.feed ? [c.feed] : [];
     const discovered = await discoverFeed(ctxFor(c), []).catch(() => null);
-    if (discovered) feedCandidates.push(discovered);
+    if (discovered) feedCandidates.push(discovered.feed);
     for (const f of feedCandidates) {
       const r = await fetchText(f, { timeoutMs: 15000, retries: 1 }).catch(() => null);
       const items = r?.text ? parseFeed(r.text) : [];

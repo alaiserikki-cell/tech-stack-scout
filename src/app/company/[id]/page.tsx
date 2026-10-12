@@ -12,7 +12,7 @@ import { loadProfile } from "@/lib/repo";
 import { liveScores } from "@/lib/scores";
 import { AtAGlance, StackMap } from "@/components/brief-glance";
 import { AutoRunProgress, OpenerActions, PrintButton, RefreshButton, RemoveButton, SourceControl } from "@/components/client";
-import { Badge, Card, Confidence, Empty, EvidenceRing, Ext, FitScore, H2, LevelPill, SOURCE_LABEL, Skeleton, ago, cx, fmtDate, isStale } from "@/components/ui";
+import { Badge, Card, Confidence, Empty, InfoRing, Ext, FitScore, H2, LevelPill, SOURCE_LABEL, Skeleton, ago, cx, fmtDate, isStale } from "@/components/ui";
 import { boardUrl } from "@/collectors/jobs";
 
 export const metadata: Metadata = { title: "Company brief" };
@@ -58,7 +58,12 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
     loadProfile(),
   ]);
   const productName = profile.product_name;
-  const sigs: SigRow[] = snap?.runId ? await db.select().from(schema.signals).where(eq(schema.signals.runId, snap.runId)) : [];
+  // only verified sources are shown: signals from a source that is (or was, at refresh time) unconfirmed are left out
+  const confirmed: Record<string, boolean> = { github: company.githubOrgVerified, jobs: company.atsVerified, blog: company.blogVerified };
+  const unconfirmedAtRefresh = new Set<string>((snap?.computed as Computed | undefined)?.unconfirmed ?? []);
+  const sigs: SigRow[] = (snap?.runId ? await db.select().from(schema.signals).where(eq(schema.signals.runId, snap.runId)) : []).filter(
+    (s) => !unconfirmedAtRefresh.has(s.source) && (!(s.source in confirmed) || confirmed[s.source]),
+  );
   const byId = new Map(sigs.map((s) => [s.id, s]));
   const computed = snap?.computed as Computed | undefined;
   const brief = snap?.briefStatus === "ok" ? (snap.brief as Brief) : null;
@@ -75,8 +80,8 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
     <article className="mx-auto max-w-3xl space-y-6">
       {/* header */}
       <header className="space-y-4">
-        <Link href="/watchlist" className="inline-flex items-center gap-1 text-sm text-muted no-underline hover:text-ink">
-          ← Watchlist
+        <Link href="/dashboard" className="inline-flex items-center gap-1 text-sm text-muted no-underline hover:text-ink">
+          ← Dashboard
         </Link>
         <div className="rounded-2xl border border-line bg-surface p-5 shadow-card sm:p-6">
           <div className="flex items-start justify-between gap-4">
@@ -94,12 +99,12 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
             {live && (
               <div className="flex shrink-0 items-start gap-3">
                 <div className="flex flex-col items-center gap-1">
-                  <FitScore score={live.fit.score} reasons={live.fit.reasons} align="right" size={60} />
-                  <span className="text-[11px] font-medium text-faint">Fit for you</span>
+                  <FitScore score={live.fit.score} reasons={live.fit.reasons} align="right" size={60} product={productName} />
+                  <span className="text-[11px] font-medium text-faint">Fit</span>
                 </div>
                 <div className="flex flex-col items-center gap-1">
-                  <EvidenceRing score={live.evidence.score} label={live.evidence.label} reasons={live.evidence.reasons} size={60} />
-                  <span className="text-[11px] font-medium text-faint">Evidence</span>
+                  <InfoRing score={live.info.score} label={live.info.label} reasons={live.info.reasons} size={60} />
+                  <span className="text-[11px] font-medium text-faint">Info</span>
                 </div>
               </div>
             )}
@@ -109,7 +114,7 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
             {computed && <LevelPill level={computed.coverage} kind="coverage" />}
             {computed?.competitors.length ? <Badge tone="warn">Uses {computed.competitors[0].name}</Badge> : null}
             <span className={isStale(company.lastRefreshedAt, now) ? "font-medium text-bad" : "text-faint"}>Refreshed {ago(company.lastRefreshedAt, now)}</span>
-            {!company.active && <span className="text-warn">· Removed from watchlist</span>}
+            {!company.active && <span className="text-warn">· Removed from the dashboard</span>}
             <span className="ml-auto">
               <PrintButton />
             </span>
@@ -194,7 +199,7 @@ async function CompanyBrief({ params, searchParams }: PageProps<"/company/[id]">
 
           {computed && <WhatChanged history={history.map((h) => ({ events: (h.changeEvents as ChangeEvent[]) ?? [], at: h.generatedAt }))} dropped={dropped.map((d) => ({ tech: d.tech, at: d.lastSeen }))} />}
 
-          {sigs.length > 0 && <SourcesList sigs={sigs} verified={{ github: company.githubOrgVerified, jobs: company.atsVerified, blog: company.blogVerified }} />}
+          {sigs.length > 0 && <SourcesList sigs={sigs} />}
 
           {brief && (
             <Fold title="Read the full engineering summary" hint="two paragraphs written by Gemini from the signals">
@@ -603,7 +608,7 @@ function SourceWarnings({ company }: { company: typeof schema.watchlist.$inferSe
         field="ats"
         label="Job board"
         value={`${company.atsProvider}/${company.atsSlug}`}
-        hint={`Use provider/slug (greenhouse, lever or ashby), or none. Current board: ${boardUrl(company.atsProvider, company.atsSlug ?? "")}`}
+        hint={`Use provider/slug (greenhouse, lever, ashby, smartrecruiters or workday), or none. Found board: ${boardUrl(company.atsProvider, company.atsSlug ?? "")}`}
       />,
     );
   if (company.blogFeedUrl && company.blogFeedUrl !== "none" && !company.blogVerified)
@@ -611,8 +616,10 @@ function SourceWarnings({ company }: { company: typeof schema.watchlist.$inferSe
   if (!items.length) return null;
   return (
     <Card className="border-warn/40">
-      <H2>Unverified sources</H2>
-      <p className="mb-3 text-sm text-muted">These were matched automatically. Confirm them, or correct them so the next refresh reads the right company.</p>
+      <H2>Found, but not proven to be {company.companyName}&apos;s</H2>
+      <p className="mb-3 text-sm text-muted">
+        These matched by name only, so nothing from them is shown or scored. If one really belongs to {company.companyName}, confirm it and the brief is rebuilt with it; otherwise correct it or set it to none.
+      </p>
       <div className="space-y-4">{items}</div>
     </Card>
   );
@@ -674,7 +681,7 @@ function sourceLabel(s: SigRow): string {
 }
 
 /** Every link behind the brief, grouped by where it came from (one entry per URL). */
-function SourcesList({ sigs, verified }: { sigs: SigRow[]; verified: Record<string, boolean> }) {
+function SourcesList({ sigs }: { sigs: SigRow[] }) {
   const groups = SOURCE_GROUPS.map((g) => {
     const seen = new Set<string>();
     const rows = sigs
@@ -691,19 +698,16 @@ function SourcesList({ sigs, verified }: { sigs: SigRow[]; verified: Record<stri
         <h2 id="sources" className="font-display text-[15px] font-semibold tracking-tight text-ink">
           Sources
         </h2>
-        <span className="text-xs text-faint">{total} links · every claim on this page comes from these</span>
+        <span className="text-xs text-faint">{total} links · verified sources only · every claim on this page comes from these</span>
       </div>
       <div className="space-y-4">
         {groups.map((g) => (
           <div key={g.source}>
             <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-faint">
               {g.title} <span className="font-normal normal-case">({g.rows.length})</span>
-              {g.source in verified &&
-                (verified[g.source] ? (
-                  <span className="ml-2 rounded-full bg-accent-soft px-1.5 py-0.5 text-[10px] font-semibold normal-case text-accent-ink">verified</span>
-                ) : (
-                  <span className="ml-2 rounded-full bg-warn/10 px-1.5 py-0.5 text-[10px] font-semibold normal-case text-warn">unverified: not used in the brief until confirmed</span>
-                ))}
+              {["github", "jobs", "blog"].includes(g.source) && (
+                <span className="ml-2 rounded-full bg-accent-soft px-1.5 py-0.5 text-[10px] font-semibold normal-case text-accent-ink">verified as theirs</span>
+              )}
             </p>
             <SourceLinks rows={g.rows} />
           </div>

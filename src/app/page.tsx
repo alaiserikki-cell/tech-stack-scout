@@ -75,8 +75,8 @@ export default function Landing() {
             FlakeGuard reads what a company publishes about how it builds software, checks every fact against its source, and turns it into a brief you can read in a minute.
           </p>
           <div className="mt-7 flex flex-wrap justify-center gap-3">
-            <Link href="/watchlist" className="rounded-xl bg-btn px-5 py-3 text-sm font-semibold text-btn-fg no-underline shadow-sm">
-              Open the watchlist →
+            <Link href="/dashboard" className="rounded-xl bg-btn px-5 py-3 text-sm font-semibold text-btn-fg no-underline shadow-sm">
+              Open the dashboard →
             </Link>
             <a href="#steps" className="rounded-xl border border-line bg-surface px-5 py-3 text-sm font-semibold text-ink no-underline">
               See how it works
@@ -114,7 +114,7 @@ export default function Landing() {
           {[
             { n: 1, icon: I.plus, tone: "mint" as const, title: "Add a company", text: "Type a domain, or add a row in the database. That's the only manual step." },
             { n: 2, icon: I.search, tone: "butter" as const, title: "We collect public signals", text: "GitHub, job boards, engineering blog, conference talks, Hacker News and DNS, with every fact saved alongside its link." },
-            { n: 3, icon: I.shield, tone: "peach" as const, title: "We verify and score", text: "Code checks each source belongs to the company, then computes a fit score and an evidence score." },
+            { n: 3, icon: I.shield, tone: "peach" as const, title: "We verify and score", text: "Code proves each source belongs to the company and drops the rest, then computes a fit score and an info score." },
             { n: 4, icon: I.doc, tone: "sky" as const, title: "You get a brief", text: "An opener, key points, a stack map and questions to ask, each linked to its source. Mondays bring a ranked digest." },
           ].map((s) => (
             <li key={s.n} className="relative rounded-2xl bg-surface p-6 text-center shadow-card">
@@ -131,7 +131,7 @@ export default function Landing() {
 
       {/* scores */}
       <Band tone="plain" id="scores">
-        <Heading title={<>Two scores, <span className="text-accent-ink">two questions.</span></>} sub="One tells you whether the account fits what you sell. The other tells you how much to trust what we found." />
+        <Heading title={<>Two scores, <span className="text-accent-ink">two questions.</span></>} sub="One tells you whether the account fits what you sell. The other tells you how much verified information we have. Both use verified sources only." />
         <div className="grid gap-5 md:grid-cols-2">
           <div className="rounded-2xl border border-accent/40 bg-surface p-6 shadow-card">
             <div className="flex items-center gap-3">
@@ -171,17 +171,18 @@ export default function Landing() {
             <div className="flex items-center gap-3">
               <Icon d={I.shield} tone="peach" />
               <div>
-                <h3 className="font-display text-xl font-bold text-ink">Evidence score</h3>
-                <p className="text-sm text-muted">How sure are we about this company&apos;s stack?</p>
+                <h3 className="font-display text-xl font-bold text-ink">Info score</h3>
+                <p className="text-sm text-muted">How much do we know about this company?</p>
               </div>
             </div>
-            <p className="mt-4 text-sm text-muted">The same for every user: it measures the data, not your product. Low evidence means &ldquo;go check before you quote it&rdquo;.</p>
+            <p className="mt-4 text-sm text-muted">The same for every user: it measures the data, not your product. Unverified sources are never used, so a low score means &ldquo;little public information&rdquo;, not &ldquo;untrusted&rdquo;.</p>
             <ul className="mt-4 space-y-3 text-sm">
               {[
-                ["Verified sources", 40, "Data from a GitHub org, job board and blog that are proven to belong to the company (15 + 15 + 10). Auto-matched sources count zero until there is proof or you confirm them."],
-                ["Corroboration", 25, "Share of technologies, from verified sources, confirmed by two or more independent sources."],
-                ["Freshness", 20, "Refreshed in the last 7 days (10) and recent activity in the last 90 days (10)."],
-                ["Breadth", 15, "3 points per verified source type with data: GitHub, jobs, blog, talks, Hacker News, hosting."],
+                ["Stack detail", 30, "3 points per technology or language identified; 10 or more is full marks."],
+                ["Source coverage", 25, "5 points per source type with data: GitHub, job board, blog, talks, Hacker News, hosting."],
+                ["Cross-checks", 20, "Share of technologies confirmed by two or more independent sources."],
+                ["Depth", 10, "Engineering roles open, hiring themes, blog posts and talks."],
+                ["Freshness", 15, "Refreshed in the last 7 days (5) and company activity in the last 90 days (10)."],
               ].map(([t, p, d]) => (
                 <li key={t as string} className="border-t border-line pt-3">
                   <div className="flex justify-between gap-3">
@@ -192,13 +193,13 @@ export default function Landing() {
                 </li>
               ))}
             </ul>
-            <p className="mt-3 text-xs text-faint">70+ strong · 40-69 moderate · below 40 weak.</p>
+            <p className="mt-3 text-xs text-faint">70+ rich · 40-69 partial · below 40 sparse.</p>
           </div>
         </div>
         <div className="mx-auto mt-6 max-w-3xl rounded-2xl bg-band-mint p-5 text-sm text-ink">
           <p className="font-display font-semibold">Reading them together</p>
           <p className="mt-1 text-muted">
-            High fit + strong evidence: call this week. High fit + weak evidence: promising, but confirm the sources first. Low fit + strong evidence: we know them well, and they are not a match today.
+            High fit + rich info: call this week, you have plenty to talk about. High fit + sparse info: promising but little is public, so ask discovery questions. Low fit + rich info: we know them well, and they are not a match today.
           </p>
         </div>
       </Band>
@@ -208,9 +209,9 @@ export default function Landing() {
         <Heading title="Where every fact comes from" sub="Only public sources, only free APIs. Every claim on a brief links back to one of these." />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[
-            { icon: I.code, title: "GitHub", read: "Languages of the 10 most recently pushed repos; CI, infrastructure and test files; dependencies in manifests.", verify: "Verified when the org's own website field is the company's domain.", href: "https://docs.github.com/rest" },
-            { icon: I.briefcase, title: "Job boards", read: "Greenhouse, Lever, Ashby, SmartRecruiters and Workday postings: tools required vs nice to have, and initiatives such as migrations.", verify: "Verified when the board is linked from the company's own careers page.", href: "https://developers.greenhouse.io/job-board.html" },
-            { icon: I.pen, title: "Engineering blog", read: "Posts from the last 90 days. Gemini extracts tech mentions, and code keeps a mention only if its quote appears word for word in the post.", verify: "Verified when the feed is hosted on the company's own domain.", href: "https://www.rssboard.org/rss-specification" },
+            { icon: I.code, title: "GitHub", read: "Languages of the 10 most recently pushed repos; CI, infrastructure and test files; dependencies in manifests.", verify: "Verified when the org's website belongs to the company: same domain, a redirect to it, or a brand domain that links back.", href: "https://docs.github.com/rest" },
+            { icon: I.briefcase, title: "Job boards", read: "Greenhouse, Lever, Ashby, SmartRecruiters and Workday postings: tools required vs nice to have, and initiatives such as migrations.", verify: "Verified when the company's own careers pages (or a careers site they link to) link to the board.", href: "https://developers.greenhouse.io/job-board.html" },
+            { icon: I.pen, title: "Engineering blog", read: "The 5 newest posts from the last 12 months, including Medium-hosted blogs. Gemini extracts tech mentions, and code keeps a mention only if its quote appears word for word in the post.", verify: "Verified when the feed is on the company's domain, linked or redirected from it, or on a brand domain that links back.", href: "https://www.rssboard.org/rss-specification" },
             { icon: I.mic, title: "Conference talks", read: "Talks on YouTube, Vimeo, InfoQ and SpeakerDeck that the company gave or owns, from the last 3 years.", verify: "Kept only when the title shows the company owns the talk.", href: "https://hn.algolia.com/api" },
             { icon: I.chat, title: "Hacker News", read: "Stories linking to the company's domain in the last 12 months, with points and comments.", verify: "Matched on the link's domain, not the name.", href: "https://hn.algolia.com/api" },
             { icon: I.globe, title: "DNS and hosting", read: "DNS records and one HTTP request reveal the public-facing host or CDN (Cloudflare, Vercel, Shopify…).", verify: "Labelled public-facing only, never the backend.", href: "https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/" },
@@ -289,15 +290,13 @@ export default function Landing() {
         </div>
       </Band>
 
-      {/* cost + CTA */}
+      {/* CTA */}
       <Band tone="plain">
         <div className="mx-auto max-w-3xl rounded-3xl bg-btn p-8 text-center text-btn-fg sm:p-12">
-          <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">Runs on free tiers. Costs ₹0.</h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm opacity-80">
-            Vercel Hobby, Neon Postgres, Gemini Flash free tier, public APIs that need no paid key, and a once-a-day refresh. Briefs are only rewritten when something actually changed.
-          </p>
+          <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">Start with one company.</h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm opacity-80">Type its website on the dashboard. The brief is ready in about a minute and stays current every week.</p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Link href="/watchlist#add" className="rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-accent-fg no-underline">
+            <Link href="/dashboard#add" className="rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-accent-fg no-underline">
               Add a company
             </Link>
             <Link href="/settings" className="rounded-xl border border-white/30 px-5 py-3 text-sm font-semibold text-btn-fg no-underline">
@@ -310,7 +309,7 @@ export default function Landing() {
   );
 }
 
-/** Live snapshot of the watchlist so the landing page leads straight into the work. */
+/** Live snapshot of the tracked accounts so the landing page leads straight into the work. */
 async function RightNow() {
   await connection();
   const db = getDb();
@@ -324,14 +323,14 @@ async function RightNow() {
     .filter((x): x is NonNullable<typeof x> => Boolean(x))
     .sort((a, b) => b.live.fit.score - a.live.fit.score);
   if (!ranked.length) return null;
-  const strong = ranked.filter((r) => r.live.evidence.label === "strong").length;
+  const rich = ranked.filter((r) => r.live.info.label === "rich").length;
   return (
     <section aria-labelledby="now" className="mx-auto -mt-4 mb-10 max-w-5xl rounded-2xl border border-line bg-surface p-5 shadow-card sm:p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="now" className="font-display text-lg font-semibold tracking-tight text-ink">
-          Right now: {ranked.length} accounts tracked · {strong} with strong evidence
+          Right now: {ranked.length} accounts tracked · {rich} with rich info
         </h2>
-        <Link href="/watchlist" className="text-sm font-semibold">
+        <Link href="/dashboard" className="text-sm font-semibold">
           See all accounts →
         </Link>
       </div>
@@ -343,7 +342,7 @@ async function RightNow() {
               <FitRing score={live.fit.score} size={40} />
               <span className="min-w-0">
                 <span className="block truncate font-semibold">{c.companyName}</span>
-                <span className="block text-xs text-faint capitalize">evidence {live.evidence.score} · {live.evidence.label}</span>
+                <span className="block text-xs text-faint">info {live.info.score} · {live.info.label}</span>
               </span>
             </Link>
           </li>

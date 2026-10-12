@@ -36,7 +36,7 @@ function links(html: string): string[] {
 }
 
 async function main() {
-  const pages = new Set<string>(["/", "/watchlist", "/digests", "/activity", "/settings"]);
+  const pages = new Set<string>(["/", "/dashboard", "/digests", "/activity", "/settings"]);
   const seen = new Set<string>();
   const internal = new Map<string, Set<string>>(); // link -> pages it appears on
   const external = new Map<string, Set<string>>();
@@ -55,7 +55,7 @@ async function main() {
         if (!path) continue;
         (internal.get(path) ?? internal.set(path, new Set()).get(path)!).add(p);
         // crawl app pages (company briefs and digests too), not API routes
-        if (!path.startsWith("/api") && !seen.has(path) && /^\/(watchlist|digests|activity|settings|company\/\d+|digests\/\d+)?$/.test(path)) queue.push(path);
+        if (!path.startsWith("/api") && !seen.has(path) && /^\/(dashboard|digests|activity|settings|company\/\d+|digests\/\d+)?$/.test(path)) queue.push(path);
       } else if (/^https?:\/\//.test(href)) {
         (external.get(href) ?? external.set(href, new Set()).get(href)!).add(p);
       }

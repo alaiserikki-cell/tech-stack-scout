@@ -4,7 +4,6 @@ import { getDb, schema } from "@/db/client";
 import type { ChangeEvent, Computed } from "./compute";
 import { RecipientRestrictedError, InvalidRecipientError, sendMail } from "./email";
 import { fitScore } from "./compute";
-import { scoringBasis } from "./scores";
 import { loadProfile } from "./repo";
 
 export interface RankedAccount {
@@ -72,24 +71,28 @@ export function digestSubject(n: number, weekOf: string): string {
   return `[Who to call this week] ${n} accounts · ${d}`;
 }
 
-export function renderDigestHtml(accounts: RankedAccount[], weekOf: string, appUrl: string): string {
+/** Every link opens in a new tab/window: the email is also shown inside a preview frame on the site. */
+const A = 'target="_blank" rel="noopener noreferrer"';
+
+export function renderDigestHtml(accounts: RankedAccount[], weekOf: string, appUrl: string, product = "FlakeGuard"): string {
   const rows = accounts
     .slice(0, TOP_N)
     .map(
       (a, i) => `
   <tr><td style="padding:16px 0;border-bottom:1px solid #e4e4e7">
-    <div style="font:600 16px/1.4 -apple-system,Segoe UI,Roboto,sans-serif;color:#18181b">${i + 1}. ${esc(a.name)} <span style="font-weight:400;color:#71717a">· fit ${a.fitScore}</span></div>
-    <div style="font:400 14px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;color:#3f3f46;margin-top:4px">${esc(a.whyNow)}${a.evidenceUrl ? ` <a href="${esc(a.evidenceUrl)}" style="color:#2952cc">evidence</a>` : ""}</div>
-    <a href="${esc(appUrl)}/company/${a.companyId}" style="display:inline-block;margin-top:8px;padding:6px 12px;border-radius:6px;background:#2952cc;color:#fff;text-decoration:none;font:500 13px -apple-system,Segoe UI,Roboto,sans-serif">View brief</a>
+    <div style="font:600 16px/1.4 -apple-system,Segoe UI,Roboto,sans-serif;color:#18181b">${i + 1}. ${esc(a.name)} <span style="font-weight:400;color:#71717a">· Fit ${a.fitScore}/100</span></div>
+    <div style="font:400 14px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;color:#3f3f46;margin-top:4px">${esc(a.whyNow)}${a.evidenceUrl ? ` <a ${A} href="${esc(a.evidenceUrl)}" style="color:#2952cc">source</a>` : ""}</div>
+    <a ${A} href="${esc(appUrl)}/company/${a.companyId}" style="display:inline-block;margin-top:8px;padding:6px 12px;border-radius:6px;background:#2952cc;color:#fff;text-decoration:none;font:500 13px -apple-system,Segoe UI,Roboto,sans-serif">View brief</a>
   </td></tr>`,
     )
     .join("");
   return `<!doctype html><html><body style="margin:0;padding:24px;background:#fafafa">
 <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #e4e4e7;border-radius:10px;padding:8px 24px">
   <tr><td style="padding:16px 0 4px;font:600 18px -apple-system,Segoe UI,Roboto,sans-serif;color:#18181b">Who to call this week</td></tr>
-  <tr><td style="padding-bottom:8px;font:400 13px -apple-system,Segoe UI,Roboto,sans-serif;color:#71717a">Week of ${esc(weekOf)} · ranked by what changed plus fit score</td></tr>
-  ${rows || `<tr><td style="padding:16px 0;color:#71717a">No accounts on the watchlist yet.</td></tr>`}
-  <tr><td style="padding:16px 0;font:400 12px -apple-system,Segoe UI,Roboto,sans-serif;color:#a1a1aa">FlakeGuard · facts collected from public GitHub, job boards, blogs, Hacker News and DNS</td></tr>
+  <tr><td style="padding-bottom:8px;font:400 13px -apple-system,Segoe UI,Roboto,sans-serif;color:#71717a">Week of ${esc(weekOf)} · ranked by what changed this week plus fit</td></tr>
+  <tr><td style="padding-bottom:8px;font:400 12px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;color:#71717a">Fit (0-100) = how well the company's verified stack matches what ${esc(product)} needs. Every fact links to its public source.</td></tr>
+  ${rows || `<tr><td style="padding:16px 0;color:#71717a">No accounts tracked yet.</td></tr>`}
+  <tr><td style="padding:16px 0;font:400 12px -apple-system,Segoe UI,Roboto,sans-serif;color:#a1a1aa">${esc(product)} account digest · facts from public GitHub, job boards, engineering blogs, talks, Hacker News and DNS · <a ${A} href="${esc(appUrl)}/digests" style="color:#a1a1aa">all digests</a></td></tr>
 </table></body></html>`;
 }
 
@@ -101,11 +104,11 @@ export async function buildDigest(weekOf = weekOfIST()): Promise<typeof schema.d
   for (const c of companies) {
     const [s] = await db.select().from(schema.snapshots).where(eq(schema.snapshots.companyId, c.id)).orderBy(desc(schema.snapshots.generatedAt)).limit(1);
     if (!s) continue;
-    rows.push({ companyId: c.id, name: c.companyName, domain: c.domain, fitScore: fitScore(scoringBasis(s.computed as Computed, c), profile).score, events: (s.changeEvents as ChangeEvent[]) ?? [], computed: s.computed as Computed, generatedAt: s.generatedAt });
+    rows.push({ companyId: c.id, name: c.companyName, domain: c.domain, fitScore: fitScore(s.computed as Computed, profile).score, events: (s.changeEvents as ChangeEvent[]) ?? [], computed: s.computed as Computed, generatedAt: s.generatedAt });
   }
   const ranked = rankAccounts(rows);
   const appUrl = (process.env.APP_URL ?? "").replace(/\/$/, "");
-  const html = renderDigestHtml(ranked, weekOf, appUrl);
+  const html = renderDigestHtml(ranked, weekOf, appUrl, profile.product_name);
   const [d] = await db
     .insert(schema.digests)
     .values({ weekOf, rankedAccounts: ranked, html })
@@ -129,4 +132,25 @@ export async function sendDigest(digestId: number, to: string): Promise<"sent" |
   }
   await db.insert(schema.digestSends).values({ digestId, recipient: hashRecipient(to), status });
   return status;
+}
+
+/** An unsent email draft (.eml): X-Unsent makes Outlook open it ready to send; the To field is left for the user. */
+export function emlDraft(subject: string, html: string): string {
+  const b64 = (t: string) => Buffer.from(t, "utf-8").toString("base64");
+  const body = b64(html).replace(/.{1,76}/g, "$&\r\n");
+  return [
+    "X-Unsent: 1",
+    "To: ",
+    `Subject: =?UTF-8?B?${b64(subject)}?=`,
+    "MIME-Version: 1.0",
+    'Content-Type: text/html; charset="UTF-8"',
+    "Content-Transfer-Encoding: base64",
+    "",
+    body,
+  ].join("\r\n");
+}
+
+/** For the in-site preview frame: open every link in a new tab even in digests stored before links had a target. */
+export function previewHtml(html: string): string {
+  return html.includes("<base ") ? html : html.replace(/<head>|<body([^>]*)>/i, (m) => (m.toLowerCase() === "<head>" ? `${m}<base target="_blank">` : `<base target="_blank">${m}`));
 }

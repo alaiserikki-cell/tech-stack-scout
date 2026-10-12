@@ -183,17 +183,18 @@ export function FitRing({ score, size = 44 }: { score: number; size?: number }) 
   );
 }
 
-export function FitScore({ score, reasons, align = "left", size = 56 }: { score: number; reasons: { reason: string; points: number }[]; align?: "left" | "right"; size?: number }) {
+export function FitScore({ score, reasons, align = "left", size = 56, product }: { score: number; reasons: { reason: string; points: number }[]; align?: "left" | "right"; size?: number; product?: string }) {
   return (
     <details className="group relative inline-block">
       <summary className="flex cursor-pointer list-none items-center gap-2 rounded-full [&::-webkit-details-marker]:hidden" aria-label={`Fit score ${score} out of 100. Show reasons`}>
         <FitRing score={score} size={size} />
       </summary>
       <div className={cx("absolute z-20 mt-2 w-72 max-w-[80vw] rounded-xl border border-line bg-surface p-4 text-left text-xs shadow-card", align === "right" ? "right-0" : "left-0")}>
-        <p className="mb-2 font-display text-sm font-semibold text-ink">Why {score}/100</p>
+        <p className="font-display text-sm font-semibold text-ink">Fit {score}/100</p>
+        <p className="mb-2 text-faint">How well this company&apos;s verified stack matches what {product ?? "you sell"} needs. Set on the Targeting page.</p>
         {reasons.length ? (
           <ul className="space-y-1.5 text-muted">
-            {reasons.slice(0, 3).map((r) => (
+            {reasons.slice(0, 5).map((r) => (
               <li key={r.reason} className="flex gap-2">
                 <span className="shrink-0 rounded-full bg-accent-soft px-1.5 font-mono text-[11px] font-semibold text-accent-ink">+{r.points}</span>
                 <span>{r.reason}</span>
@@ -203,17 +204,20 @@ export function FitScore({ score, reasons, align = "left", size = 56 }: { score:
         ) : (
           <p className="text-muted">No fit signals found yet.</p>
         )}
+        <a href="/#scores" className="mt-3 inline-block text-[11px]">
+          How fit is scored
+        </a>
       </div>
     </details>
   );
 }
 
-/** Evidence score ring with its breakdown (each part shows points out of its maximum). */
-export function EvidenceRing({ score, label, reasons, align = "right", size = 60 }: { score: number; label: string; reasons: { reason: string; points: number; max: number }[]; align?: "left" | "right"; size?: number }) {
-  const color = label === "strong" ? "var(--accent)" : label === "moderate" ? "var(--muted)" : "var(--warn)";
+/** Info score ring with its breakdown (each part shows points out of its maximum). */
+export function InfoRing({ score, label, reasons, align = "right", size = 60 }: { score: number; label: string; reasons: { reason: string; points: number; max: number }[]; align?: "left" | "right"; size?: number }) {
+  const color = label === "rich" ? "var(--accent)" : label === "partial" ? "var(--muted)" : "var(--warn)";
   return (
     <details className="group relative inline-block">
-      <summary className="flex cursor-pointer list-none items-center rounded-full [&::-webkit-details-marker]:hidden" aria-label={`Evidence score ${score} out of 100, ${label}. Show breakdown`}>
+      <summary className="flex cursor-pointer list-none items-center rounded-full [&::-webkit-details-marker]:hidden" aria-label={`Info score ${score} out of 100, ${label}. Show breakdown`}>
         <span className="relative inline-grid shrink-0 place-items-center rounded-full" style={{ width: size, height: size, background: `conic-gradient(${color} ${score * 3.6}deg, var(--surface-2) 0)` }} aria-hidden>
           <span className="grid place-items-center rounded-full bg-surface font-display font-bold tabular-nums text-ink" style={{ width: size - 8, height: size - 8, fontSize: size * 0.32 }}>
             {score}
@@ -221,9 +225,10 @@ export function EvidenceRing({ score, label, reasons, align = "right", size = 60
         </span>
       </summary>
       <div className={cx("absolute z-20 mt-2 w-80 max-w-[85vw] rounded-xl border border-line bg-surface p-4 text-left text-xs shadow-card", align === "right" ? "right-0" : "left-0")}>
-        <p className="mb-2 font-display text-sm font-semibold text-ink">
-          Evidence {score}/100 · <span className="capitalize">{label}</span>
+        <p className="font-display text-sm font-semibold text-ink">
+          Info {score}/100 · <span className="capitalize">{label}</span>
         </p>
+        <p className="mb-2 text-faint">How much verified information we have on this company. Only verified sources count.</p>
         <ul className="space-y-2 text-muted">
           {reasons.map((r) => (
             <li key={r.reason}>
@@ -240,7 +245,7 @@ export function EvidenceRing({ score, label, reasons, align = "right", size = 60
           ))}
         </ul>
         <a href="/#scores" className="mt-3 inline-block text-[11px]">
-          How evidence is scored
+          How the info score works
         </a>
       </div>
     </details>

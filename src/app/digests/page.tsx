@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: "Digests" };
 export default function DigestsPage() {
   return (
     <div className="mx-auto max-w-3xl">
-      <PageTitle eyebrow="Monday digest" title={<>Who to call, <Mint>every Monday.</Mint></>} sub="Each Monday morning (India time) the top accounts to call are ranked and emailed. Open a week for its priority map." />
+      <PageTitle eyebrow="Monday digest" title={<>Who to call, <Mint>every Monday.</Mint></>} sub="Each Monday morning (India time) the top accounts to call are ranked. Open a week for its priority map and a downloadable email draft." />
       <Suspense fallback={<SkeletonPage rows={4} />}>
         <DigestList />
       </Suspense>

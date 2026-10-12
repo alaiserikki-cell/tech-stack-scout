@@ -94,7 +94,11 @@ export function StackMap({ c, productName }: { c: Computed; productName: string 
             <div className={cx("flex-1 rounded-xl border p-3", l.fit ? "border-accent/50 bg-accent-soft/40" : "border-line bg-surface-2/50")}>
               <p className="flex items-center justify-between gap-2 text-xs font-semibold text-ink">
                 {l.title}
-                {l.fit && <span className="rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-bold text-accent-fg">{productName} fits here</span>}
+                {l.fit && (
+                  <span className="rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-bold text-accent-fg" title={`${productName} (what you sell) works on this layer: the CI and test tools`}>
+                    {productName} plugs in here
+                  </span>
+                )}
               </p>
               <Chips items={l.items} />
             </div>

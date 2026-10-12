@@ -10,9 +10,9 @@ import { liveScores } from "@/lib/scores";
 import { AddCompanyForm, PasscodeForm, WatchlistTable, type WatchRow } from "@/components/client";
 import { Card, Empty, Skeleton, SkeletonPage, ago, isStale } from "@/components/ui";
 
-export const metadata: Metadata = { title: "Watchlist" };
+export const metadata: Metadata = { title: "Dashboard" };
 
-export default function WatchlistPage() {
+export default function DashboardPage() {
   return (
     <>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-5">
@@ -27,16 +27,16 @@ export default function WatchlistPage() {
           <p className="mt-1.5 text-xs text-faint">Type a domain and press Build brief. Remove a company from its row below.</p>
         </div>
       </div>
-      <Suspense fallback={<WatchlistSkeleton />}>
-        <Watchlist />
+      <Suspense fallback={<DashboardSkeleton />}>
+        <Accounts />
       </Suspense>
     </>
   );
 }
 
-function WatchlistSkeleton() {
+function DashboardSkeleton() {
   return (
-    <div className="space-y-4" aria-busy="true" aria-label="Loading watchlist">
+    <div className="space-y-4" aria-busy="true" aria-label="Loading dashboard">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-20" />
@@ -57,7 +57,7 @@ function Stat({ label, value, hint }: { label: string; value: string | number; h
   );
 }
 
-async function Watchlist() {
+async function Accounts() {
   await connection();
   const db = getDb();
   const [companies, snaps, running, authed, profile] = await Promise.all([
@@ -80,8 +80,8 @@ async function Watchlist() {
       domain: c.domain,
       fit: live ? live.fit.score : null,
       fitReasons: live?.fit.reasons ?? [],
-      evidence: live ? live.evidence.score : null,
-      evidenceLabel: live?.evidence.label ?? null,
+      info: live ? live.info.score : null,
+      infoLabel: live?.info.label ?? null,
       techs: (comp?.techs ?? []).map((t) => t.name),
       activity: comp?.activity.label ?? "unknown",
       languages: (comp?.languages?.length ? comp.languages.map((l) => l.name) : (comp?.jobLanguages ?? []).map((l) => l.name)).slice(0, 3),
@@ -113,21 +113,23 @@ async function Watchlist() {
         <Stat label="Accounts tracked" value={rows.length} hint="max 40 active" />
         <Stat label="Average fit" value={avgFit} hint="for what you sell" />
         <Stat label="Changed this week" value={changed} hint="new tech, posts, hiring" />
-        <Stat label="Strong evidence" value={rows.filter((r) => r.evidenceLabel === "strong").length} hint={`${stale} stale (> 7 days)`} />
+        <Stat label="Rich info" value={rows.filter((r) => r.infoLabel === "rich").length} hint={`${stale} stale (> 7 days)`} />
       </div>
       {rows.length ? (
         <WatchlistTable rows={rows} />
       ) : (
-        <Empty title="No companies on the watchlist yet.">Add one above, or insert a row into the watchlist table in the Neon console; the next daily run picks it up.</Empty>
+        <Empty title="No companies tracked yet.">Type a company website above and press Build brief.</Empty>
       )}
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl border border-line bg-surface p-4 text-sm shadow-card">
-          <p className="font-display font-semibold text-ink">Fit score: is this a good account for you?</p>
-          <p className="mt-1 text-muted">Matches each company against what you sell and who you target. <a href="/settings">Change your targeting</a> and every score updates instantly.</p>
+          <p className="font-display font-semibold text-ink">Fit: is this a good account for {profile.product_name}?</p>
+          <p className="mt-1 text-muted">
+            How well the company&apos;s verified stack matches what {profile.product_name} needs ({profile.one_line_pitch.replace(/\.$/, "").toLowerCase()}). <a href="/settings">Change the targeting</a> and every score updates instantly.
+          </p>
         </div>
         <div className="rounded-2xl border border-line bg-surface p-4 text-sm shadow-card">
-          <p className="font-display font-semibold text-ink">Evidence score: how sure are we?</p>
-          <p className="mt-1 text-muted">How much of the stack comes from verified sources, confirmed twice, recently. <a href="/#scores">How both scores work</a></p>
+          <p className="font-display font-semibold text-ink">Info: how much do we know?</p>
+          <p className="mt-1 text-muted">How much verified information we found: technologies, source types, cross-checks, hiring and writing, freshness. Unverified sources never count. <a href="/#scores">How both scores work</a></p>
         </div>
       </div>
     </div>
