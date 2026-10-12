@@ -23,7 +23,7 @@ async function main() {
   console.log(`Smoke testing ${base}\n`);
 
   // pages
-  for (const p of ["/", "/digests", "/activity", "/settings"]) {
+  for (const p of ["/", "/digests", "/activity", "/how-it-works", "/settings"]) {
     const r = await get(p);
     check(`GET ${p}`, r.status === 200 && !/Application error|Internal Server Error/.test(r.text), `HTTP ${r.status}`);
   }
