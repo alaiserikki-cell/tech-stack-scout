@@ -5,7 +5,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/db/client";
-import { TOP_N, type RankedAccount } from "@/lib/digest";
+import { TOP_N, digestSubject, digestText, type RankedAccount } from "@/lib/digest";
+import { CopyTextButton } from "@/components/client";
 import { Ext, FitRing, Mint, SkeletonPage, cx, fmtDate } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Digest" };
@@ -50,6 +51,14 @@ async function Digest({ params }: PageProps<"/digests/[id]">) {
           Who to call <Mint>this week.</Mint>
         </h1>
         <p className="mt-2 text-sm text-muted">Ranked by fit; changes from the last 7 days add up to 10 points, so they break near-ties. Computed in code, no AI.</p>
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <a href={`/api/digests/${d.id}/eml`} download className="rounded-lg bg-btn px-3 py-2 text-sm font-medium text-btn-fg no-underline">
+            Download as email draft
+          </a>
+          <CopyTextButton text={`Subject: ${digestSubject(top.length, d.weekOf)}
+
+${digestText(all, d.weekOf, process.env.APP_URL?.replace(/\/$/, ""))}`} label="Copy as text" />
+        </div>
       </div>
 
       <PriorityMap accounts={all} />

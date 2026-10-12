@@ -1022,3 +1022,17 @@ export function EmailDraftCard({ subject: s0, body: b0 }: { subject: string; bod
     </div>
   );
 }
+
+export function CopyTextButton({ text, label }: { text: string; label: string }) {
+  const [state, setState] = useState<"idle" | "ok" | "failed">("idle");
+  return (
+    <span className="inline-flex items-center gap-2">
+      <button type="button" onClick={async () => setState((await copyText(text)) ? "ok" : "failed")} className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-ink">
+        {label}
+      </button>
+      <span className="text-xs text-faint" aria-live="polite">
+        {state === "ok" ? "Copied. Paste it into a new email." : state === "failed" ? "Copy was blocked by the browser." : ""}
+      </span>
+    </span>
+  );
+}

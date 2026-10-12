@@ -36,7 +36,9 @@ async function ActivityData() {
     db.select().from(schema.activityLog).where(eq(schema.activityLog.type, "cron_run")).orderBy(desc(schema.activityLog.at)).limit(1),
     db.select({ n: schema.refreshRuns.id }).from(schema.refreshRuns).where(eq(schema.refreshRuns.status, "running")),
   ]);
-  const items: FeedItem[] = rows.map((r) => ({
+  // past "email not delivered" entries are no longer relevant (the app no longer sends email); hidden, not deleted
+  const shown = rows.filter((r) => !(r.type === "digest_sent" && /not delivered/i.test(r.summary)));
+  const items: FeedItem[] = shown.map((r) => ({
     id: r.id,
     at: r.at.toISOString(),
     type: r.type,

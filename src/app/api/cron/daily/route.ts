@@ -1,8 +1,7 @@
 import { and, asc, eq, inArray, isNull, lt, or } from "drizzle-orm";
 import { getDb, schema } from "@/db/client";
 import { createRun, executeRun, sweepStuckRuns } from "@/lib/pipeline";
-import { buildDigest, isMondayIST, sendDigest, weekOfIST } from "@/lib/digest";
-import { emailConfigured } from "@/lib/email";
+import { buildDigest, isMondayIST, weekOfIST } from "@/lib/digest";
 import { logActivity } from "@/lib/activity";
 import { latestSnapshotsByCompany } from "@/lib/queries";
 
@@ -46,21 +45,13 @@ export async function GET(req: Request) {
   if (isMondayIST()) {
     const weekOf = weekOfIST();
     const [existing] = await db.select().from(schema.digests).where(eq(schema.digests.weekOf, weekOf));
-    if (existing && existing.emailStatus === "sent") digest = "already sent this week";
+    if (existing) digest = "already built this week";
     else if (Date.now() - t0 > BUDGET_MS + 30_000) digest = "deferred (time budget)";
     else {
-      const d = existing ?? (await buildDigest(weekOf));
-      const to = process.env.DIGEST_TO;
-      if (to && emailConfigured()) {
-        if (!existing) await logActivity("digest_built", `Built the digest for the week of ${weekOf}`, { actor: "cron", detail: { digestId: d.id } });
-        const status = await sendDigest(d.id, to);
-        await logActivity("digest_sent", status === "sent" ? "Emailed this week's digest to the digest inbox" : `Weekly digest email not delivered (${status})`, { actor: "cron", detail: { digestId: d.id, status } });
-        await db.update(schema.digests).set({ emailStatus: status }).where(eq(schema.digests.id, d.id));
-        digest = `built and ${status}`;
-      } else {
-        await db.update(schema.digests).set({ emailStatus: "not_configured" }).where(eq(schema.digests.id, d.id));
-        digest = "built; email not configured";
-      }
+      // the digest is built for the site (and downloadable as an email draft); the job never sends email
+      const d = await buildDigest(weekOf);
+      await logActivity("digest_built", `Built the digest for the week of ${weekOf}`, { actor: "cron", detail: { digestId: d.id } });
+      digest = "built";
     }
   }
   await logActivity("cron_run", `Daily job: ${refreshed.length} of ${due.length} due companies refreshed; digest ${digest}`, { actor: "cron" });

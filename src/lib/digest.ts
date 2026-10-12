@@ -137,3 +137,11 @@ export async function sendDigest(digestId: number, to: string): Promise<"sent" |
   return status;
 }
 
+/** Plain-text version of the digest email, for "Copy as text" and the text part of the .eml draft. */
+export function digestText(accounts: RankedAccount[], weekOf: string, appUrl = (process.env.APP_URL ?? "").replace(/\/$/, "")): string {
+  const NL = "\n";
+  const lines = accounts.slice(0, TOP_N).map((a, i) =>
+    [`${i + 1}. ${a.name} (fit ${a.fitScore}/100)`, `   ${a.whyNow}`, a.evidenceUrl ? `   Source: ${a.evidenceUrl}` : "", appUrl ? `   Brief: ${appUrl}/company/${a.companyId}` : ""].filter(Boolean).join(NL),
+  );
+  return [`Who to call this week (week of ${weekOf})`, "Ranked by fit, with this week's changes breaking ties.", "", ...lines].join(NL);
+}
