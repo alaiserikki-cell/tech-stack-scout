@@ -36,7 +36,7 @@ function links(html: string): string[] {
 }
 
 async function main() {
-  const pages = new Set<string>(["/", "/dashboard", "/digests", "/activity", "/settings"]);
+  const pages = new Set<string>(["/", "/dashboard", "/digests", "/activity", "/settings", "/how-it-works"]);
   const seen = new Set<string>();
   const internal = new Map<string, Set<string>>(); // link -> pages it appears on
   const external = new Map<string, Set<string>>();
