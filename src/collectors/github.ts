@@ -170,7 +170,7 @@ export async function orgWebsiteProves(blog: string | null | undefined, domain: 
   const url = /^https?:\/\//i.test(blog) ? blog : `https://${blog}`;
   if (orgWebsiteMatches(url, domain)) return true;
   try {
-    const r = await fetchImpl(url, { redirect: "follow", headers: { "user-agent": "Mozilla/5.0 (FlakeGuard org check)" }, signal: AbortSignal.timeout(8000) });
+    const r = await fetchImpl(url, { redirect: "follow", headers: { "user-agent": "Mozilla/5.0 (Tech Stack Scout org check)" }, signal: AbortSignal.timeout(8000) });
     if (onDomain(r.url || url, domain)) return true;
   } catch {
     /* fall through to the brand rule */

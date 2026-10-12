@@ -5,7 +5,7 @@
 import "dotenv/config";
 
 const base = (process.argv[2] ?? process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
-const UA = "Mozilla/5.0 (FlakeGuard link check)";
+const UA = "Mozilla/5.0 (Tech Stack Scout link check)";
 
 async function status(url: string, method: "HEAD" | "GET" = "HEAD"): Promise<number> {
   try {

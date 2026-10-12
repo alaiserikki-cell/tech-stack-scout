@@ -25,7 +25,7 @@ export function emailProvider(): "resend" | "gmail" | null {
 export async function sendMail(to: string, subject: string, html: string): Promise<void> {
   const provider = emailProvider();
   if (provider === "resend") {
-    const from = process.env.RESEND_FROM || "FlakeGuard <onboarding@resend.dev>";
+    const from = process.env.RESEND_FROM || "Tech Stack Scout <onboarding@resend.dev>";
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { authorization: `Bearer ${process.env.RESEND_API_KEY}`, "content-type": "application/json" },
@@ -43,7 +43,7 @@ export async function sendMail(to: string, subject: string, html: string): Promi
       secure: true,
       auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
     });
-    await transport.sendMail({ from: `FlakeGuard <${process.env.GMAIL_USER}>`, to, subject, html });
+    await transport.sendMail({ from: `Tech Stack Scout <${process.env.GMAIL_USER}>`, to, subject, html });
     return;
   }
   throw new Error("Email is not configured");

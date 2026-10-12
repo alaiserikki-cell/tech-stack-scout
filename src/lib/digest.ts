@@ -95,7 +95,7 @@ export function renderDigestHtml(accounts: RankedAccount[], weekOf: string, appU
   <tr><td style="padding-bottom:8px;font:400 13px -apple-system,Segoe UI,Roboto,sans-serif;color:#71717a">Week of ${esc(weekOf)} · ranked by fit, with this week's changes breaking ties</td></tr>
   <tr><td style="padding-bottom:8px;font:400 12px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;color:#71717a">Fit (0-100) = how well the company's verified stack matches what ${esc(product)} needs. Every fact links to its public source.</td></tr>
   ${rows || `<tr><td style="padding:16px 0;color:#71717a">No accounts tracked yet.</td></tr>`}
-  <tr><td style="padding:16px 0;font:400 12px -apple-system,Segoe UI,Roboto,sans-serif;color:#a1a1aa">${esc(product)} account digest · facts from public GitHub, job boards, engineering blogs, talks, Hacker News and DNS · <a ${A} href="${esc(appUrl)}/digests" style="color:#a1a1aa">all digests</a></td></tr>
+  <tr><td style="padding:16px 0;font:400 12px -apple-system,Segoe UI,Roboto,sans-serif;color:#a1a1aa">Tech Stack Scout · facts from public GitHub, job boards, engineering blogs, talks, Hacker News and DNS · <a ${A} href="${esc(appUrl)}/digests" style="color:#a1a1aa">all digests</a></td></tr>
 </table></body></html>`;
 }
 

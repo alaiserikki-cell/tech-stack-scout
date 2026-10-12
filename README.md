@@ -1,9 +1,9 @@
-# FlakeGuard
+# Tech Stack Scout
 
 [![CI](https://github.com/alaiserikki-cell/tech-stack-scout/actions/workflows/ci.yml/badge.svg)](https://github.com/alaiserikki-cell/tech-stack-scout/actions/workflows/ci.yml)
 
 
-FlakeGuard is a tech-stack intelligence app for Nikhil, an enterprise account executive selling a developer productivity tool that finds and quarantines flaky tests. It keeps a dashboard of target companies current automatically and, for each one, builds a call-prep brief: how the company builds software, how actively, what changed recently, an outreach opener tied to a real signal, 3 discovery questions the evidence already answers and 2 it can't. Every company page has a ready-to-send outreach email draft (the AI opener plus verified facts), and every Monday a "who to call this week" list ranks the accounts.
+Tech Stack Scout is a tech-stack intelligence app for Nikhil, an enterprise account executive selling FlakeGuard, a developer productivity tool that finds and quarantines flaky tests. It keeps a dashboard of target companies current automatically and, for each one, builds a call-prep brief: how the company builds software, how actively, what changed recently, an outreach opener tied to a real signal, 3 discovery questions the evidence already answers and 2 it can't. Every company page has a ready-to-send outreach email draft (the AI opener plus verified facts), and every Monday a "who to call this week" list ranks the accounts.
 
 **Live:** https://tech-stack-scout-zeta.vercel.app
 

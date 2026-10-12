@@ -9,8 +9,8 @@ const interTight = Inter_Tight({ variable: "--font-inter-tight", subsets: ["lati
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: { default: "FlakeGuard", template: "%s · FlakeGuard" },
-  description: "Call-prep briefs on how target companies build software, from public signals.",
+  title: { default: "Tech Stack Scout", template: "%s · Tech Stack Scout" },
+  description: "Tech Stack Scout: how your target accounts build software, from public sources, refreshed weekly.",
 };
 
 export const viewport: Viewport = {
@@ -44,15 +44,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded-lg focus:bg-surface focus:px-3 focus:py-1">
           Skip to content
         </a>
-        <div className="bg-[#1f1f1f] px-4 py-1.5 text-center text-xs text-white/85 dark:bg-black">
-          <span className="sm:hidden">Public signals in, sourced briefs out</span>
-          <span className="hidden sm:inline">Signals collected from public GitHub, job boards, blogs, Hacker News and DNS · briefs written by Gemini Flash, checked in code</span>
-        </div>
         <header className="sticky top-0 z-30 border-b border-line/70 bg-surface/80 backdrop-blur-md">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3">
             <Link href="/" className="flex items-center gap-2 text-ink no-underline">
               <LogoMark />
-              <span className="font-display text-[15px] font-bold tracking-tight">FlakeGuard</span>
+              <span className="font-display text-[15px] font-bold tracking-tight">Tech Stack Scout</span>
             </Link>
             <nav aria-label="Main" className="order-3 -mx-1 flex w-full gap-x-0.5 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden text-sm sm:order-none sm:w-auto sm:flex-1 sm:flex-wrap">
               {NAV.map((n) => (
@@ -68,7 +64,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {children}
         </main>
         <footer className="border-t border-line/70 py-6 text-center text-xs text-faint">
-          FlakeGuard · facts in code, prose by Gemini Flash
+          Tech Stack Scout · <Link href="/how-it-works">How it works</Link>
         </footer>
       </body>
     </html>

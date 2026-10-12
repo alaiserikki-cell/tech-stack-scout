@@ -11,7 +11,7 @@ import type { ReactNode } from "react";
 import { FIT_COMPONENTS, FIT_WEIGHTS } from "@/lib/compute";
 import { Eyebrow, FitRing, Skeleton, cx } from "@/components/ui";
 
-export const metadata: Metadata = { title: { absolute: "FlakeGuard: know how every account builds" } };
+export const metadata: Metadata = { title: { absolute: "Tech Stack Scout" } };
 
 /* ---------- small building blocks ---------- */
 
@@ -72,7 +72,7 @@ export default function Landing() {
             From a domain to a <span className="text-accent-ink">call-ready brief.</span>
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-base text-muted sm:text-lg">
-            FlakeGuard reads what a company publishes about how it builds software, checks every fact against its source, and turns it into a brief you can read in a minute.
+            Tech Stack Scout reads what a company publishes about how it builds software, checks every fact against its source, and turns it into a brief you can read in a minute.
           </p>
           <div className="mt-7 flex flex-wrap justify-center gap-3">
             <Link href="/dashboard" className="rounded-xl bg-btn px-5 py-3 text-sm font-semibold text-btn-fg no-underline shadow-sm">
