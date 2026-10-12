@@ -15,7 +15,7 @@ export async function GET() {
   try {
     const r = await getDb().execute(sql`
       select (select count(*) from watchlist where active)::int as companies,
-             (select count(*) from (select distinct on (company_id) brief_status from snapshots order by company_id, generated_at desc) s where brief_status in ('ok','none'))::int as briefs,
+             (select count(*) from (select distinct on (company_id) company_id, brief_status from snapshots order by company_id, generated_at desc) s join watchlist w on w.id = s.company_id and w.active where s.brief_status in ('ok','none'))::int as briefs,
              (select max(at) from activity_log where type = 'cron_run') as last_cron`);
     const row = r.rows[0] as { companies: number; briefs: number; last_cron: string | null };
     checks.database = { ok: true, detail: `${row.companies} companies, ${row.briefs} with a current brief` };
