@@ -579,7 +579,7 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
   return (
     <>
       {/* desktop table */}
-      <div className="hidden overflow-hidden rounded-2xl border border-line bg-surface shadow-card md:block">
+      <div className="hidden overflow-x-auto rounded-2xl border border-line bg-surface shadow-card lg:block">
         <div className="flex items-center justify-between border-b border-line px-5 py-4">
           <h2 className="font-display text-base font-semibold tracking-tight text-ink">Watchlist</h2>
           {toolbar}
@@ -668,7 +668,7 @@ export function WatchlistTable({ rows }: { rows: WatchRow[] }) {
         </table>
       </div>
       {/* mobile cards */}
-      <div className="md:hidden">
+      <div className="lg:hidden">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-display text-base font-semibold tracking-tight text-ink">Watchlist</h2>
           <label className="flex items-center gap-2 text-xs text-muted">
