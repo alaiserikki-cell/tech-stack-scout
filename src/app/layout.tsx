@@ -2,7 +2,9 @@ import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { Inter, Inter_Tight, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Suspense } from "react";
 import { AddCompanyDialog } from "@/components/client";
+import { NavLinks, NavLinksStatic, type NavItem } from "@/components/nav-links";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const interTight = Inter_Tight({ variable: "--font-inter-tight", subsets: ["latin"], weight: ["500", "600", "700", "800"] });
@@ -21,8 +23,8 @@ export const viewport: Viewport = {
 };
 
 // ordered by how often Nikhil needs them: accounts first, then this week's ranking, then setup and history
-const NAV = [
-  { href: "/dashboard", label: "Dashboard" },
+const NAV: NavItem[] = [
+  { href: "/dashboard", label: "Dashboard", also: ["/company"] },
   { href: "/digests", label: "This week" },
   { href: "/settings", label: "Targeting" },
   { href: "/activity", label: "Activity" },
@@ -51,11 +53,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <span className="font-display text-[15px] font-bold tracking-tight">Tech Stack Scout</span>
             </Link>
             <nav aria-label="Main" className="order-3 -mx-1 flex w-full gap-x-0.5 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden text-sm sm:order-none sm:w-auto sm:flex-1 sm:flex-wrap">
-              {NAV.map((n) => (
-                <Link key={n.href} href={n.href} className="rounded-lg px-2.5 py-1.5 text-muted no-underline transition-colors hover:bg-surface-2 hover:text-ink">
-                  {n.label}
-                </Link>
-              ))}
+              <Suspense fallback={<NavLinksStatic items={NAV} />}>
+                <NavLinks items={NAV} />
+              </Suspense>
             </nav>
             <AddCompanyDialog />
           </div>
