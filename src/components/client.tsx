@@ -1005,9 +1005,6 @@ export function EmailDraftCard({ subject: s0, body: b0 }: { subject: string; bod
         >
           Open in Gmail
         </a>
-        <a href={`mailto:?subject=${enc(draft.subject)}&body=${enc(draft.body)}`} className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-ink no-underline">
-          Open in email app
-        </a>
         <button
           type="button"
           onClick={async () => setCopied((await copyText(`Subject: ${draft.subject}\n\n${draft.body}`)) ? "ok" : "failed")}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import profileJson from "../data/product-profile.json";
-import { gmailComposeUrl, mailtoUrl, outreachEmail } from "../src/lib/outreach";
+import { gmailComposeUrl, outreachEmail } from "../src/lib/outreach";
 
 const t = (name: string, category: string, sources: string[]) => ({ name, category, sources }) as never;
 const profile = profileJson as never;
@@ -71,9 +71,9 @@ describe("outreach email draft (not sdk_heavy)", () => {
     expect(d.body).not.toContain("Your public repos use"); // the extra line is only for sdk_heavy orgs
     expect(d.body).not.toMatch(/runs GitHub Actions for every service/);
   });
-  it("builds Gmail and mail-app links with the draft encoded", () => {
+  it("builds the Gmail link with the draft encoded", () => {
     expect(gmailComposeUrl(d)).toContain("su=Acme's%20CI%20pipeline");
-    expect(decodeURIComponent(mailtoUrl(d).split("&body=")[1])).toBe(d.body);
+    expect(decodeURIComponent(gmailComposeUrl(d).split("&body=")[1])).toBe(d.body);
   });
 });
 

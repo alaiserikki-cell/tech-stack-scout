@@ -88,7 +88,3 @@ export function outreachEmail(args: {
 export function gmailComposeUrl(d: EmailDraft): string {
   return `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(d.subject)}&body=${encodeURIComponent(d.body)}`;
 }
-
-export function mailtoUrl(d: EmailDraft): string {
-  return `mailto:?subject=${encodeURIComponent(d.subject)}&body=${encodeURIComponent(d.body)}`;
-}

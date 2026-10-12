@@ -5,7 +5,6 @@ import { carriesBrand, extractLinks, linksToDomain, onDomain, proveOwnership } f
 import { findFeedLinks, mediumFeed } from "../src/collectors/blog";
 import { isSampleCode, orgWebsiteProves } from "../src/collectors/github";
 import { renderDigestHtml } from "../src/lib/digest";
-import { gmailComposeUrl, mailtoUrl, outreachEmail } from "../src/lib/outreach";
 import profileJson from "../data/product-profile.json";
 
 /**
